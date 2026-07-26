@@ -35,18 +35,24 @@ Live Activity that counts the distance down on the Lock Screen and in the Dynami
 **Two moods.** *Tropical Spritz* — piña cream, paloma pink, a serif for feeling and a mono for every
 number. *Nomad Money* — near-black, one lime accent, hairlines instead of shadows, tabular figures
 throughout. They differ in structure, not just colour: corner radii, elevation, type scale and whether
-a gradient is allowed at all all change with the mood. Change it and the widgets change too.
+a gradient is allowed at all change with the mood. Change it and the widgets change too.
 
 ## Building it
 
-Requires a Mac with Xcode 16, and an iPhone for anything involving the compass or camera. Bundle
-identifiers are placeholders — **[`docs/BUILD.md`](docs/BUILD.md)** has the four-step setup and a
-device checklist.
+Requires a Mac with Xcode 16 — Apple does not allow an iOS app to be signed anywhere else — and an
+iPhone for anything involving the compass or camera.
 
 ```bash
 git clone https://github.com/rohitdivate/compassmap.git
-cd compassmap && open Tradewind.xcodeproj
+cd compassmap
+python3 Tools/setup_signing.py --prefix com.yourname --team ABCDE12345
+open Tradewind.xcodeproj
 ```
+
+That rewrites the placeholder bundle identifiers to yours and regenerates the project, so the only
+step left in Xcode is pressing Run. On a **free** Apple ID add `--free`: the app runs for seven days
+at a time and the widgets stay empty, because a Personal Team cannot provision an App Group.
+**[`docs/BUILD.md`](docs/BUILD.md)** has the full table and a device checklist.
 
 ## How it is put together
 
@@ -90,6 +96,7 @@ There is more on the visual side, including what the widgets deliberately do *no
 The repository generates a few of its own files:
 
 ```bash
+python3 Tools/setup_signing.py --help  # your bundle identifiers and signing team
 python3 Tools/gen_xcodeproj.py         # Tradewind.xcodeproj (committed; CI checks it is current)
 python3 Tools/make_appicon.py          # the app icon, from the same curve as the in-app arrow
 python3 Tools/make_preview_images.py   # painted placeholders for the preview

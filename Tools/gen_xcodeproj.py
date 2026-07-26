@@ -28,6 +28,9 @@ PROJECT_DIR = os.path.join(ROOT, f"{PROJECT_NAME}.xcodeproj")
 APP_BUNDLE_ID = "com.tradewind.app"
 WIDGET_BUNDLE_ID = "com.tradewind.app.widgets"
 TESTS_BUNDLE_ID = "com.tradewind.app.tests"
+# Empty means "whatever Xcode picks", which is right for CI and for a simulator build. Set it with
+# `python3 Tools/setup_signing.py --team ABCDE12345` so a device build does not need a UI visit.
+DEVELOPMENT_TEAM = ""
 DEPLOYMENT_TARGET = "17.0"
 MARKETING_VERSION = "1.0"
 BUILD_VERSION = "1"
@@ -138,6 +141,8 @@ def build_targets() -> list[Target]:
         "SWIFT_EMIT_LOC_STRINGS": "YES",
         "ENABLE_USER_SCRIPT_SANDBOXING": "YES",
     }
+    if DEVELOPMENT_TEAM:
+        common["DEVELOPMENT_TEAM"] = DEVELOPMENT_TEAM
 
     app = Target(
         name="Tradewind",

@@ -1,43 +1,78 @@
 # Building Tradewind
 
-## What you need
+## Getting it onto your phone
 
-- A Mac with **Xcode 16 or later** (the project targets iOS 17 and the tests use Swift Testing).
-- An **iPhone**, for anything involving the compass or the camera. The simulator has no
-  magnetometer, so the arrow will not move and the camera screen shows its unavailable state.
-- An **Apple Developer account** — a free one is enough to run on your own device. iCloud sync
-  needs a paid one.
-
-## First run
+You need a **Mac with Xcode 16 or later** and an **iPhone**. There is no way around the Mac: Apple
+does not allow an iOS app to be signed or installed from anywhere else, and this container has no
+Xcode, so no build of this app exists yet — only source that CI has proved compiles.
 
 ```bash
 git clone https://github.com/rohitdivate/compassmap.git
 cd compassmap
+
+# Rewrites every bundle identifier to yours and sets the signing team, then regenerates the project.
+python3 Tools/setup_signing.py --prefix com.yourname --team ABCDE12345
+
 open Tradewind.xcodeproj
 ```
 
-Then, once, before it will build for a device:
+Then plug the iPhone in, pick it in the toolbar's device menu, and press **⌘R**. The first run asks
+you to trust the developer certificate on the phone: *Settings → General → VPN & Device Management →
+your Apple ID → Trust*.
 
-1. Select the **Tradewind** target → *Signing & Capabilities* → set your **Team**.
-2. Do the same for the **TradewindWidgets** target.
-3. Change the bundle identifiers. `com.tradewind.app` is a placeholder and almost certainly is not
-   yours:
+**Your team ID** is the ten characters at https://developer.apple.com/account under *Membership
+details*. If you have never signed in to Xcode with your Apple ID, do that first (*Xcode → Settings →
+Accounts → +*) and it creates a free "Personal Team" for you.
 
-   | Where | Change from | To |
-   | --- | --- | --- |
-   | Tradewind target | `com.tradewind.app` | `com.yourname.tradewind` |
-   | TradewindWidgets target | `com.tradewind.app.widgets` | `com.yourname.tradewind.widgets` |
-   | App Group (both targets) | `group.com.tradewind.app` | `group.com.yourname.tradewind` |
-   | iCloud container (Tradewind) | `iCloud.com.tradewind.app` | `iCloud.com.yourname.tradewind` |
+### Free Apple ID vs. paid membership
 
-4. Update the same identifiers in **[`Shared/Snapshot/AppGroup.swift`](../Shared/Snapshot/AppGroup.swift)**.
-   That file is the single place the code refers to them, so it is one edit, not a search.
-5. Build and run.
+This is the one thing worth knowing before you start, because it decides whether the widgets work.
 
-If you skip the iCloud container, the app still runs: the store falls back to the App Group without
-CloudKit and Settings reports "On this iPhone only". If you skip the App Group too, it falls back to
-a private container and says "widgets unavailable" — which is accurate, because widgets read the
-shared container.
+| | Free Apple ID (Personal Team) | Apple Developer Program ($99/yr) |
+| --- | --- | --- |
+| App on your phone | Yes, **expires after 7 days** — re-run from Xcode to renew | Yes, for a year |
+| Camera, compass, arrow, map, trips, sharing, Siri | All work | All work |
+| **Widgets and Live Activity** | **Install but stay empty** | Work |
+| iCloud sync between devices | No | Yes |
+
+The widget limitation is Apple's, not a shortcut here: an App Group is the only channel through which
+a widget extension can read the app's data, and a free Personal Team cannot provision one. So on a
+free account, run:
+
+```bash
+python3 Tools/setup_signing.py --prefix com.yourname --team ABCDE12345 --free
+```
+
+which removes the App Group, iCloud and push entitlements — without that, Xcode refuses to build at
+all, with *"Personal development teams do not support the App Groups capability"*. The app then falls
+back to a private store and Settings honestly reports **"On this iPhone (widgets unavailable)"**.
+
+If you later pay for a membership, `--paid` puts the entitlements back:
+
+```bash
+python3 Tools/setup_signing.py --prefix com.yourname --team YOURREALID --paid
+```
+
+`--reset` restores the `com.tradewind` placeholders, which is what the repository is committed with.
+
+### What that script touches
+
+So you can check it rather than trust it: the three bundle IDs in
+[`Tools/gen_xcodeproj.py`](../Tools/gen_xcodeproj.py), the App Group and CloudKit container in
+[`Shared/Snapshot/AppGroup.swift`](../Shared/Snapshot/AppGroup.swift), the URL name in
+`Tradewind/Info.plist`, both `.entitlements` files, `project.yml`, and then it re-runs the project
+generator. Nothing else in the code refers to an identifier.
+
+### If it will not build
+
+- **"Signing for 'Tradewind' requires a development team"** — you did not pass `--team`, or the ID is
+  wrong. Check it against *Membership details*.
+- **"Personal development teams do not support the App Groups capability"** — you are on a free Apple
+  ID. Re-run with `--free`.
+- **"Failed to register bundle identifier"** — someone already owns that identifier. Pick a different
+  `--prefix`; it does not need to be a domain you actually own, just one nobody else has claimed.
+- **"Unable to install"** on the phone — you have hit the free account's ten-app limit, or the
+  certificate needs trusting; see the Trust step above.
 
 ## Selecting a simulator vs. a device
 
@@ -61,7 +96,8 @@ The test bundle compiles the Foundation-only layers (`Shared/Math`, `Shared/Snap
 
 ## Checking it actually works, on a device
 
-The parts that only hardware can prove:
+The parts that only hardware can prove. Items 5 to 7 need the App Group, so they only apply on a paid
+membership — see the table above.
 
 1. **Capture** — take a photo of something 100–200 m away from where you are standing. The badge
    above the shutter should say "Good fix" with an accuracy in metres before you press it.
@@ -103,6 +139,7 @@ brew install xcodegen && xcodegen generate
 ## Other generated files
 
 ```bash
+python3 Tools/setup_signing.py --help  # bundle identifiers and signing team
 python3 Tools/make_appicon.py          # the app icon
 python3 Tools/make_preview_images.py   # painted placeholders for the design preview
 python3 Tools/build_preview.py         # docs/preview/index.html
