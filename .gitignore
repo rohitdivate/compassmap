@@ -1,0 +1,29 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+.swiftpm/
+
+# The project is generated (Tools/gen_xcodeproj.py) but committed so the repo opens
+# in Xcode with no extra steps. Only per-user state below is ignored.
+Tradewind.xcodeproj/project.xcworkspace/xcuserdata/
+Tradewind.xcodeproj/xcuserdata/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Preview tooling
+docs/preview/node_modules/
+docs/preview/shots/*.tmp.png

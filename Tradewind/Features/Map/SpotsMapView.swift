@@ -1,0 +1,292 @@
+import CoreLocation
+import MapKit
+import SwiftData
+import SwiftUI
+
+/// Every spot at once, with range rings and a line to whichever one you tap.
+///
+/// The map is the answer to "which of these is actually near me" in a way a list of distances
+/// is not. It stays themed — a tinted overlay and themed annotations — so it does not feel like
+/// a different app bolted on.
+struct SpotsMapView: View {
+
+    @Environment(AppSettings.self) private var settings
+    @Environment(AppRouter.self) private var router
+    @Environment(\.theme) private var theme
+
+    @Query(sort: \Spot.capturedAt, order: .reverse) private var spots: [Spot]
+
+    @State private var location = LocationService.shared
+    @State private var camera: MapCameraPosition = .automatic
+    @State private var selectedSpotID: UUID?
+    @State private var showsRangeRings = true
+
+    private var ranked: [RankedSpot] {
+        SpotRanking.rank(spots, from: location.coordinate)
+    }
+
+    private var selected: RankedSpot? {
+        guard let selectedSpotID else { return ranked.first }
+        return ranked.first { $0.id == selectedSpotID }
+    }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            map
+            header
+            if let selected {
+                VStack {
+                    Spacer()
+                    SelectedSpotBar(
+                        ranked: selected,
+                        unitPreference: settings.unitPreference,
+                        onOpen: { router.openSpot(id: selected.spot.id) }
+                    )
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 4)
+                }
+            }
+        }
+    }
+
+    // MARK: - Map
+
+    private var map: some View {
+        Map(position: $camera, selection: $selectedSpotID) {
+            UserAnnotation()
+
+            if showsRangeRings, let origin = location.coordinate {
+                let centre = CLLocationCoordinate2D(
+                    latitude: origin.latitude,
+                    longitude: origin.longitude
+                )
+                ForEach([100.0, 500.0, 1_000.0], id: \.self) { radius in
+                    MapCircle(center: centre, radius: radius)
+                        .foregroundStyle(.clear)
+                        .stroke(theme.accent.opacity(0.35), lineWidth: 1)
+                }
+            }
+
+            // A great-circle line rather than a straight one on the projection: over short
+            // distances they agree, and over long ones only the great circle is the truth.
+            if let origin = location.coordinate, let selected {
+                MapPolyline(coordinates: Self.arcPoints(from: origin, to: selected.spot.coordinate))
+                    .stroke(
+                        theme.accent.opacity(0.85),
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 8])
+                    )
+            }
+
+            ForEach(ranked) { item in
+                Annotation(
+                    item.spot.displayName,
+                    coordinate: CLLocationCoordinate2D(
+                        latitude: item.spot.latitude,
+                        longitude: item.spot.longitude
+                    ),
+                    anchor: .bottom
+                ) {
+                    SpotMapPin(
+                        spot: item.spot,
+                        isSelected: item.id == selectedSpotID,
+                        isPinned: item.spot.isPinned
+                    )
+                }
+                .tag(item.id)
+            }
+        }
+        .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
+        .mapControls {
+            MapUserLocationButton()
+            MapCompass()
+        }
+        .overlay {
+            // Pulls the map into the app's palette without hiding the geography.
+            theme.deepest.opacity(0.18)
+                .allowsHitTesting(false)
+                .ignoresSafeArea()
+        }
+        .ignoresSafeArea(edges: .top)
+    }
+
+    private var header: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(spots.count) saved").eyebrowStyle(color: theme.accent)
+                Text("The map")
+                    .font(Typography.title)
+                    .foregroundStyle(theme.text)
+            }
+            Spacer()
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { showsRangeRings.toggle() }
+            } label: {
+                Image(systemName: showsRangeRings ? "dot.circle.and.hand.point.up.left.fill" : "dot.circle")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(showsRangeRings ? theme.deepest : theme.text)
+                    .frame(width: 40, height: 40)
+                    .background {
+                        Circle().fill(showsRangeRings
+                            ? AnyShapeStyle(theme.accent)
+                            : AnyShapeStyle(.ultraThinMaterial))
+                    }
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel(showsRangeRings ? "Hide range rings" : "Show range rings")
+
+            Button {
+                if let origin = location.coordinate {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        camera = .region(MKCoordinateRegion(
+                            center: CLLocationCoordinate2D(
+                                latitude: origin.latitude,
+                                longitude: origin.longitude
+                            ),
+                            latitudinalMeters: 1_600,
+                            longitudinalMeters: 1_600
+                        ))
+                    }
+                } else {
+                    location.requestOneShotLocation()
+                }
+            } label: {
+                Image(systemName: "scope")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(theme.text)
+                    .frame(width: 40, height: 40)
+                    .background { Circle().fill(.ultraThinMaterial) }
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel("Centre on me")
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 6)
+        .background {
+            LinearGradient(
+                colors: [theme.deepest.opacity(0.85), .clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 160)
+            .offset(y: -30)
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// Samples the great circle so `MapPolyline` draws a curve rather than a chord.
+    static func arcPoints(from origin: Coordinate, to destination: Coordinate) -> [CLLocationCoordinate2D] {
+        let steps = 48
+        return (0...steps).map { step in
+            let point = BearingMath.interpolate(
+                from: origin,
+                to: destination,
+                fraction: Double(step) / Double(steps)
+            )
+            return CLLocationCoordinate2D(latitude: point.latitude, longitude: point.longitude)
+        }
+    }
+}
+
+// MARK: - Pin
+
+private struct SpotMapPin: View {
+    @Environment(\.theme) private var theme
+
+    var spot: Spot
+    var isSelected: Bool
+    var isPinned: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Circle()
+                    .fill(theme.accent)
+                    .frame(width: isSelected ? 56 : 44, height: isSelected ? 56 : 44)
+                    .shadow(color: theme.glow.opacity(0.6), radius: isSelected ? 12 : 5)
+
+                PhotoView(data: spot.photoData, maxDimension: 200, glyph: spot.glyph)
+                    .frame(width: isSelected ? 50 : 38, height: isSelected ? 50 : 38)
+                    .clipShape(Circle())
+
+                if isPinned {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(theme.deepest)
+                        .padding(3)
+                        .background { Circle().fill(theme.accentSoft) }
+                        .offset(x: 16, y: -16)
+                }
+            }
+
+            // Little stem so the circle reads as pinned to a point on the ground.
+            Triangle()
+                .fill(theme.accent)
+                .frame(width: 12, height: 8)
+                .offset(y: -1)
+        }
+        .animation(.spring(response: 0.32, dampingFraction: 0.7), value: isSelected)
+    }
+}
+
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.closeSubpath()
+        return path
+    }
+}
+
+// MARK: - Selected spot bar
+
+private struct SelectedSpotBar: View {
+    @Environment(\.theme) private var theme
+
+    var ranked: RankedSpot
+    var unitPreference: UnitPreference
+    var onOpen: () -> Void
+
+    var body: some View {
+        Button(action: onOpen) {
+            GlassCard(cornerRadius: 22, padding: 14) {
+                HStack(spacing: 14) {
+                    PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph)
+                        .frame(width: 52, height: 52)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(ranked.spot.displayName)
+                            .font(Typography.cardTitle)
+                            .foregroundStyle(theme.text)
+                            .lineLimit(1)
+                        Text(ranked.spot.subtitle)
+                            .font(Typography.caption)
+                            .foregroundStyle(theme.textMuted)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    VStack(alignment: .trailing, spacing: 2) {
+                        if let metres = ranked.metres {
+                            let readout = DistanceFormatting.readout(
+                                metres: metres,
+                                preference: unitPreference
+                            )
+                            Text(readout.combined)
+                                .font(Typography.cardDistance)
+                                .monospacedDigit()
+                                .foregroundStyle(theme.text)
+                        }
+                        Text("Point me there")
+                            .font(Typography.label)
+                            .foregroundStyle(theme.accent)
+                    }
+                }
+            }
+        }
+        .buttonStyle(PressableStyle(scale: 0.98))
+    }
+}

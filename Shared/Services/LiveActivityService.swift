@@ -1,0 +1,126 @@
+import ActivityKit
+import Foundation
+import Observation
+
+/// Starts, updates and ends the "heading there" Live Activity.
+///
+/// Updates are throttled: ActivityKit will quietly start dropping them if an app pushes on
+/// every location fix, and a distance that refreshes every twenty metres is indistinguishable
+/// from one that refreshes every metre when it is living in the Dynamic Island.
+@Observable
+final class LiveActivityService {
+
+    static let shared = LiveActivityService()
+
+    @ObservationIgnored private var activity: Activity<HeadingActivityAttributes>?
+    @ObservationIgnored private var lastPushedAt: Date?
+    @ObservationIgnored private var lastPushedDistance: Double?
+
+    private let minimumInterval: TimeInterval = 8
+    private let minimumDistanceChange: Double = 20
+
+    private(set) var activeSpotID: UUID?
+
+    var isSupported: Bool {
+        ActivityAuthorizationInfo().areActivitiesEnabled
+    }
+
+    var isRunning: Bool { activity != nil }
+
+    private init() {}
+
+    // MARK: - Lifecycle
+
+    @discardableResult
+    func start(
+        spotID: UUID,
+        spotName: String,
+        placeName: String?,
+        distanceMetres: Double,
+        bearing: Double,
+        themeID: String,
+        unitPreference: UnitPreference
+    ) -> Bool {
+        guard isSupported else { return false }
+        if activeSpotID == spotID, isRunning { return true }
+        end()
+
+        let attributes = HeadingActivityAttributes(
+            spotID: spotID,
+            spotName: spotName,
+            placeName: placeName,
+            themeID: themeID,
+            unitPreferenceRaw: unitPreference.rawValue
+        )
+        let state = HeadingActivityAttributes.ContentState(
+            distanceMetres: distanceMetres,
+            bearing: bearing
+        )
+
+        do {
+            activity = try Activity.request(
+                attributes: attributes,
+                content: ActivityContent(state: state, staleDate: Date().addingTimeInterval(60 * 20)),
+                pushType: nil
+            )
+            activeSpotID = spotID
+            lastPushedAt = Date()
+            lastPushedDistance = distanceMetres
+            return true
+        } catch {
+            print("[Tradewind] could not start Live Activity: \(error)")
+            return false
+        }
+    }
+
+    func update(distanceMetres: Double, bearing: Double, isArrived: Bool) {
+        guard let activity else { return }
+
+        let movedEnough = lastPushedDistance
+            .map { abs($0 - distanceMetres) >= minimumDistanceChange } ?? true
+        let waitedEnough = lastPushedAt
+            .map { Date().timeIntervalSince($0) >= minimumInterval } ?? true
+        // Arrival always goes through immediately; it is the one update that matters.
+        guard isArrived || (movedEnough && waitedEnough) else { return }
+
+        lastPushedAt = Date()
+        lastPushedDistance = distanceMetres
+
+        let state = HeadingActivityAttributes.ContentState(
+            distanceMetres: distanceMetres,
+            bearing: bearing,
+            isArrived: isArrived
+        )
+        Task {
+            await activity.update(
+                ActivityContent(state: state, staleDate: Date().addingTimeInterval(60 * 20))
+            )
+        }
+    }
+
+    /// Ends with a final state, so the last thing shown on the Lock Screen is the arrival
+    /// rather than a stale distance.
+    func finish(distanceMetres: Double, bearing: Double) {
+        guard let activity else { return }
+        let state = HeadingActivityAttributes.ContentState(
+            distanceMetres: distanceMetres,
+            bearing: bearing,
+            isArrived: true
+        )
+        self.activity = nil
+        activeSpotID = nil
+        Task {
+            await activity.end(
+                ActivityContent(state: state, staleDate: nil),
+                dismissalPolicy: .after(Date().addingTimeInterval(30))
+            )
+        }
+    }
+
+    func end() {
+        guard let activity else { return }
+        self.activity = nil
+        activeSpotID = nil
+        Task { await activity.end(nil, dismissalPolicy: .immediate) }
+    }
+}

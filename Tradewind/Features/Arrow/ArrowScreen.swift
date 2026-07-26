@@ -1,0 +1,384 @@
+import CoreLocation
+import MapKit
+import SwiftData
+import SwiftUI
+
+/// The screen the whole app exists for: an arrow, a distance, and the photo of where you are
+/// going sitting behind both.
+struct ArrowScreen: View {
+
+    @Environment(AppSettings.self) private var settings
+    @Environment(AppRouter.self) private var router
+    @Environment(\.theme) private var theme
+    @Environment(\.modelContext) private var modelContext
+
+    var destination: ArrowDestination
+    var engine: CompassEngine
+    var hero: Namespace.ID
+    var onClose: () -> Void
+
+    @State private var liveActivity = LiveActivityService.shared
+    @State private var location = LocationService.shared
+    @State private var celebrationStartedAt: Date?
+    @State private var isShowingDetail = false
+    @State private var hasAnnouncedArrival = false
+
+    private var store: SpotStore { SpotStore(context: modelContext) }
+
+    var body: some View {
+        ZStack {
+            backdrop
+
+            VStack(spacing: 0) {
+                topBar
+                Spacer(minLength: 8)
+                compass
+                Spacer(minLength: 8)
+                readout
+                actions
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 22)
+
+            if let celebrationStartedAt {
+                CelebrationView(theme: theme, startedAt: celebrationStartedAt)
+                    .ignoresSafeArea()
+            }
+        }
+        .background(Color.black.opacity(0.001))  // gives the overlay a hit-testing surface
+        .onAppear(perform: begin)
+        .onDisappear(perform: finish)
+        .onChange(of: engine.onTarget) { _, isOnTarget in
+            if isOnTarget { FeedbackService.shared.onTarget() }
+        }
+        .onChange(of: engine.proximity) { _, proximity in
+            FeedbackService.shared.updatePulse(proximity: proximity)
+        }
+        .onChange(of: engine.distanceMetres) { _, _ in pushLiveActivityUpdate() }
+        .onChange(of: engine.hasArrived) { _, arrived in
+            guard arrived, !hasAnnouncedArrival else { return }
+            hasAnnouncedArrival = true
+            celebrationStartedAt = Date()
+            FeedbackService.shared.arrived()
+            FeedbackService.shared.stopPulsing()
+            pushLiveActivityUpdate()
+        }
+        .sheet(isPresented: $isShowingDetail) {
+            if let spot = destination.spot {
+                SpotDetailView(spot: spot)
+                    .environment(settings)
+                    .environment(\.theme, theme)
+            }
+        }
+    }
+
+    // MARK: - Backdrop
+
+    /// The photo, pushed out of focus and drifting with the arrow. It is the reason the screen
+    /// feels like a place rather than a readout.
+    private var backdrop: some View {
+        ZStack {
+            ThemedBackground(
+                theme: theme,
+                animated: true,
+                timeTint: settings.timeOfDayTintEnabled
+            )
+
+            if let photoData = destination.photoData {
+                PhotoView(data: photoData, maxDimension: 1_200)
+                    .matchedGeometryEffect(id: "photo-\(destination.id)", in: hero)
+                    .scaleEffect(1.25)
+                    .blur(radius: 44, opaque: false)
+                    .opacity(0.5)
+                    .offset(
+                        x: CGFloat(sin(engine.arrowAngle * .pi / 180)) * -16,
+                        y: CGFloat(cos(engine.arrowAngle * .pi / 180)) * -10
+                    )
+                    .animation(.easeOut(duration: 0.6), value: engine.arrowAngle)
+                    .ignoresSafeArea()
+            }
+
+            // Keeps the readout legible over any photo.
+            LinearGradient(
+                colors: [theme.deepest.opacity(0.55), .clear, theme.deepest.opacity(0.85)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        }
+    }
+
+    // MARK: - Top bar
+
+    private var topBar: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Button(action: onClose) {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(theme.text)
+                    .frame(width: 40, height: 40)
+                    .background { Circle().fill(.ultraThinMaterial) }
+                    .overlay { Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel("Close")
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(engine.turnHint()).eyebrowStyle(color: theme.accent)
+                Text(destination.name)
+                    .font(Typography.title)
+                    .foregroundStyle(theme.text)
+                    .lineLimit(2)
+                if let subtitle = destination.subtitle {
+                    Text(subtitle)
+                        .font(Typography.caption)
+                        .foregroundStyle(theme.textMuted)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let spot = destination.spot {
+                Menu {
+                    Button {
+                        store.setPinned(spot.isPinned ? nil : spot)
+                    } label: {
+                        Label(
+                            spot.isPinned ? "Unpin from widgets" : "Pin to widgets",
+                            systemImage: spot.isPinned ? "pin.slash" : "pin"
+                        )
+                    }
+                    Button {
+                        isShowingDetail = true
+                    } label: {
+                        Label("Spot details", systemImage: "info.circle")
+                    }
+                    if let url = spot.deepLinkURL {
+                        ShareLink(item: url) {
+                            Label("Share this spot", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                    Button {
+                        openInMaps()
+                    } label: {
+                        Label("Open in Maps", systemImage: "map")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(theme.text)
+                        .frame(width: 40, height: 40)
+                        .background { Circle().fill(.ultraThinMaterial) }
+                        .overlay { Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
+                }
+                .accessibilityLabel("More options")
+            }
+        }
+        .padding(.top, 6)
+    }
+
+    // MARK: - Compass
+
+    private var compass: some View {
+        ZStack {
+            if !engine.hasArrived {
+                RadarRings(theme: theme, diameter: 340)
+                    .opacity(0.5 + engine.proximity * 0.4)
+            }
+
+            CompassRose(
+                theme: theme,
+                heading: engine.headingIsUsable ? engine.roseAngle : 0,
+                targetBearing: engine.bearing,
+                onTarget: engine.onTarget,
+                diameter: 300
+            )
+
+            DirectionArrow(
+                theme: theme,
+                angle: engine.arrowAngle,
+                onTarget: engine.onTarget,
+                proximity: engine.proximity,
+                size: 176
+            )
+
+            if engine.hasArrived {
+                ArrivalStamp(theme: theme, title: "You made it", subtitle: destination.name)
+                    .offset(y: 128)
+            }
+        }
+        .frame(height: 340)
+        .accessibilityElement()
+        .accessibilityLabel(engine.accessibilityDescription(spotName: destination.name))
+        .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    // MARK: - Readout
+
+    private var readout: some View {
+        VStack(spacing: 10) {
+            if let distance = engine.distanceReadout() {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(distance.value)
+                        .font(Typography.hero(heroFontSize(for: distance.value)))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                        .foregroundStyle(theme.text)
+                    Text(distance.unit)
+                        .font(.system(size: 26, weight: .semibold, design: .rounded))
+                        .foregroundStyle(theme.textMuted)
+                        .padding(.bottom, 6)
+                }
+                .animation(.snappy(duration: 0.25), value: distance.value)
+            } else {
+                VStack(spacing: 6) {
+                    ProgressView()
+                        .tint(theme.accent)
+                    Text(location.isAuthorized ? "Finding you" : "Location is off")
+                        .font(Typography.caption)
+                        .foregroundStyle(theme.textMuted)
+                }
+                .frame(height: 80)
+            }
+
+            HStack(spacing: 8) {
+                if let walk = engine.walkingTimeText() {
+                    PillLabel(text: walk, symbol: "figure.walk")
+                }
+                if let elevation = engine.elevationText() {
+                    PillLabel(text: elevation, symbol: "mountain.2.fill")
+                }
+                if let bearing = engine.bearing {
+                    PillLabel(
+                        text: "\(BearingMath.compassPoint(forBearing: bearing)) \(Int(bearing.rounded()))°",
+                        symbol: "location.north.line.fill"
+                    )
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            if !engine.headingIsUsable {
+                Text("No compass reading — showing the direction from north instead.")
+                    .font(Typography.caption)
+                    .foregroundStyle(theme.textMuted)
+                    .multilineTextAlignment(.center)
+            } else if location.needsCalibration {
+                Text("Magnetic interference. Move away from metal, or wave the phone in a figure of eight.")
+                    .font(Typography.caption)
+                    .foregroundStyle(theme.accentSoft)
+                    .multilineTextAlignment(.center)
+            } else if let accuracy = engine.horizontalAccuracy, accuracy > 40 {
+                Text("Rough fix — accurate to about \(Int(accuracy)) m")
+                    .font(Typography.caption)
+                    .foregroundStyle(theme.textMuted)
+            }
+        }
+        .padding(.bottom, 16)
+    }
+
+    /// Big numbers get a smaller face so "1,240" does not run off the edge.
+    private func heroFontSize(for value: String) -> CGFloat {
+        switch value.count {
+        case 0...3: return 96
+        case 4: return 84
+        case 5: return 72
+        default: return 62
+        }
+    }
+
+    // MARK: - Actions
+
+    private var actions: some View {
+        HStack(spacing: 10) {
+            if liveActivity.isSupported {
+                if liveActivity.isRunning, liveActivity.activeSpotID == destination.id {
+                    SecondaryButton(title: "Stop tracking", symbol: "stop.circle") {
+                        liveActivity.end()
+                    }
+                } else {
+                    PrimaryButton(title: "Track on Lock Screen", symbol: "bolt.badge.clock") {
+                        startLiveActivity()
+                    }
+                }
+            }
+
+            if destination.spot == nil {
+                PrimaryButton(title: "Save this spot", symbol: "plus.circle.fill") {
+                    saveGuestDestination()
+                }
+            }
+        }
+    }
+
+    // MARK: - Behaviour
+
+    private func begin() {
+        engine.target = destination.coordinate
+        engine.targetAltitude = destination.altitude
+        engine.start()
+        FeedbackService.shared.startPulsing()
+        if engine.hasArrived {
+            hasAnnouncedArrival = true
+        }
+    }
+
+    private func finish() {
+        engine.target = nil
+        FeedbackService.shared.stopPulsing()
+    }
+
+    private func startLiveActivity() {
+        guard let distance = engine.distanceMetres, let bearing = engine.bearing else { return }
+        let started = liveActivity.start(
+            spotID: destination.id,
+            spotName: destination.name,
+            placeName: destination.subtitle,
+            distanceMetres: distance,
+            bearing: bearing,
+            themeID: settings.themeID,
+            unitPreference: settings.unitPreference
+        )
+        if started {
+            FeedbackService.shared.lightTap()
+            // Background updates are what keep the Lock Screen honest once the phone is in a
+            // pocket, and they need "always" authorization.
+            location.requestAlwaysAuthorization()
+        }
+    }
+
+    private func pushLiveActivityUpdate() {
+        guard liveActivity.isRunning, liveActivity.activeSpotID == destination.id else { return }
+        guard let distance = engine.distanceMetres, let bearing = engine.bearing else { return }
+        if engine.hasArrived {
+            liveActivity.finish(distanceMetres: distance, bearing: bearing)
+        } else {
+            liveActivity.update(distanceMetres: distance, bearing: bearing, isArrived: false)
+        }
+    }
+
+    /// Turns a shared link into a spot of your own.
+    private func saveGuestDestination() {
+        let coordinate = destination.coordinate
+        let name = destination.name
+        let spot = store.createSpot(
+            name: name,
+            coordinate: coordinate,
+            photoData: nil,
+            thumbnailData: nil,
+            glyph: "📍"
+        )
+        FeedbackService.shared.lightTap()
+        router.openSpot(id: spot.id)
+    }
+
+    private func openInMaps() {
+        let coordinate = destination.coordinate
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude
+        ))
+        let item = MKMapItem(placemark: placemark)
+        item.name = destination.name
+        item.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking])
+    }
+}
