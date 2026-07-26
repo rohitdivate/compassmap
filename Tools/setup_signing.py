@@ -90,6 +90,44 @@ def current_prefix() -> str:
     return match.group(1)
 
 
+def configured_team() -> str:
+    """The team ID currently baked into the generator, if any."""
+    text = (ROOT / "Tools" / "gen_xcodeproj.py").read_text(encoding="utf-8")
+    match = re.search(r'^DEVELOPMENT_TEAM = "(.*)"$', text, re.MULTILINE)
+    return match.group(1) if match else ""
+
+
+def team_in_project() -> str:
+    """The team ID Xcode wrote into the project, if someone picked one in Signing & Capabilities.
+
+    Regenerating the project rewrites `project.pbxproj` wholesale, so a team chosen in Xcode's UI
+    would silently vanish. Reading it back means running this script never undoes that choice.
+    """
+    path = ROOT / "Tradewind.xcodeproj" / "project.pbxproj"
+    if not path.exists():
+        return ""
+    found = set(re.findall(r"DEVELOPMENT_TEAM = ([A-Z0-9]{10});", path.read_text(encoding="utf-8")))
+    return found.pop() if len(found) == 1 else ""
+
+
+PLACEHOLDER_PREFIXES = {"com.yourname", "com.example", "com.yourcompany", "com.mycompany", "com.test"}
+
+
+def validate_prefix(prefix: str) -> None:
+    """Catch the two mistakes that produce a confusing Xcode error rather than a clear one."""
+    if prefix.lower() in PLACEHOLDER_PREFIXES:
+        sys.exit(
+            f"--prefix {prefix} is the placeholder from the documentation, not an identifier.\n"
+            "Use something of your own, e.g. --prefix com.rohitdivate. It does not have to be a\n"
+            "domain you own — only one nobody else has already registered with Apple."
+        )
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]*(\.[A-Za-z0-9-]+)+", prefix):
+        sys.exit(
+            f"--prefix {prefix} is not a reverse-DNS identifier. Apple requires at least one dot and\n"
+            "only letters, digits and hyphens — 'tradewind' will not provision, 'com.rohitdivate' will."
+        )
+
+
 def swap(path: pathlib.Path, old: str, new: str, *, expected: int) -> None:
     text = path.read_text(encoding="utf-8")
     found = text.count(old)
@@ -119,7 +157,9 @@ def main() -> int:
     )
     parser.add_argument(
         "--prefix",
-        help="reverse-DNS prefix you own, e.g. com.yourname. The app becomes <prefix>.app.",
+        help="a reverse-DNS prefix of your own — com.<yourname> is fine, and it does not have to be "
+        "a domain you own. The app becomes <prefix>.app. Must contain a dot, and the documentation's "
+        "own examples are rejected so they cannot be pasted in by accident.",
     )
     parser.add_argument("--team", default=None, help="10-character Apple Developer team ID")
     parser.add_argument(
@@ -145,6 +185,17 @@ def main() -> int:
 
     old = current_prefix()
     new = args.prefix or old
+    if args.prefix:
+        validate_prefix(args.prefix)
+
+    # Xcode writes the team you pick in Signing & Capabilities straight into project.pbxproj, and
+    # regenerating the project would throw it away. Adopt it instead, so this script never costs you
+    # a choice you already made in the UI.
+    if args.team is None and not configured_team():
+        adopted = team_in_project()
+        if adopted:
+            print(f"adopting the team already set in Xcode: {adopted}")
+            args.team = adopted
 
     if new != old:
         print(f"identifiers: {old}.app -> {new}.app")

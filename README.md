@@ -45,13 +45,14 @@ iPhone for anything involving the compass or camera.
 ```bash
 git clone https://github.com/rohitdivate/compassmap.git
 cd compassmap
-python3 Tools/setup_signing.py --prefix com.yourname --team ABCDE12345
+python3 Tools/setup_signing.py --prefix com.rohitdivate --free   # your own name in the prefix
 open Tradewind.xcodeproj
 ```
 
 That rewrites the placeholder bundle identifiers to yours and regenerates the project, so the only
-step left in Xcode is pressing Run. On a **free** Apple ID add `--free`: the app runs for seven days
-at a time and the widgets stay empty, because a Personal Team cannot provision an App Group.
+step left in Xcode is pressing Run. Drop `--free` if you have a paid Apple Developer membership; keep
+it if you do not, because a free Apple ID gets a Personal Team, which cannot provision the App Group
+the widgets read through — the app runs fully, for seven days at a time, with the widgets empty.
 **[`docs/BUILD.md`](docs/BUILD.md)** has the full table and a device checklist.
 
 ## How it is put together

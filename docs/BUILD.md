@@ -11,7 +11,8 @@ git clone https://github.com/rohitdivate/compassmap.git
 cd compassmap
 
 # Rewrites every bundle identifier to yours and sets the signing team, then regenerates the project.
-python3 Tools/setup_signing.py --prefix com.yourname --team ABCDE12345
+# Substitute your own name in the prefix — the script rejects this line unchanged.
+python3 Tools/setup_signing.py --prefix com.rohitdivate --team ABCDE12345
 
 open Tradewind.xcodeproj
 ```
@@ -40,8 +41,13 @@ a widget extension can read the app's data, and a free Personal Team cannot prov
 free account, run:
 
 ```bash
-python3 Tools/setup_signing.py --prefix com.yourname --team ABCDE12345 --free
+python3 Tools/setup_signing.py --prefix com.rohitdivate --free
 ```
+
+The prefix needs a dot and needs to be yours: `com.rohitdivate` provisions, `tradewind` does not, and
+`com.yourname` is refused outright because it is this page's placeholder rather than an identifier.
+`--team` is optional — leave it off and the script adopts whatever team is already selected in Xcode,
+so regenerating the project does not undo that choice.
 
 which removes the App Group, iCloud and push entitlements — without that, Xcode refuses to build at
 all, with *"Personal development teams do not support the App Groups capability"*. The app then falls
@@ -50,7 +56,7 @@ back to a private store and Settings honestly reports **"On this iPhone (widgets
 If you later pay for a membership, `--paid` puts the entitlements back:
 
 ```bash
-python3 Tools/setup_signing.py --prefix com.yourname --team YOURREALID --paid
+python3 Tools/setup_signing.py --prefix com.rohitdivate --paid
 ```
 
 `--reset` restores the `com.tradewind` placeholders, which is what the repository is committed with.
@@ -67,8 +73,9 @@ generator. Nothing else in the code refers to an identifier.
 
 - **"Signing for 'Tradewind' requires a development team"** — you did not pass `--team`, or the ID is
   wrong. Check it against *Membership details*.
-- **"Personal development teams do not support the App Groups capability"** — you are on a free Apple
-  ID. Re-run with `--free`.
+- **"Personal development teams ... do not support the iCloud and Push Notifications
+  capabilities"**, or **"No profiles for '...' were found"** — you are on a free Apple ID. Re-run
+  with `--free`. This is the most likely first failure, because a free Apple ID is the default.
 - **"Failed to register bundle identifier"** — someone already owns that identifier. Pick a different
   `--prefix`; it does not need to be a domain you actually own, just one nobody else has claimed.
 - **"Unable to install"** on the phone — you have hit the free account's ten-app limit, or the
