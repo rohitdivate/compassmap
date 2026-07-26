@@ -36,42 +36,55 @@ struct DirectionArrow: View {
     var proximity: Double = 0
     var size: CGFloat = 190
 
+    // Split into typed sub-views rather than one long chain: as a single expression this body
+    // exceeded the type-checker's budget and failed to compile.
     var body: some View {
         ZStack {
-            // Glow sits behind and grows with proximity, so the arrow visibly heats up as
-            // you close in without any text having to tell you.
-            ArrowShape()
-                .fill(theme.glow)
-                .frame(width: size * 0.62, height: size)
-                .blur(radius: onTarget ? 26 : 16)
-                .opacity(0.30 + proximity * 0.45 + (onTarget ? 0.2 : 0))
-
-            ArrowShape()
-                .fill(theme.arrowGradient)
-                .overlay {
-                    // A single specular sweep along the leading edge.
-                    ArrowShape()
-                        .fill(
-                            LinearGradient(
-                                colors: [.white.opacity(0.55), .clear, .white.opacity(0.10)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .blendMode(.softLight)
-                }
-                .overlay {
-                    ArrowShape()
-                        .stroke(.white.opacity(0.35), lineWidth: 1)
-                }
-                .frame(width: size * 0.62, height: size)
-                .shadow(color: .black.opacity(0.35), radius: 10, y: 6)
+            glow
+            dart
         }
         .rotationEffect(.degrees(angle))
         .scaleEffect(onTarget ? 1.06 : 1.0)
         .animation(.spring(response: 0.45, dampingFraction: 0.62), value: onTarget)
         .animation(.interpolatingSpring(stiffness: 90, damping: 14), value: angle)
         .accessibilityHidden(true)
+    }
+
+    /// Sits behind the arrow and grows with proximity, so the arrow visibly heats up as you
+    /// close in without any text having to say so.
+    private var glow: some View {
+        ArrowShape()
+            .fill(theme.glow)
+            .frame(width: size * 0.62, height: size)
+            .blur(radius: onTarget ? 26 : 16)
+            .opacity(glowOpacity)
+    }
+
+    private var glowOpacity: Double {
+        let base = 0.30 + proximity * 0.45
+        return base + (onTarget ? 0.20 : 0)
+    }
+
+    private var dart: some View {
+        ArrowShape()
+            .fill(theme.arrowGradient)
+            .overlay { specular }
+            .overlay { ArrowShape().stroke(.white.opacity(0.35), lineWidth: 1) }
+            .frame(width: size * 0.62, height: size)
+            .shadow(color: .black.opacity(0.35), radius: 10, y: 6)
+    }
+
+    /// A single sweep of light along the leading edge.
+    private var specular: some View {
+        ArrowShape()
+            .fill(
+                LinearGradient(
+                    colors: [.white.opacity(0.55), .clear, .white.opacity(0.10)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .blendMode(.softLight)
     }
 }
 
