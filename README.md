@@ -6,7 +6,8 @@ An iPhone app that remembers exactly where you were standing when you took a pho
 arrow back at it — with the distance counting down as you walk.
 
 > **See it before you build it:** [`docs/preview/index.html`](docs/preview/index.html) — every screen,
-> in all six themes. A single self-contained file; open it straight from a clone.
+> in both moods, set in the typefaces the app ships. A single self-contained file; open it straight
+> from a clone.
 
 ---
 
@@ -31,8 +32,10 @@ Live Activity that counts the distance down on the Lock Screen and in the Dynami
 
 **Trips.** Group spots into trips, each with a cover and, if you like, its own look.
 
-**Six looks.** Margarita, Paloma, Hawaii Sunset, King Coconut, Mango Temple, Midnight Tide. Change it
-and the widgets change too.
+**Two moods.** *Tropical Spritz* — piña cream, paloma pink, a serif for feeling and a mono for every
+number. *Nomad Money* — near-black, one lime accent, hairlines instead of shadows, tabular figures
+throughout. They differ in structure, not just colour: corner radii, elevation, type scale and whether
+a gradient is allowed at all all change with the mood. Change it and the widgets change too.
 
 ## Building it
 
@@ -54,7 +57,7 @@ Shared/
   Snapshot/     the small JSON file the widgets read
   Models/       SwiftData: Spot, Trip, and the container that degrades instead of crashing
   Services/     location and heading, the compass engine, camera, geocoding, haptics, Live Activity
-  DesignSystem/ six themes, the arrow, the rose, the confetti, the glass
+  DesignSystem/ the two moods, the bundled faces, the arrow, the rose, the confetti
   Intents/      Siri, Shortcuts, and widget configuration
 Tradewind/      the app: gallery, arrow, map, trips, detail, capture, settings, onboarding
 TradewindWidgets/ widgets, Lock Screen accessories, Live Activity views, Control Centre controls
@@ -98,8 +101,9 @@ python3 Tools/build_preview.py         # docs/preview/index.html
 Tradewind was written in an environment without Xcode, so it was never compiled locally.
 [`.github/workflows/ios.yml`](.github/workflows/ios.yml) is the compiler of record: it builds the app
 and the widget extension and runs the tests on a macOS runner. The design was verified the other way
-round — by rendering [the preview](docs/preview/index.html) and looking at all fifty-four
-screen-and-theme combinations, which is how the missing bottom scrim was found.
+round — by rendering [the preview](docs/preview/index.html) and looking at all eighteen
+screen-and-mood combinations. That is how the arrow screen was caught still offering to track a spot
+you were already standing on.
 
 ⚠️ macOS runner minutes bill at 10× on private repositories. If that is not wanted, disable the
 workflow in the repository's Actions settings; nothing else depends on it.

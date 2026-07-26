@@ -49,8 +49,9 @@ final class ImageCache {
 
 /// A spot's photo, decoded off the main thread and faded in.
 ///
-/// The placeholder is a themed gradient with the spot's glyph rather than a grey box, so a
-/// still-loading grid looks intentional.
+/// The placeholder is a themed surface carrying whichever glyph you chose for the spot, rather than a
+/// grey box, so a still-loading grid looks intentional. It was a gradient; neither mood spends its
+/// gradient budget on a loading state.
 struct PhotoView: View {
     @Environment(\.theme) private var theme
 
@@ -79,11 +80,7 @@ struct PhotoView: View {
 
     @ViewBuilder
     private var placeholder: some View {
-        LinearGradient(
-            colors: [theme.surface, theme.canvas],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        theme.surfaceRaised
         .overlay {
             if let glyph, !glyph.isEmpty {
                 Text(glyph).font(.system(size: 34))

@@ -210,6 +210,9 @@ struct SecondaryButton: View {
 
     var title: String
     var symbol: String?
+    /// On a photograph the button cannot borrow the canvas, so it borrows the picture instead —
+    /// theme ink on a blurred photo is either invisible or a hole punched in it.
+    var onPhoto: Bool = false
     var action: () -> Void
 
     var body: some View {
@@ -222,16 +225,21 @@ struct SecondaryButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
-            .foregroundStyle(theme.text)
-            .background { shape.fill(theme.usesHairlines ? theme.surfaceRaised : Color.clear) }
-            .overlay {
-                shape.strokeBorder(
-                    theme.usesHairlines ? theme.hairline : theme.text,
-                    lineWidth: theme.usesHairlines ? 1 : 1.5
-                )
-            }
+            .foregroundStyle(onPhoto ? Color.white : theme.text)
+            .background { shape.fill(fill) }
+            .overlay { shape.strokeBorder(border, lineWidth: onPhoto || theme.usesHairlines ? 1 : 1.5) }
         }
         .buttonStyle(PressableStyle())
+    }
+
+    private var fill: Color {
+        if onPhoto { return .white.opacity(0.14) }
+        return theme.usesHairlines ? theme.surfaceRaised : .clear
+    }
+
+    private var border: Color {
+        if onPhoto { return .white.opacity(0.22) }
+        return theme.usesHairlines ? theme.hairline : theme.text
     }
 
     private var shape: RoundedRectangle {

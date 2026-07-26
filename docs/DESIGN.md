@@ -1,7 +1,7 @@
 # The design of Tradewind
 
-There is a rendered version of everything below — every screen in every theme — at
-[`docs/preview/index.html`](preview/index.html). Open it in a browser; it needs nothing.
+There is a rendered version of everything below — every screen in both moods, set in the typefaces the
+app ships — at [`docs/preview/index.html`](preview/index.html). Open it in a browser; it needs nothing.
 
 ## The idea
 
@@ -11,59 +11,88 @@ support reading that number at a glance, while walking, in sunlight, probably on
 So the app is built around a single hero moment — a big arrow, a bigger number, and the photo of
 where you are going sitting blurred behind both — and everything else is a way of getting to it.
 
-## Themes
+## Two moods
 
-Six, and they are the app's personality rather than a preference buried in Settings. The theme picker
-is the first thing onboarding ends on and the first thing Settings opens with. Changing it restyles
-the widgets and the Live Activity too, because a theme that stops at the app boundary is not really
-the app's identity.
+Not two colour schemes. The moods disagree about how a surface is separated from the page, what a
+corner radius should be, how large a heading is, and whether a gradient is allowed at all. One
+component definition satisfies both because the answers live in `Theme` as tokens rather than in the
+views as constants.
 
-| Theme | Palette | Reads as |
+| | **Tropical Spritz** | **Nomad Money** |
 | --- | --- | --- |
-| **Margarita** | lime zest, agave, salt, tequila gold | Bright, herbal, midday |
-| **Paloma** | grapefruit pink, soda blue, pink salt | Soft, fizzy, late afternoon |
-| **Hawaii Sunset** | mango, hibiscus, deep ocean violet | The default. Golden hour |
-| **King Coconut** | tea fields, cinnamon, amber husk | Earthy, hill country |
-| **Mango Temple** | lagoon turquoise, temple gold | Hot, tiled, humid |
-| **Midnight Tide** | ink navy, phosphorescent teal | Night dive |
+| Reads as | Sun-soaked, editorial, tactile | Tabular, hairline, one accent |
+| Scheme | Light, and it forces light | Dark, and it forces dark |
+| Canvas | Piña Cream `#FFF6E9` | Void `#0A0B0D` |
+| Cards | White, lifted on a soft shadow | `#131519`, separated by a 1px hairline |
+| Accent | Paloma Pink `#FF6B8B` | Electric Lime `#C6F24E` — the only one |
+| Second colour | Lagoon Blue `#1FA3B8`, Margarita Lime `#B8E62E` | None. Grey carries every non-accent state |
+| Display face | Instrument Serif 400 · 40pt | Space Grotesk 700 · 28pt |
+| Body face | DM Sans | Space Grotesk |
+| Numerals | DM Mono | JetBrains Mono, tabular |
+| Radii | 999 pills · 20 cards · 16 rows · 14 avatars | 10 controls · 16 cards · 14 rows · 9 avatars |
+| Gradients | One per screen, behind a photo or as the hero. Never on a button | None |
+| Grain | 3.5% over the canvas — it is paper | None — it is a screen |
 
-All six are night palettes, and the app opts out of light mode rather than shipping six
-half-considered light variants. That is a deliberate limit, not an omission: the whole look depends on
-a light source glowing out of a dark ground, and there is no honest way to invert that.
+Each mood fixes its own scheme, which is why `colorScheme` is a token and the app applies
+`.preferredColorScheme(theme.colorScheme)`. A cream editorial mood rendered in dark mode is not that
+mood any more, and a ledger mood in light mode is a spreadsheet.
 
-Every theme is a value in [`ThemeCatalog`](../Shared/DesignSystem/Theme.swift). Adding one is adding
-an entry to `ThemeCatalog.all`; nothing else needs to change, including the widgets.
+### The rules each mood is written to
+
+**Tropical Spritz.** Serif for feeling, mono for fact — never set a number in the serif. Cream, not
+white, is the canvas; white is reserved for cards so they lift off it. Lime is a highlight, not a
+surface: badges, progress, toggles-on. Primary buttons sit on a hard `0 3 0` offset in
+`accentShadow` and press down into it. Copy is warm and short.
+
+**Nomad Money.** One accent, and it means "this is the live value". Separation is a hairline, never a
+shadow — `Elevation.hairline` collapses every card shadow and every button offset to zero. Numerals are
+tabular so columns of distances line up. No decoration; density is the aesthetic.
+
+Both are values in [`ThemeCatalog`](../Shared/DesignSystem/Theme.swift). The theme picker is what
+onboarding ends on and what Settings opens with, and changing it restyles the widgets and the Live
+Activity too, because a mood that stops at the app boundary is not the app's identity.
 
 ### Tokens
 
-`Theme` carries exactly what a screen needs and nothing that is only used once:
+`Theme` carries structure as well as colour. The structural ones are the reason a single set of views
+can be both moods:
 
-- `backdrop` — three gradient stops, deepest first
-- `mesh` — nine colours for the iOS 18 `MeshGradient`; enrichment, never a requirement
-- `accent` / `accentSoft` — the interactive colour, and its contrast partner
-- `arrow` — three stops along the dart, tip last
-- `glow` — the halo behind the arrow, and button shadows
-- `text` / `textMuted`
-- `cardTint` — laid under frosted glass
-- `celebration` — the arrival confetti
-- `grainOpacity`
+- `colorScheme` — the mood's own scheme, forced
+- `elevation` — `.shadow` or `.hairline`; `usesHairlines` and `cardShadow` derive from it
+- `radii` — control, card, row, avatar, screen
+- `scale` — ten sizes, from `display` down to `eyebrow`, plus `readout` and `cardNumber`
+- `numerals` — `.mono` or `.tabularMono`; only the latter applies `monospacedDigit()`
+- `displayFont` / `bodyFont` / `bodyMediumFont` / `bodyBoldFont` / `monoFont` / `monoMediumFont`,
+  addressed by PostScript name
+- `heroGradient` — the one permitted gradient, or `nil`, which `heroFill` resolves to a flat surface
+
+and the colour ones: `canvas`, `surface`, `surfaceRaised`, `hairline`, `accent`, `onAccent`,
+`accentShadow`, `secondary`, `highlight`, `onHighlight`, `depth`, `text`, `textMuted`, `textFaint`,
+`positive`, `negative`, `glow`, `arrow`, `celebration`, `grainOpacity`.
 
 ## Type
 
-Two families, used for different jobs.
+Five families, all Open Font License, bundled in `Tradewind/Resources/Fonts` and registered by the app
+and the widget extension both. Google Fonts' static cuts register each weight as its own family, so
+faces are addressed by PostScript name through [`Fonts`](../Shared/DesignSystem/Fonts.swift) rather
+than by family and weight — `Fonts.Sans.medium` is `"DMSans-Medium"`, not DM Sans at `.medium`.
 
-- **Serif** (`ui-serif` → New York) for names and headings. It reads like a beach-bar menu, which is
-  the right register for a thing about places worth walking to.
-- **Rounded** (`ui-rounded` → SF Rounded) for every number. Rounded digits are easier to read at a
-  glance, and the whole app is really one big number.
+- **Instrument Serif** — Spritz display. A masthead face; it reads like a travel magazine.
+- **DM Sans** — Spritz body, three weights.
+- **DM Mono** — every Spritz number.
+- **Space Grotesk** — Nomad display *and* body, three weights. One family doing both is part of why
+  that mood feels like a single instrument.
+- **JetBrains Mono** — every Nomad number, tabular.
 
-Numbers that change are `monospacedDigit()` so the readout does not jitter as digits swap. Eyebrow
-labels are tiny, uppercase and tracked out; they carry the state that would otherwise need a sentence
-("Turn right", "Golden hour", "Nearest first").
+`Fonts.verifyRegistration()` logs any face the bundle failed to register, because a missing font
+silently substitutes rather than failing, and a substituted display face is a different design.
+
+Eyebrow labels are tiny, uppercase and tracked out; they carry state that would otherwise need a
+sentence ("Turn right", "Golden hour", "Nearest first").
 
 ## Motion
 
-The rule is that motion should carry information, and where it cannot, it should be quiet.
+Motion should carry information, and where it cannot, it should be quiet.
 
 - The **arrow** is smoothed with an exponential filter on the circle — one step per frame along the
   shortest arc. Raw magnetometer values jitter; naïve averaging spins the arrow the long way round
@@ -71,8 +100,7 @@ The rule is that motion should carry information, and where it cannot, it should
 - The **glow** grows with proximity, so getting closer is visible without reading anything.
 - The **haptic pulse** accelerates as you approach — a warmer/colder game you can play with the phone
   in your pocket, which is the only way to navigate that does not involve staring at a screen.
-- The **backdrop** drifts very slowly on the hero screens only. Everywhere else it is static, because
-  an animated gradient behind a scrolling list is just battery.
+- The **backdrop does not move at all.** It used to drift. Neither mood permits it.
 - The **arrival** burst is the one unearned flourish, and it is allowed because arriving is the point.
 
 ## Craft details worth knowing
@@ -80,15 +108,24 @@ The rule is that motion should carry information, and where it cannot, it should
 - **The arrow is drawn, not a symbol.** `ArrowShape` is four quadratic curves — long tip, swept wings,
   deep tail notch — so the silhouette is the app's own and reads as direction even at 10×16 points in
   a widget. The app icon is generated from the same curve.
-- **Grain over every gradient.** Flat gradients band on OLED. `FilmGrain` lays a fixed dot field over
-  the backdrop from a seeded PRNG, so it never shimmers between redraws.
-- **A bottom scrim.** The backdrops run bright at their foot, which is where the floating bar sits.
-  Without the scrim the tab labels land light-on-light. This was found by looking at the rendered
-  preview, not by reading the code.
 - **The compass rose rotates with its letters**, as a real rose does, rather than counter-rotating
   them to stay upright.
-- **Placeholders are themed.** A photo that has not decoded yet shows a theme gradient and the spot's
-  emoji, not a grey box, so a half-loaded grid still looks intentional.
+- **The arrow screen belongs to neither mood.** A photograph is the background, so the compass plate
+  goes dark and translucent and the type goes white in both moods. A cream card over a photo reads as
+  a hole punched in the picture, and a cream scrim washes the photo out.
+- **Placeholders are themed.** A photo that has not decoded yet shows a themed surface carrying
+  whichever glyph you gave the spot, not a grey box, so a half-loaded grid still looks intentional.
+
+### Three things the moods cost us
+
+Re-skinning removed features rather than restyling them, because the moods' own rules forbid them:
+
+- **The mesh-gradient backdrop is gone.** Spritz allows one gradient per screen and spends it on the
+  hero; Nomad allows none. `ThemedBackground` is now a flat canvas plus optional grain.
+- **The bottom scrim is gone.** It existed because the old backdrops ran bright under the floating
+  bar. A flat canvas does not, so the scrim had nothing to fix.
+- **The time-of-day tint is gone.** A colour wash drifting over the canvas is decoration in a mood
+  that permits none. `TimeOfDay` survives only for the greeting copy.
 
 ## Honest limits
 
@@ -99,16 +136,18 @@ The rule is that motion should carry information, and where it cannot, it should
   update throttling. It counts the distance down, which is the useful part.
 - **Golden hour is computed, not fetched.** Accurate to a minute or two, which is far better than the
   decision it informs. There is no weather.
-- **Light mode is not supported**, as above.
+- **Each mood forces its own scheme**, so the app does not follow the system appearance. Picking the
+  look is picking light or dark; that is the trade the moods ask for.
 
 ## Where things live
 
 ```
 Shared/DesignSystem/
-  Theme.swift              tokens and the six palettes
-  ThemedBackground.swift   mesh gradient, iOS 17 fallback, grain, time-of-day tint, bottom scrim
+  Theme.swift              structural and colour tokens, and the two moods
+  Fonts.swift              PostScript names for the twelve bundled faces, and a registration check
+  Typography.swift         the scale, as a Theme extension
+  ThemedBackground.swift   flat canvas, grain, HeroPanel, TimeOfDay
   CompassRose.swift        ArrowShape, DirectionArrow, CompassRose, MiniArrow, RadarRings
   CelebrationView.swift    arrival confetti and stamp
-  Components.swift         glass card, pills, chips, buttons, empty states
-  Typography.swift         the type scale
+  Components.swift         Surface, pills, chips, buttons, stat tiles, empty states
 ```

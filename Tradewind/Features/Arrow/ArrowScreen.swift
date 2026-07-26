@@ -304,7 +304,9 @@ struct ArrowScreen: View {
     /// The one line of small print, when there is something honest to say about the reading.
     @ViewBuilder
     private var statusNote: some View {
-        if !engine.headingIsUsable {
+        if engine.hasArrived {
+            noteText(arrivalNote, .white.opacity(0.72))
+        } else if !engine.headingIsUsable {
             noteText("No compass reading — showing the direction from north instead.", .white.opacity(0.7))
         } else if location.needsCalibration {
             noteText(
@@ -313,6 +315,19 @@ struct ArrowScreen: View {
             )
         } else if let accuracy = engine.horizontalAccuracy, accuracy > 40 {
             noteText("Rough fix — accurate to about \(Int(accuracy)) m", .white.opacity(0.7))
+        }
+    }
+
+    /// Arrival is the one moment the screen can say something other than a measurement.
+    private var arrivalNote: String {
+        guard let capturedAt = destination.spot?.capturedAt else {
+            return "Close enough to see it."
+        }
+        let days = Calendar.current.dateComponents([.day], from: capturedAt, to: Date()).day ?? 0
+        switch days {
+        case ..<1: return "Close enough to see it. You photographed this today."
+        case 1: return "Close enough to see it. You photographed this yesterday."
+        default: return "Close enough to see it. You photographed this spot \(days) days ago."
         }
     }
 
@@ -335,7 +350,30 @@ struct ArrowScreen: View {
 
     // MARK: - Actions
 
+    @ViewBuilder
     private var actions: some View {
+        if engine.hasArrived {
+            arrivalActions
+        } else {
+            trackingActions
+        }
+    }
+
+    /// You are standing on it. Offering to track it on the Lock Screen is the one thing that no
+    /// longer makes sense, so arrival replaces the bar rather than adding to it.
+    private var arrivalActions: some View {
+        VStack(spacing: 10) {
+            PrimaryButton(title: "Take another photo here", symbol: "camera.fill") {
+                if liveActivity.isRunning { liveActivity.end() }
+                router.isShowingCapture = true
+            }
+            SecondaryButton(title: "Back to my spots", symbol: "chevron.left", onPhoto: true) {
+                onClose()
+            }
+        }
+    }
+
+    private var trackingActions: some View {
         HStack(spacing: 10) {
             if liveActivity.isSupported {
                 if liveActivity.isRunning, liveActivity.activeSpotID == destination.id {
