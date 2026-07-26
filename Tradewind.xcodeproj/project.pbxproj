@@ -227,13 +227,13 @@
 		057B2B13D3910DC9F0EF103E /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
-				127EB6DA68512A8778290CCE /* CelebrationView.swift */,
-				28EE228B0E82EE79F5B2A471 /* Color+Hex.swift */,
-				EC50BB132511DD27CF33084F /* CompassRose.swift */,
-				28CC6AF057CEA5C82A1D4072 /* Components.swift */,
-				42B0089C11365983AE7DC58E /* Theme.swift */,
-				E3BD7F86A6685EEF80A04542 /* ThemedBackground.swift */,
-				F22EE0F37F4C7351F5B071BE /* Typography.swift */,
+				669865820C1E85D45494FA8B /* CelebrationView.swift */,
+				8BBEFA914A87FEDCD2AE9B73 /* Color+Hex.swift */,
+				3ECC46C7EBA4B47446FBE492 /* CompassRose.swift */,
+				3005062DF44B3707F98F0431 /* Components.swift */,
+				7C3CF38AB46BA4492E924F86 /* Theme.swift */,
+				1F65EAD4FADE4B8948D71476 /* ThemedBackground.swift */,
+				2E67551FE9EE3B6B4C726D30 /* Typography.swift */,
 			);
 			path = DesignSystem;
 			sourceTree = "<group>";
@@ -241,8 +241,8 @@
 		6C22704B96744FC7C483BB2E /* Intents */ = {
 			isa = PBXGroup;
 			children = (
-				673689B0A2EF5F62A43B8B61 /* SpotEntity.swift */,
-				AFA68904E3EE2A33387715B9 /* TradewindIntents.swift */,
+				B3C85D91B76E936917E65F7F /* SpotEntity.swift */,
+				70E8C7B6738C872C85942746 /* TradewindIntents.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -250,9 +250,9 @@
 		710A2E0D97E149E757491003 /* Math */ = {
 			isa = PBXGroup;
 			children = (
-				EC78FCF3937E2BD8B0377C11 /* BearingMath.swift */,
-				F6F4F1720A7EF6FCFB0D7D62 /* DistanceFormatting.swift */,
-				DB82003EF87BE7638747C8AA /* SolarTimes.swift */,
+				AE9F67A63027DF23D5953DAD /* BearingMath.swift */,
+				21859BC563A2335055087A2A /* DistanceFormatting.swift */,
+				A0DC110DA28F22776CC3C17F /* SolarTimes.swift */,
 			);
 			path = Math;
 			sourceTree = "<group>";
@@ -260,7 +260,7 @@
 		11C0FD1C795422D6CECB39AF /* Metadata */ = {
 			isa = PBXGroup;
 			children = (
-				29687D3263562A3735859BF1 /* GPSMetadata.swift */,
+				1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */,
 			);
 			path = Metadata;
 			sourceTree = "<group>";
@@ -268,9 +268,9 @@
 		C37A2380280B96020CAF9757 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				E23B874D11ECF510A28F5EE0 /* AppModelContainer.swift */,
-				4FAAF3C63733BABC3399023F /* Spot.swift */,
-				5B1B827B1D8DC97186D019AA /* Trip.swift */,
+				5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */,
+				48F6EC23B5ED8212D4AF9110 /* Spot.swift */,
+				681735495DF5481567AA0F94 /* Trip.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -278,16 +278,16 @@
 		DB9A13CCC579D0D97779DFC4 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				2CBFC331587BE6541EE9BD62 /* AppSettings.swift */,
-				0EAF9FA1346C06D48360D3B3 /* CompassEngine.swift */,
-				6343B17B40664D51901C055E /* CurrentLocationProbe.swift */,
-				BCF1DC7C025C4F9230D852A0 /* FeedbackService.swift */,
-				7061F3D274E19C853304B584 /* GeocodeService.swift */,
-				956C06F8CFA824CC5B592674 /* HeadingActivityAttributes.swift */,
-				9D56E96A517A07D393A5BC3D /* LiveActivityService.swift */,
-				CCEB3595A9F9E925FA2F8AE8 /* LocationService.swift */,
-				1000EA45DD344DF97574F7F2 /* PhotoService.swift */,
-				E7FF742B0694B3DBB6859BC7 /* SpotStore.swift */,
+				6DB5902A9462F9A234CB2CAD /* AppSettings.swift */,
+				80D41BE49CF4EB2662ECD36F /* CompassEngine.swift */,
+				74C9A3535CC4C62DFA561E2F /* CurrentLocationProbe.swift */,
+				82942F2172A5840F6A232A00 /* FeedbackService.swift */,
+				FAF4F427E16C9C7491A16A37 /* GeocodeService.swift */,
+				3D89190DF62BA79BB40412AC /* HeadingActivityAttributes.swift */,
+				CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */,
+				69A3D8BCDBC98AF520738780 /* LocationService.swift */,
+				F923B02339B7B16EAE20164E /* PhotoService.swift */,
+				797F7DFA5C92376EC9F8433F /* SpotStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -295,10 +295,10 @@
 		53839AC729C28CA0E2DD503F /* Snapshot */ = {
 			isa = PBXGroup;
 			children = (
-				4979F3C6E400FE1134C83487 /* AppGroup.swift */,
-				DBCFE114C423834D1D4EAC94 /* PendingAction.swift */,
-				9FEFB7D6AA4A02DA3C6F0A6C /* SharedSnapshot.swift */,
-				5841DF5FCEB1F05E8DE6B41D /* SharedSnapshotStore.swift */,
+				C07064A66E87DD3F7B94CB72 /* AppGroup.swift */,
+				B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */,
+				CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */,
+				2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */,
 			);
 			path = Snapshot;
 			sourceTree = "<group>";
@@ -320,9 +320,9 @@
 		C89EE9DE6D4F53AB9EC5F139 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				5903FD62A01190867E40BED9 /* AppRouter.swift */,
-				870618F195A2509FB38E0B90 /* RootView.swift */,
-				F71CEB007ED6B6DEAD72C50B /* TradewindApp.swift */,
+				C172965368D30FF21C48BE0C /* AppRouter.swift */,
+				127FF2ED17335A850D36EA5C /* RootView.swift */,
+				B3C5C8FBF5162236684DD8F8 /* TradewindApp.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -330,7 +330,7 @@
 		31A8BDC27CA1E31F8781A370 /* Arrow */ = {
 			isa = PBXGroup;
 			children = (
-				0A6C9358975EA58D0997C13A /* ArrowScreen.swift */,
+				29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */,
 			);
 			path = Arrow;
 			sourceTree = "<group>";
@@ -338,10 +338,10 @@
 		6EE325A0EE040CB59B37FC0E /* Capture */ = {
 			isa = PBXGroup;
 			children = (
-				5CDA5FA3853C351DAFFF25F6 /* CameraController.swift */,
-				A41BF655D8FDC1E88D16FA61 /* CameraPreview.swift */,
-				76AE5B3133AACF2BCE66EE4B /* CameraUnavailableView.swift */,
-				E43F65A35FA92441DB7AF4B8 /* CaptureFlowView.swift */,
+				1D4BDF8889B8BE769FFCDE6F /* CameraController.swift */,
+				3893AC3DDF94190614DD2398 /* CameraPreview.swift */,
+				717901D38B045D28E6404BF9 /* CameraUnavailableView.swift */,
+				9AD059698BCA235025429ECB /* CaptureFlowView.swift */,
 			);
 			path = Capture;
 			sourceTree = "<group>";
@@ -349,7 +349,7 @@
 		26C2D16131A59D579F926EF5 /* Detail */ = {
 			isa = PBXGroup;
 			children = (
-				5AC4CB4B4AB947960FC7B727 /* SpotDetailView.swift */,
+				77D0E79204571C921A7A7101 /* SpotDetailView.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";
@@ -357,7 +357,7 @@
 		922D7C734053F810FCF73B47 /* Gallery */ = {
 			isa = PBXGroup;
 			children = (
-				FCA78CC813A65BBE845C4A85 /* SpotsGalleryView.swift */,
+				F6A54010EF058332E20DC83D /* SpotsGalleryView.swift */,
 			);
 			path = Gallery;
 			sourceTree = "<group>";
@@ -365,7 +365,7 @@
 		65B70653815C0A0A571B4167 /* Map */ = {
 			isa = PBXGroup;
 			children = (
-				290319ABD32BC8B11F8BAA20 /* SpotsMapView.swift */,
+				BF5E11EBE3E0F808897A84C7 /* SpotsMapView.swift */,
 			);
 			path = Map;
 			sourceTree = "<group>";
@@ -373,7 +373,7 @@
 		54F4C86A61841E394B68AAF4 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
-				B4D7B6E40B6883C9BCE00965 /* OnboardingView.swift */,
+				4787D2CD7FDEB9046E50FA8D /* OnboardingView.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -381,7 +381,7 @@
 		146DA061EC720037AE858198 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				DDD9382E8B2B3FDDCFBFE951 /* SettingsView.swift */,
+				07856BDEC13368DD332D0D4D /* SettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -389,9 +389,9 @@
 		4CD0585F2DAA74E9E03F427D /* Support */ = {
 			isa = PBXGroup;
 			children = (
-				B80AC112D52B5430A76C8F03 /* PhotoView.swift */,
-				3347FFEC98C79797176F92D4 /* PostcardView.swift */,
-				FAAE31C3E9382AD6F1B63979 /* SpotRanking.swift */,
+				EB55D7A10E434A3CECB17477 /* PhotoView.swift */,
+				F34D62CF5C390B282A698CE9 /* PostcardView.swift */,
+				C49C155B03BCAE867DAA1C1B /* SpotRanking.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -399,7 +399,7 @@
 		D826C288A6F31208BFFFF43E /* Trips */ = {
 			isa = PBXGroup;
 			children = (
-				451A81368F56F1EA4BFED072 /* TripsView.swift */,
+				57139ABD337D0B6545719EFF /* TripsView.swift */,
 			);
 			path = Trips;
 			sourceTree = "<group>";
@@ -423,7 +423,7 @@
 		05D2E4AB7BDDDE076E0292B2 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				4CC3BDA09A27387A51E71C59 /* Assets.xcassets */,
+				98A84084E4E4B4CEBD6BDFDA /* Assets.xcassets */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -434,8 +434,8 @@
 				C89EE9DE6D4F53AB9EC5F139 /* App */,
 				CACF3340443098EAD751E76F /* Features */,
 				05D2E4AB7BDDDE076E0292B2 /* Resources */,
-				EBC7778712682EC2F9F9A647 /* Info.plist */,
-				EB6CFB798467046A1759B7A3 /* Tradewind.entitlements */,
+				7D55C9E563392C7C775D84C1 /* Info.plist */,
+				8A24B8B4BAD990906AD7FC57 /* Tradewind.entitlements */,
 			);
 			path = Tradewind;
 			sourceTree = "<group>";
@@ -443,11 +443,11 @@
 		F5E03DA4C6AA025D77291CB0 /* TradewindTests */ = {
 			isa = PBXGroup;
 			children = (
-				352C950728486FC54D99738C /* BearingMathTests.swift */,
-				F7E6993A46D2D7F99B50A5D3 /* DistanceFormattingTests.swift */,
-				4664BFD85D94E1090889EDEF /* GPSMetadataTests.swift */,
-				3506DF9EB1BF9765FC3417E6 /* SharedSnapshotTests.swift */,
-				00B23EFB18ED821818537DA3 /* SolarTimesTests.swift */,
+				6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */,
+				1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */,
+				1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */,
+				9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */,
+				5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */,
 			);
 			path = TradewindTests;
 			sourceTree = "<group>";
@@ -455,13 +455,13 @@
 		1D196B0D8C943B8A8630641F /* TradewindWidgets */ = {
 			isa = PBXGroup;
 			children = (
-				9AAF8AEDDDC21F92F8AD56C7 /* HeadingLiveActivity.swift */,
-				EBC7778712682EC2F9F9A647 /* Info.plist */,
-				D66C4041BC378B45CC0C62BB /* NearestSpotsWidget.swift */,
-				AF9170CA3EA2C26DE0B2BB07 /* SpotCompassWidget.swift */,
-				277A88EE6F20939A5BF2C516 /* TradewindWidgetBundle.swift */,
-				D3D1B711DA78CEFB7E6B5FAC /* TradewindWidgets.entitlements */,
-				A001EE032A2A4FF80A9AA7FB /* WidgetSupport.swift */,
+				125CE65EDDF92126FF28520B /* HeadingLiveActivity.swift */,
+				8176FC86D02FF25D92027C4E /* Info.plist */,
+				5F88A74DF2A4F4714F376064 /* NearestSpotsWidget.swift */,
+				3F5018EF8FEAFADD83CAFF7F /* SpotCompassWidget.swift */,
+				EA9AADACEDE836AC19D64BC4 /* TradewindWidgetBundle.swift */,
+				29CA4F1DBD30E06D53F86243 /* TradewindWidgets.entitlements */,
+				FB15E5E5069964758663FC41 /* WidgetSupport.swift */,
 			);
 			path = TradewindWidgets;
 			sourceTree = "<group>";

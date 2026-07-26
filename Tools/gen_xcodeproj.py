@@ -232,19 +232,23 @@ def collect_file_refs(targets: list[Target]) -> list[str]:
 class GroupNode:
     name: str
     children: dict[str, "GroupNode"] = field(default_factory=dict)
+    # Full repo-relative paths, not basenames: file reference IDs are derived from the full
+    # path, so a group holding basenames would emit child IDs that match nothing and Xcode
+    # would look for every source at the repository root.
     files: list[str] = field(default_factory=list)
 
-    def insert(self, rel_path: str) -> None:
+    def insert(self, rel_path: str, full_path: str | None = None) -> None:
+        full = full_path if full_path is not None else rel_path
         parts = rel_path.split("/")
         if len(parts) == 1:
-            self.files.append(rel_path)
+            self.files.append(full)
             return
         head, rest = parts[0], "/".join(parts[1:])
         child = self.children.get(head)
         if child is None:
             child = GroupNode(head)
             self.children[head] = child
-        child.insert(rest)
+        child.insert(rest, full)
 
 
 def group_tree(paths: list[str]) -> GroupNode:
@@ -653,6 +657,45 @@ def generate() -> str:
     return w.text()
 
 
+def validate(pbxproj: str, expected_paths: list[str]) -> None:
+    """Checks the two integrity properties the pbxproj format does not check itself.
+
+    Nothing validates a pbxproj. An ID referenced by a group or a build phase that matches no
+    emitted object is silently ignored, and every affected file then resolves relative to the
+    project root instead of its folder — which Xcode reports, minutes later and a long way from
+    the cause, as "Build input files cannot be found". Both properties are cheap to assert here.
+    """
+    import re
+
+    def section(name: str) -> str:
+        start = pbxproj.find(f"/* Begin {name} section */")
+        end = pbxproj.find(f"/* End {name} section */")
+        return pbxproj[start:end] if start >= 0 and end > start else ""
+
+    defined = set(re.findall(r"^\t\t([0-9A-F]{24}) ", pbxproj, flags=re.MULTILINE))
+    referenced = set(re.findall(r"\b([0-9A-F]{24})\b", pbxproj))
+
+    # 1. Nothing points at an object that was never emitted.
+    dangling = referenced - defined
+    if dangling:
+        raise SystemExit(
+            f"generated project references {len(dangling)} undefined object(s): "
+            + ", ".join(sorted(dangling)[:8])
+        )
+
+    # 2. Every file reference lives in some group, so its path resolves through that group's
+    #    folder rather than through the project root.
+    groups = section("PBXGroup")
+    orphans = [
+        path for path in expected_paths if oid("fileref", path) not in groups
+    ]
+    if orphans:
+        raise SystemExit(
+            f"{len(orphans)} file reference(s) are not in any group, so their paths would "
+            f"resolve at the project root: {orphans[:5]}"
+        )
+
+
 SCHEME_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1600"
@@ -755,6 +798,7 @@ WORKSPACE_DATA = """<?xml version="1.0" encoding="UTF-8"?>
 
 def main() -> int:
     pbxproj = generate()
+    validate(pbxproj, collect_file_refs(build_targets()))
 
     if os.path.isdir(PROJECT_DIR):
         shutil.rmtree(PROJECT_DIR)
