@@ -16,6 +16,7 @@ struct ThemedBackground: View {
     var body: some View {
         ZStack {
             base
+            bottomScrim
             if timeTint {
                 TimeOfDay.current.overlay(for: theme)
                     .blendMode(.plusLighter)
@@ -25,6 +26,23 @@ struct ThemedBackground: View {
                 .allowsHitTesting(false)
         }
         .ignoresSafeArea()
+    }
+
+    /// Every backdrop runs warm and bright at its foot — which is exactly where the floating bar
+    /// sits. Without this the tab labels land light-on-light and effectively disappear. Deep at the
+    /// top, the sunset band through the middle, and deep again at the bottom also simply looks
+    /// better: like watching the light from inside a dark room.
+    private var bottomScrim: some View {
+        LinearGradient(
+            stops: [
+                .init(color: .clear, location: 0.70),
+                .init(color: theme.deepest.opacity(0.50), location: 0.88),
+                .init(color: theme.deepest.opacity(0.80), location: 1.0),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .allowsHitTesting(false)
     }
 
     @ViewBuilder

@@ -191,11 +191,15 @@ struct CompassRose: View {
     }
 
     /// Compass degrees to a point on the ring, with zero at the top rather than at three o'clock.
+    ///
+    /// The trigonometry is done in `Double` and converted once at the end: mixing `Double` and
+    /// `CGFloat` in the same expression leaves `cos` and `sin` genuinely ambiguous.
     private func point(on centre: CGPoint, radius: CGFloat, degrees: Double) -> CGPoint {
         let radians = (degrees - 90) * .pi / 180
+        let distance = Double(radius)
         return CGPoint(
-            x: centre.x + cos(radians) * radius,
-            y: centre.y + sin(radians) * radius
+            x: centre.x + CGFloat(cos(radians) * distance),
+            y: centre.y + CGFloat(sin(radians) * distance)
         )
     }
 }

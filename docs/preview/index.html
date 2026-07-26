@@ -1,0 +1,1939 @@
+<title>Tradewind — screen and theme preview</title>
+
+<!--
+  Source template for docs/preview/index.html.
+
+  Run `python3 Tools/build_preview.py` to inline the painted placeholder images and write the
+  self-contained page. Every colour here is copied from Shared/DesignSystem/Theme.swift; if a
+  palette changes there, change it here too — this file is the review surface for those tokens,
+  so the two disagreeing would defeat the point.
+-->
+
+<style>
+  /* ---------------------------------------------------------------------------------------
+     The page chrome is a studio: quiet, so the six palettes on the phone can be judged
+     against something neutral. The one thing it borrows from the theme under inspection is
+     the accent, so the whole surface leans into whatever is being reviewed.
+     --------------------------------------------------------------------------------------- */
+
+  :root {
+    color-scheme: light dark;
+
+    /* Studio neutrals — light. A warm paper, not white, so the tropical palettes do not
+       fluoresce against it. */
+    --studio-ground: #f1ede5;
+    --studio-panel: #fbf9f5;
+    --studio-line: #ddd6c9;
+    --studio-ink: #1b1d23;
+    --studio-muted: #6d6a63;
+    --studio-shadow: rgba(60, 50, 35, 0.16);
+
+    /* Type roles: a serif for headings (as in the app), rounded for figures (as in the app),
+       and a monospace utility face for the spec-sheet metadata. */
+    --serif: ui-serif, "New York", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --rounded: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, sans-serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+    /* Theme tokens, replaced by JS when a theme is picked. */
+    --accent: #ffb25b;
+    --accent-soft: #ff5e93;
+    --bg0: #250e4b;
+    --bg1: #9a2f6e;
+    --bg2: #ff8c42;
+    --ink: #fff4e8;
+    --ink-muted: #dfb4c0;
+    --card: #5a1c68;
+    --glow: #ffa24c;
+    --arrow-a: #ff6b35;
+    --arrow-b: #ffb25b;
+    --arrow-c: #ffe9a8;
+    --grain: 0.05;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --studio-ground: #0b0d12;
+      --studio-panel: #14171f;
+      --studio-line: #262b36;
+      --studio-ink: #e9edf4;
+      --studio-muted: #8b94a6;
+      --studio-shadow: rgba(0, 0, 0, 0.55);
+    }
+  }
+
+  /* The viewer's own toggle must win over the OS preference, in both directions. */
+  :root[data-theme="dark"] {
+    --studio-ground: #0b0d12;
+    --studio-panel: #14171f;
+    --studio-line: #262b36;
+    --studio-ink: #e9edf4;
+    --studio-muted: #8b94a6;
+    --studio-shadow: rgba(0, 0, 0, 0.55);
+  }
+
+  :root[data-theme="light"] {
+    --studio-ground: #f1ede5;
+    --studio-panel: #fbf9f5;
+    --studio-line: #ddd6c9;
+    --studio-ink: #1b1d23;
+    --studio-muted: #6d6a63;
+    --studio-shadow: rgba(60, 50, 35, 0.16);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--studio-ground);
+    color: var(--studio-ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 24px 72px;
+  }
+
+  /* ---- Masthead ---- */
+
+  header.masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--studio-line);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(30px, 4.4vw, 46px);
+    font-weight: 600;
+    line-height: 1.05;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    margin: 10px 0 0;
+    max-width: 60ch;
+    color: var(--studio-muted);
+    font-size: 15px;
+  }
+
+  .masthead-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.9;
+    color: var(--studio-muted);
+    text-align: right;
+  }
+
+  .masthead-meta b { color: var(--studio-ink); font-weight: 600; }
+
+  /* ---- Workbench ---- */
+
+  .workbench {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 34px;
+    margin-top: 32px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .workbench { grid-template-columns: 1fr; }
+    .rail { position: static !important; }
+  }
+
+  .rail {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .rail h2 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--studio-muted);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+
+  /* Theme swatches: each one shows its real gradient, so the list is the palette. */
+  .swatches { display: flex; flex-direction: column; gap: 7px; }
+
+  .swatch {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 11px;
+    align-items: center;
+    padding: 7px;
+    border: 1px solid var(--studio-line);
+    border-radius: 12px;
+    background: var(--studio-panel);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    transition: border-color 0.16s, transform 0.16s;
+  }
+
+  .swatch:hover { transform: translateX(2px); }
+  .swatch[aria-pressed="true"] { border-color: var(--accent); }
+
+  .swatch .chip {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .swatch .chip::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 78% 18%, var(--chip-accent) 0%, transparent 62%);
+    opacity: 0.85;
+  }
+
+  .swatch .name { font-size: 13px; font-weight: 600; line-height: 1.25; }
+  .swatch .tag {
+    font-size: 10.5px;
+    color: var(--studio-muted);
+    line-height: 1.3;
+    display: block;
+  }
+
+  /* Screen list, numbered by the order you'd meet them in the app. */
+  .screens { display: flex; flex-direction: column; gap: 3px; }
+
+  .screen-btn {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--studio-ink);
+    font: inherit;
+    font-size: 13.5px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.14s;
+  }
+
+  .screen-btn:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+  .screen-btn[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    font-weight: 600;
+  }
+
+  .screen-btn .idx {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--studio-muted);
+    min-width: 14px;
+  }
+
+  .screen-btn[aria-pressed="true"] .idx { color: var(--accent); }
+
+  /* ---- Stage ---- */
+
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+  }
+
+  .stage-floor {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 34px 0 44px;
+    border-radius: 26px;
+    background:
+      radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%),
+      var(--studio-panel);
+    border: 1px solid var(--studio-line);
+  }
+
+  /* ---- The phone ---- */
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    border-radius: 54px;
+    padding: 11px;
+    background: linear-gradient(160deg, #2b2f38, #0e1015 40%, #23262e);
+    box-shadow:
+      0 40px 80px -20px var(--studio-shadow),
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    flex: 0 0 auto;
+  }
+
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 44px;
+    overflow: hidden;
+    background: var(--bg0);
+    color: var(--ink);
+    font-family: var(--sans);
+    isolation: isolate;
+  }
+
+  /* The app's backdrop: a layered approximation of the SwiftUI mesh gradient. */
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    /* Stop order matches Theme.backdrop: deepest at the top, lightest at the foot. The final
+       layer is ThemedBackground's bottom scrim, which keeps the floating bar legible over the
+       warm end of the gradient. */
+    background:
+      linear-gradient(to bottom, transparent 70%,
+        color-mix(in srgb, var(--bg0) 50%, transparent) 88%,
+        color-mix(in srgb, var(--bg0) 80%, transparent) 100%),
+      radial-gradient(80% 55% at 82% 6%, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 62%),
+      radial-gradient(70% 50% at 12% 84%, color-mix(in srgb, var(--accent-soft) 40%, transparent) 0%, transparent 60%),
+      linear-gradient(178deg, var(--bg0) 0%, var(--bg1) 46%, var(--bg2) 100%);
+  }
+
+  /* Film grain, matching FilmGrain in the app. Inline SVG turbulence: no network request. */
+  .backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: var(--grain);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .status-bar {
+    position: relative;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 30px 0;
+    font-family: var(--rounded);
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 3;
+  }
+
+  .status-bar .island {
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 118px;
+    height: 33px;
+    border-radius: 20px;
+    background: #000;
+  }
+
+  .status-icons { display: flex; gap: 5px; align-items: center; opacity: 0.9; }
+
+  .app { position: relative; z-index: 2; height: calc(100% - 52px); overflow: hidden; }
+  .app.scrolls { overflow-y: auto; scrollbar-width: none; }
+  .app.scrolls::-webkit-scrollbar { display: none; }
+
+  /* ---- App type scale, mirroring Typography.swift ---- */
+
+  .app-title { font-family: var(--serif); font-size: 34px; font-weight: 600; line-height: 1.06; }
+  .app-h2 { font-family: var(--serif); font-size: 23px; font-weight: 600; }
+  .app-h3 { font-family: var(--serif); font-size: 17px; font-weight: 600; }
+  .app-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .app-body { font-size: 14.5px; }
+  .app-caption { font-size: 12px; color: var(--ink-muted); }
+  .app-label { font-size: 11px; font-weight: 600; }
+  .num { font-family: var(--rounded); font-variant-numeric: tabular-nums; }
+
+  /* ---- Reusable app furniture ---- */
+
+  .row { display: flex; align-items: center; }
+  .pad { padding: 0 18px; }
+
+  .glass {
+    background: color-mix(in srgb, var(--card) 55%, rgba(255, 255, 255, 0.06));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pill.prominent {
+    background: var(--accent);
+    color: var(--bg0);
+    border-color: transparent;
+  }
+
+  .btn-primary {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--bg0);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--glow) 45%, transparent);
+  }
+
+  .btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+  }
+
+  .arrow-svg { display: block; overflow: visible; }
+  .arrow-svg path.body { fill: url(#arrowGradient); }
+
+  /* ---- Bottom bar ---- */
+
+  .bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    z-index: 4;
+  }
+
+  .bar-strip {
+    display: flex;
+    gap: 2px;
+    padding: 5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(14px);
+  }
+
+  .bar-tab {
+    width: 62px;
+    height: 46px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 15px;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--ink-muted);
+  }
+
+  .bar-tab.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+  .bar-tab svg { width: 17px; height: 17px; }
+
+  .bar-shutter {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg0);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--glow) 50%, transparent);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+  }
+
+  .bar-shutter svg { width: 21px; height: 21px; }
+
+  /* ---- Cards ---- */
+
+  .hero-card {
+    position: relative;
+    height: 292px;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.36);
+  }
+
+  .hero-card img,
+  .grid-card img,
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hero-card .scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 34%, rgba(0, 0, 0, 0.28) 62%, rgba(0, 0, 0, 0.82) 100%);
+  }
+
+  .hero-card .caption { position: absolute; inset: auto 0 0 0; padding: 17px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+
+  .grid-card {
+    border-radius: 20px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--card) 45%, rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .grid-card .ph { height: 118px; position: relative; }
+  .grid-card .meta { padding: 11px; }
+
+  .thumb { border-radius: 13px; overflow: hidden; flex: 0 0 auto; }
+
+  /* ---- Compass screen ---- */
+
+  .rose-wrap {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    display: grid;
+    place-items: center;
+  }
+
+  .rose {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+  }
+
+  .rose.on { box-shadow: 0 0 26px 2px var(--glow); }
+
+  .hero-distance {
+    font-family: var(--rounded);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 0.9;
+  }
+
+  /* ---- Widgets screen ---- */
+
+  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .widget {
+    border-radius: 22px;
+    padding: 13px;
+    background: linear-gradient(165deg, var(--bg1), var(--bg0));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .widget::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(70% 60% at 84% 8%, color-mix(in srgb, var(--accent) 32%, transparent), transparent 66%);
+  }
+
+  .widget > * { position: relative; }
+  .widget.small { aspect-ratio: 1; }
+  .widget.wide { grid-column: span 2; }
+
+  .lockscreen {
+    border-radius: 18px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .ring {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--rounded);
+    font-size: 14px;
+    font-weight: 700;
+    background:
+      conic-gradient(var(--accent) 0turn 0.62turn, rgba(255, 255, 255, 0.2) 0.62turn 1turn);
+    position: relative;
+  }
+
+  .ring::after {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: var(--bg0);
+  }
+
+  .ring span { position: relative; z-index: 1; }
+
+  /* ---- Onboarding ---- */
+
+  .dots { display: flex; gap: 6px; justify-content: center; }
+  .dots i {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+    display: block;
+  }
+  .dots i.on { width: 22px; background: var(--accent); }
+
+  /* ---- Settings ---- */
+
+  .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+  .theme-tile {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .theme-tile.on { border-color: var(--accent); border-width: 2px; }
+  .theme-tile .top { height: 78px; position: relative; display: grid; place-items: center; }
+  .theme-tile .bottom { padding: 9px; background: var(--bg0); }
+
+  .toggle {
+    width: 42px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--accent);
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .toggle::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .toggle.off { background: rgba(255, 255, 255, 0.22); }
+  .toggle.off::after { right: auto; left: 3px; }
+
+  /* ---- Map ---- */
+
+  .map-plate {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--accent-soft) 22%, transparent), transparent 55%),
+      linear-gradient(150deg, #21303a, #16202a 55%, #101820);
+  }
+
+  .map-plate::before {
+    /* A hint of coastline and streets so it reads as a map, not a gradient. */
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.4;
+    background-image:
+      linear-gradient(115deg, transparent 46%, rgba(255, 255, 255, 0.16) 46.4%, transparent 47%),
+      linear-gradient(72deg, transparent 62%, rgba(255, 255, 255, 0.1) 62.3%, transparent 63%),
+      radial-gradient(closest-side at 70% 74%, rgba(90, 160, 175, 0.5), transparent);
+  }
+
+  .map-pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .map-pin .disc {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--accent);
+    padding: 3px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  }
+
+  .map-pin.sel .disc { width: 54px; height: 54px; box-shadow: 0 0 16px var(--glow); }
+  .map-pin .disc img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .map-pin .stem {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--accent);
+  }
+
+  .rings-overlay {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .rings-overlay i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 50%;
+    display: block;
+  }
+
+  /* ---- Spec strip under the phone ---- */
+
+  .spec {
+    width: 100%;
+    max-width: 720px;
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+
+  @media (max-width: 700px) { .spec { grid-template-columns: 1fr; } }
+
+  .spec h3 {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+
+  .spec p { margin: 0; color: var(--studio-muted); font-size: 14px; max-width: 58ch; }
+
+  .spec ul { margin: 10px 0 0; padding-left: 18px; color: var(--studio-muted); font-size: 13.5px; }
+  .spec li { margin-bottom: 4px; }
+
+  .files {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.85;
+    color: var(--studio-muted);
+    background: var(--studio-panel);
+    border: 1px solid var(--studio-line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    overflow-x: auto;
+  }
+
+  .files b {
+    display: block;
+    color: var(--studio-ink);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 9.5px;
+    margin-bottom: 4px;
+  }
+
+  /* ---- Palette table ---- */
+
+  .palette {
+    width: 100%;
+    max-width: 720px;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  .palette caption {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--studio-muted);
+    padding-bottom: 8px;
+  }
+
+  .palette th,
+  .palette td {
+    text-align: left;
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--studio-line);
+  }
+
+  .palette th { font-weight: 600; font-size: 11px; color: var(--studio-muted); }
+  .palette td.hex { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .palette .dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    display: inline-block;
+    vertical-align: -3px;
+    margin-right: 8px;
+    border: 1px solid rgba(128, 128, 128, 0.4);
+  }
+
+  footer.note {
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--studio-line);
+    color: var(--studio-muted);
+    font-size: 13px;
+    max-width: 68ch;
+  }
+
+  footer.note code {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--studio-ink);
+  }
+
+  button:focus-visible,
+  .swatch:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Design preview · not a build</p>
+      <h1>Tradewind, screen by screen</h1>
+      <p class="standfirst">
+        Every screen in the app, in each of the six themes. These are HTML mockups of the SwiftUI
+        views — same palettes, same type pairing, same layout — built so the design can be judged
+        and corrected before anyone opens Xcode.
+      </p>
+    </div>
+    <div class="masthead-meta">
+      <div><b>iOS 17+</b> · SwiftUI · WidgetKit</div>
+      <div>6 themes · 9 screens</div>
+      <div>Palettes from <b>Theme.swift</b></div>
+    </div>
+  </header>
+
+  <div class="workbench">
+    <nav class="rail" aria-label="Preview controls">
+      <div>
+        <h2>Theme</h2>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <div>
+        <h2>Screen</h2>
+        <div class="screens" id="screens"></div>
+      </div>
+    </nav>
+
+    <div class="stage">
+      <div class="stage-floor">
+        <div class="phone">
+          <div class="screen" id="screen">
+            <div class="backdrop"></div>
+            <div class="status-bar">
+              <span class="num" id="clock">9:41</span>
+              <span class="island"></span>
+              <span class="status-icons">
+                <svg width="17" height="11" viewBox="0 0 17 11" aria-hidden="true">
+                  <rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor" />
+                  <rect x="4.5" y="5" width="3" height="6" rx="1" fill="currentColor" />
+                  <rect x="9" y="2.5" width="3" height="8.5" rx="1" fill="currentColor" />
+                  <rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor" opacity="0.4" />
+                </svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" aria-hidden="true">
+                  <rect x="0.5" y="0.5" width="21" height="11" rx="3.2" fill="none"
+                        stroke="currentColor" opacity="0.5" />
+                  <rect x="2.5" y="2.5" width="14" height="7" rx="1.8" fill="currentColor" />
+                  <path d="M23 4v4a2.2 2.2 0 0 0 0-4z" fill="currentColor" opacity="0.5" />
+                </svg>
+              </span>
+            </div>
+            <div class="app" id="app"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div>
+          <h3 id="specTitle">—</h3>
+          <p id="specBody"></p>
+          <ul id="specPoints"></ul>
+        </div>
+        <div class="files" id="specFiles"></div>
+      </div>
+
+      <table class="palette">
+        <caption id="paletteCaption">Palette</caption>
+        <thead>
+          <tr><th>Token</th><th>Hex</th><th>Where it lands</th></tr>
+        </thead>
+        <tbody id="paletteBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="note">
+    <p>
+      Rendered from <code>docs/preview/template.html</code> by
+      <code>python3 Tools/build_preview.py</code>. Photographs are painted placeholders generated by
+      <code>Tools/make_preview_images.py</code> — abstractions, not pictures of real places. Headings
+      use the system serif and figures the system rounded face, which resolve to New York and SF
+      Rounded on Apple devices and to substitutes elsewhere; on a non-Apple browser the type is
+      approximate while the layout and colour are exact.
+    </p>
+  </footer>
+</div>
+
+<script>
+  "use strict";
+
+  /* Painted placeholders, inlined by the build script. */
+  const IMAGES = {"waterfall":"data:image/jpeg;base64,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","lagoon":"data:image/jpeg;base64,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","temple":"data:image/jpeg;base64,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","hills":"data:image/jpeg;base64,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"};
+
+  /* -----------------------------------------------------------------------------------------
+     Palettes copied verbatim from Shared/DesignSystem/Theme.swift.
+     ----------------------------------------------------------------------------------------- */
+  const THEMES = [
+    {
+      id: "margarita", name: "Margarita", tagline: "Lime zest, agave, salt on the rim",
+      bg: ["#04231C", "#0D4936", "#1E8158"],
+      accent: "#C6F24E", accentSoft: "#F3EBCF",
+      arrow: ["#4FBE71", "#C6F24E", "#EEFFA8"],
+      glow: "#C6F24E", ink: "#F5FCEA", inkMuted: "#A6C69A", card: "#0B4433", grain: 0.05,
+    },
+    {
+      id: "paloma", name: "Paloma", tagline: "Grapefruit, soda, pink salt",
+      bg: ["#1E0B2B", "#722A57", "#E0736F"],
+      accent: "#FF7A9C", accentSoft: "#9BD7E3",
+      arrow: ["#FF5E86", "#FF9DB4", "#FFE1E8"],
+      glow: "#FF8FA8", ink: "#FFF1F3", inkMuted: "#D6A9B8", card: "#4C1A45", grain: 0.045,
+    },
+    {
+      id: "hawaii", name: "Hawaii Sunset", tagline: "Mango, hibiscus, deep ocean violet",
+      bg: ["#250E4B", "#9A2F6E", "#FF8C42"],
+      accent: "#FFB25B", accentSoft: "#FF5E93",
+      arrow: ["#FF6B35", "#FFB25B", "#FFE9A8"],
+      glow: "#FFA24C", ink: "#FFF4E8", inkMuted: "#DFB4C0", card: "#5A1C68", grain: 0.05,
+    },
+    {
+      id: "kingCoconut", name: "King Coconut", tagline: "Tea fields, cinnamon, amber husk",
+      bg: ["#12241A", "#37552F", "#D2953A"],
+      accent: "#F0A93B", accentSoft: "#9CC46A",
+      arrow: ["#C97B22", "#F0A93B", "#FFDE9E"],
+      glow: "#F0A93B", ink: "#FBF4E4", inkMuted: "#BCC6A4", card: "#264227", grain: 0.06,
+    },
+    {
+      id: "mangoTemple", name: "Mango Temple", tagline: "Lagoon turquoise and temple gold",
+      bg: ["#07222A", "#0F5F66", "#F2B233"],
+      accent: "#FFC93C", accentSoft: "#34D2C3",
+      arrow: ["#FF9F1C", "#FFC93C", "#FFF0A8"],
+      glow: "#FFC93C", ink: "#F3FCFB", inkMuted: "#A2CCCB", card: "#0B4750", grain: 0.05,
+    },
+    {
+      id: "midnightTide", name: "Midnight Tide", tagline: "Phosphorescence on a black sea",
+      bg: ["#03070F", "#091A2C", "#123A4D"],
+      accent: "#4FE3C1", accentSoft: "#7FA6FF",
+      arrow: ["#1F9E92", "#4FE3C1", "#C9FFF1"],
+      glow: "#4FE3C1", ink: "#EAF4FF", inkMuted: "#8CA2BE", card: "#0D2839", grain: 0.04,
+    },
+  ];
+
+  /* The sample library. Distances are the numbers the screens show. */
+  const SPOTS = [
+    { name: "Ravana Falls", place: "Ella, Sri Lanka", img: "waterfall", d: "240", u: "m",
+      walk: "3 min walk", bearing: 34, point: "NE", glyph: "🌊", pinned: true },
+    { name: "Beach shack", place: "Mirissa", img: "lagoon", d: "1.4", u: "km",
+      walk: "17 min walk", bearing: 156, point: "SSE", glyph: "🍹", pinned: false },
+    { name: "Temple at dusk", place: "Ayutthaya", img: "temple", d: "3.8", u: "km",
+      walk: "47 min walk", bearing: 288, point: "WNW", glyph: "⛩️", pinned: false },
+    { name: "Tea room", place: "Nuwara Eliya", img: "hills", d: "9.2", u: "km",
+      walk: null, bearing: 212, point: "SSW", glyph: "☕️", pinned: false },
+  ];
+
+  /* The dart from ArrowShape in Shared/DesignSystem/CompassRose.swift, as SVG. */
+  const ARROW_PATH =
+    "M50 0 Q74 42 94 88 Q68 80 50 66 Q32 80 6 88 Q26 42 50 0 Z";
+
+  let gradientSeq = 0;
+
+  /** The arrow, at a size and rotation. Each instance carries its own gradient id. */
+  function arrow(size, rotation, opts) {
+    const options = opts || {};
+    const id = "ag" + (gradientSeq++);
+    const width = size * 0.62;
+    const glow = options.glow
+      ? `<filter id="${id}f" x="-60%" y="-60%" width="220%" height="220%">
+           <feGaussianBlur stdDeviation="${options.glow}" /></filter>`
+      : "";
+    const glowUse = options.glow
+      ? `<path d="${ARROW_PATH}" fill="var(--glow)" filter="url(#${id}f)" opacity="0.75" />`
+      : "";
+    const stroke = options.hairline === false
+      ? ""
+      : `<path d="${ARROW_PATH}" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.4" />`;
+
+    return `<svg class="arrow-svg" width="${width}" height="${size}" viewBox="0 0 100 100"
+                 preserveAspectRatio="none" aria-hidden="true"
+                 style="transform: rotate(${rotation}deg)">
+      <defs>
+        <linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="var(--arrow-a)" />
+          <stop offset="55%" stop-color="var(--arrow-b)" />
+          <stop offset="100%" stop-color="var(--arrow-c)" />
+        </linearGradient>
+        ${glow}
+      </defs>
+      ${glowUse}
+      <path d="${ARROW_PATH}" fill="url(#${id})" />
+      ${stroke}
+    </svg>`;
+  }
+
+  /** The tick ring, generated the same way CompassRose draws it. */
+  function rose(diameter, headingOffset) {
+    const r = diameter / 2;
+    let marks = "";
+    for (let deg = 0; deg < 360; deg += 5) {
+      const cardinal = deg % 90 === 0;
+      const major = deg % 30 === 0;
+      const len = cardinal ? 16 : major ? 11 : 6;
+      const w = cardinal ? 2.4 : major ? 1.6 : 1;
+      const op = cardinal ? 0.95 : major ? 0.6 : 0.3;
+      const rad = ((deg - 90) * Math.PI) / 180;
+      const x1 = r + Math.cos(rad) * (r - 12);
+      const y1 = r + Math.sin(rad) * (r - 12);
+      const x2 = r + Math.cos(rad) * (r - 12 - len);
+      const y2 = r + Math.sin(rad) * (r - 12 - len);
+      const colour = cardinal ? "var(--accent)" : "var(--ink)";
+      marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${colour}"
+                      stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round" />`;
+    }
+    [[0, "N"], [90, "E"], [180, "S"], [270, "W"]].forEach(([deg, letter]) => {
+      const rad = ((deg - 90) * Math.PI) / 180;
+      const x = r + Math.cos(rad) * (r - 42);
+      const y = r + Math.sin(rad) * (r - 42);
+      marks += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="700"
+                      fill="${deg === 0 ? "var(--accent)" : "var(--ink-muted)"}"
+                      font-family="var(--rounded)">${letter}</text>`;
+    });
+    return `<svg width="${diameter}" height="${diameter}" aria-hidden="true"
+                 style="position:absolute; inset:0; transform: rotate(${-headingOffset}deg)">
+      ${marks}
+    </svg>`;
+  }
+
+  function photo(key, cls) {
+    return `<img src="${IMAGES[key]}" alt="" class="${cls || ""}" />`;
+  }
+
+  function icon(name) {
+    const paths = {
+      photos: "M3 5h11v9H3z M6 8l2.5 3 2-2 3 3H6z",
+      map: "M2 4l4-2 4 2 4-2v11l-4 2-4-2-4 2z",
+      case: "M2 5h12v8H2z M6 5V3h4v2",
+      camera: "M2 5h3l1-1.5h4L11 5h3v8H2z M8 6.5a2.4 2.4 0 100 4.8 2.4 2.4 0 000-4.8z",
+      slider: "M2 4h12 M2 8h12 M2 12h12",
+    };
+    return `<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linejoin="round"><path d="${paths[name]}" /></svg>`;
+  }
+
+  function bottomBar(active) {
+    const tabs = [["Spots", "photos"], ["Map", "map"], ["Trips", "case"]];
+    const strip = tabs
+      .map(([label, key]) =>
+        `<div class="bar-tab ${label === active ? "on" : ""}">${icon(key)}<span>${label}</span></div>`)
+      .join("");
+    return `<div class="bar">
+      <div class="bar-strip">${strip}</div>
+      <div class="bar-shutter">${icon("camera")}</div>
+    </div>`;
+  }
+
+  /* -----------------------------------------------------------------------------------------
+     Screens
+     ----------------------------------------------------------------------------------------- */
+
+  const SCREENS = [
+    {
+      id: "onboarding",
+      label: "Onboarding",
+      title: "First run",
+      body: "Four pages: what it does, why it needs the camera and your location, what the widgets do, and which look you want. The permission ask comes with a reason attached, after you have seen the point of the app.",
+      points: [
+        "The compass illustration is drawn, not shipped — so it restyles with the theme picked on the last page.",
+        "Camera access is requested at the first photo, not here.",
+      ],
+      files: ["Tradewind/Features/Onboarding/OnboardingView.swift"],
+      render: () => `
+        <div style="height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:8px 0 26px">
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px">
+            <div class="rose-wrap" style="width:220px; height:220px">
+              ${rose(220, 0)}
+              <div style="position:relative">${arrow(120, 34, { glow: 5 })}</div>
+            </div>
+            <div style="text-align:center; padding:0 30px">
+              <p class="app-eyebrow" style="margin:0 0 8px">Tradewind</p>
+              <h1 class="app-title" style="margin:0 0 10px">Find your way back</h1>
+              <p class="app-body" style="margin:0; color:var(--ink-muted)">
+                Photograph somewhere worth returning to. Tradewind remembers exactly where you
+                were standing, and points you back whenever you want.
+              </p>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:14px; padding:0 30px">
+            <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+            <button class="btn-primary">Next</button>
+            <p class="app-caption" style="text-align:center; margin:0">Skip</p>
+          </div>
+        </div>`,
+    },
+    {
+      id: "gallery",
+      label: "Spots (home)",
+      title: "Your spots, nearest first",
+      body: "The list re-sorts as you move and the distances tick with it. The nearest — or whichever spot is pinned for the widgets — gets the hero card so it can be tapped without looking.",
+      points: [
+        "Trip chips filter the list; the eyebrow says whether the order is by distance or by date.",
+        "With no location fix it falls back to most-recent-first rather than an arbitrary order.",
+      ],
+      files: [
+        "Tradewind/Features/Gallery/SpotsGalleryView.swift",
+        "Tradewind/Features/Support/SpotRanking.swift",
+      ],
+      scrolls: true,
+      render: () => {
+        const s = SPOTS[0];
+        const cards = SPOTS.slice(1)
+          .map((spot) => `
+            <div class="grid-card">
+              <div class="ph">
+                ${photo(spot.img)}
+                ${spot.pinned ? '<div style="position:absolute;top:8px;right:8px" class="pill prominent">📌</div>' : ""}
+              </div>
+              <div class="meta">
+                <div class="app-h3" style="margin-bottom:6px">${spot.name}</div>
+                <div class="row" style="gap:8px">
+                  ${arrow(20, spot.bearing)}
+                  <span class="num" style="font-size:20px; font-weight:600">${spot.d}</span>
+                  <span class="app-label" style="color:var(--ink-muted)">${spot.u}</span>
+                </div>
+              </div>
+            </div>`)
+          .join("");
+
+        return `
+          <div class="pad" style="padding-top:6px; padding-bottom:96px">
+            <div class="row" style="justify-content:space-between; align-items:flex-start">
+              <div>
+                <p class="app-eyebrow" style="margin:0 0 3px">Golden hour</p>
+                <div class="app-title">Tradewind</div>
+                <p class="app-caption" style="margin:4px 0 0">4 spots · nearest 240 m away</p>
+              </div>
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);
+                          border:1px solid rgba(255,255,255,.18);display:grid;place-items:center">
+                <span style="width:16px;height:16px;display:block">${icon("slider")}</span>
+              </div>
+            </div>
+
+            <div class="row" style="gap:7px; margin:18px 0 16px; overflow:hidden">
+              <span class="pill prominent">Everywhere</span>
+              <span class="pill">Sri Lanka, March</span>
+              <span class="pill">Thailand</span>
+            </div>
+
+            <div class="hero-card">
+              ${photo(s.img)}
+              <div class="scrim"></div>
+              <div class="caption">
+                <div class="row" style="gap:6px; margin-bottom:9px">
+                  <span class="pill prominent">📌 Pinned</span>
+                  <span class="pill">Sri Lanka, March</span>
+                  <span class="pill">${s.point}</span>
+                </div>
+                <div class="app-h2" style="color:#fff; margin-bottom:9px">${s.name}</div>
+                <div class="row" style="gap:12px">
+                  ${arrow(34, s.bearing)}
+                  <div>
+                    <div class="row" style="align-items:baseline; gap:3px; color:#fff">
+                      <span class="num" style="font-size:31px; font-weight:600">${s.d}</span>
+                      <span class="num" style="font-size:15px; opacity:.75">${s.u}</span>
+                    </div>
+                    <div class="app-caption" style="color:rgba(255,255,255,.7)">${s.walk}</div>
+                  </div>
+                  <div style="margin-left:auto; font-size:28px; color:var(--accent)">↗</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin:22px 0 12px">
+              <p class="app-eyebrow" style="margin:0 0 3px">Nearest first</p>
+              <div class="app-h3">All your spots</div>
+            </div>
+            <div class="grid">${cards}</div>
+          </div>
+          ${bottomBar("Spots")}`;
+      },
+    },
+    {
+      id: "arrow",
+      label: "Arrow (walking)",
+      title: "The screen the app exists for",
+      body: "An arrow, a distance, and the photo of where you are going sitting blurred behind both. The arrow points at the bearing relative to the way you are facing; the ring shows where the spot is on the compass.",
+      points: [
+        "The glow grows as you close in, so proximity is visible without reading anything.",
+        "Haptics pulse faster the nearer you get — the phone can stay in your pocket.",
+        "With no usable magnetometer it shows the bearing from north instead, and says so.",
+      ],
+      files: [
+        "Tradewind/Features/Arrow/ArrowScreen.swift",
+        "Shared/Services/CompassEngine.swift",
+        "Shared/DesignSystem/CompassRose.swift",
+      ],
+      render: () => `
+        <div style="position:absolute; inset:0; overflow:hidden">
+          ${photo(SPOTS[0].img, "blurred")}
+        </div>
+        <style>
+          .blurred { position:absolute; inset:-14%; width:128%; height:128%; object-fit:cover;
+                     filter: blur(42px); opacity:.5 }
+        </style>
+        <div style="position:absolute; inset:0;
+                    background:linear-gradient(to bottom, color-mix(in srgb, var(--bg0) 55%, transparent),
+                    transparent 42%, color-mix(in srgb, var(--bg0) 85%, transparent))"></div>
+
+        <div style="position:relative; height:100%; display:flex; flex-direction:column;
+                    padding:6px 20px 22px">
+          <div class="row" style="gap:12px; align-items:flex-start">
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);
+                        border:1px solid rgba(255,255,255,.18);display:grid;place-items:center;
+                        font-size:13px">⌄</div>
+            <div style="flex:1">
+              <p class="app-eyebrow" style="margin:0 0 2px">Turn right</p>
+              <div class="app-h2">${SPOTS[0].name}</div>
+              <p class="app-caption" style="margin:2px 0 0">${SPOTS[0].place}</p>
+            </div>
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);
+                        border:1px solid rgba(255,255,255,.18);display:grid;place-items:center">···</div>
+          </div>
+
+          <div style="flex:1; display:grid; place-items:center">
+            <div class="rose-wrap">
+              ${rose(300, 18)}
+              <div style="position:relative">${arrow(176, 34, { glow: 7 })}</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; margin-bottom:14px">
+            <div class="row" style="justify-content:center; align-items:baseline; gap:6px">
+              <span class="hero-distance" style="font-size:92px">240</span>
+              <span class="num" style="font-size:26px; font-weight:600; color:var(--ink-muted)">m</span>
+            </div>
+            <div class="row" style="justify-content:center; gap:8px; margin-top:10px">
+              <span class="pill">🚶 3 min walk</span>
+              <span class="pill">⛰ 48 m above you</span>
+              <span class="pill">↑ NE 34°</span>
+            </div>
+          </div>
+
+          <button class="btn-primary">Track on Lock Screen</button>
+        </div>`,
+    },
+    {
+      id: "arrival",
+      label: "Arrival",
+      title: "You made it",
+      body: "Inside twenty-five metres the screen changes character: the arrow blooms, confetti in the theme's palette, and a stamp lands on the photo. It is the one moment the app is allowed to celebrate.",
+      points: [
+        "Hysteresis on the radius, so standing on the boundary does not flicker the celebration.",
+        "The confetti is a pure function of (started, now) — nothing to keep in sync.",
+      ],
+      files: [
+        "Shared/DesignSystem/CelebrationView.swift",
+        "Shared/Services/CompassEngine.swift",
+      ],
+      render: () => {
+        let confetti = "";
+        let seed = 7;
+        const rand = () => {
+          seed = (seed * 1103515245 + 12345) % 2147483648;
+          return seed / 2147483648;
+        };
+        const palette = ["var(--accent)", "var(--accent-soft)", "var(--arrow-c)", "#ffffff"];
+        for (let i = 0; i < 70; i++) {
+          const angle = rand() * Math.PI * 2;
+          const dist = 60 + rand() * 210;
+          const x = 195 + Math.cos(angle) * dist;
+          const y = 330 + Math.sin(angle) * dist * 0.8 + rand() * 90;
+          const size = 4 + rand() * 6;
+          confetti += `<i style="left:${x}px; top:${y}px; width:${size}px;
+            height:${size * (0.6 + rand())}px; background:${palette[i % 4]};
+            transform:rotate(${rand() * 360}deg); opacity:${0.35 + rand() * 0.6}"></i>`;
+        }
+        return `
+          <div style="position:absolute; inset:0; overflow:hidden">
+            ${photo(SPOTS[0].img, "blurred")}
+          </div>
+          <div style="position:absolute; inset:0;
+                      background:linear-gradient(to bottom, color-mix(in srgb, var(--bg0) 45%, transparent),
+                      transparent 40%, color-mix(in srgb, var(--bg0) 88%, transparent))"></div>
+          <div style="position:absolute; inset:0; pointer-events:none">${confetti}</div>
+          <style>
+            .app i { position:absolute; display:block; border-radius:2px }
+          </style>
+
+          <div style="position:relative; height:100%; display:flex; flex-direction:column;
+                      align-items:center; justify-content:center; gap:26px; padding:0 24px">
+            <div class="rose-wrap">
+              <div class="rose on"></div>
+              ${rose(300, 4)}
+              <div style="position:relative">${arrow(186, 2, { glow: 11 })}</div>
+            </div>
+            <div style="border:2px solid var(--accent); border-radius:9px; padding:9px 18px;
+                        transform:rotate(-7deg); text-align:center;
+                        box-shadow:0 0 18px color-mix(in srgb, var(--glow) 45%, transparent)">
+              <div style="font-family:var(--serif); font-size:19px; font-weight:800;
+                          letter-spacing:.05em; color:var(--accent)">You made it</div>
+              <div class="app-label" style="letter-spacing:.2em; text-transform:uppercase;
+                          color:var(--accent); font-size:9.5px">${SPOTS[0].name}</div>
+            </div>
+            <div class="row" style="justify-content:center; align-items:baseline; gap:6px">
+              <span class="hero-distance" style="font-size:62px">12</span>
+              <span class="num" style="font-size:22px; color:var(--ink-muted)">m</span>
+            </div>
+          </div>`;
+      },
+    },
+    {
+      id: "map",
+      label: "Map",
+      title: "Which of these is actually near me",
+      body: "A list of distances cannot answer that; a map can. Photo-thumbnail pins, range rings at 100 m, 500 m and a kilometre, and a great-circle line to whichever spot is selected.",
+      points: [
+        "The line is sampled along the great circle, not drawn straight across the projection.",
+        "A tinted overlay pulls the map into the theme without hiding the geography.",
+      ],
+      files: ["Tradewind/Features/Map/SpotsMapView.swift"],
+      render: () => `
+        <div class="map-plate"></div>
+        <div class="rings-overlay">
+          <i style="width:120px;height:120px"></i>
+          <i style="width:230px;height:230px"></i>
+          <i style="width:340px;height:340px"></i>
+        </div>
+        <svg style="position:absolute; inset:0" aria-hidden="true">
+          <path d="M195 430 C 215 360, 240 300, 268 240" fill="none" stroke="var(--accent)"
+                stroke-width="3" stroke-dasharray="8 8" stroke-linecap="round" opacity="0.85" />
+        </svg>
+        <div class="map-pin sel" style="left:268px; top:240px">
+          <div class="disc">${photo(SPOTS[0].img)}</div><div class="stem"></div>
+        </div>
+        <div class="map-pin" style="left:96px; top:330px">
+          <div class="disc">${photo(SPOTS[1].img)}</div><div class="stem"></div>
+        </div>
+        <div class="map-pin" style="left:300px; top:560px">
+          <div class="disc">${photo(SPOTS[2].img)}</div><div class="stem"></div>
+        </div>
+        <div style="position:absolute; left:186px; top:424px; width:18px; height:18px;
+                    border-radius:50%; background:#4a9bff; border:2.5px solid #fff;
+                    box-shadow:0 0 0 7px rgba(74,155,255,.25)"></div>
+
+        <div class="pad" style="position:relative; padding-top:6px">
+          <div class="row" style="justify-content:space-between; align-items:flex-start">
+            <div>
+              <p class="app-eyebrow" style="margin:0 0 2px">4 saved</p>
+              <div class="app-h2">The map</div>
+            </div>
+            <div class="row" style="gap:8px">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);
+                          display:grid;place-items:center;color:var(--bg0)">◎</div>
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);
+                          border:1px solid rgba(255,255,255,.18);display:grid;place-items:center">⌖</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute; left:18px; right:18px; bottom:88px">
+          <div class="glass" style="padding:13px; border-radius:20px">
+            <div class="row" style="gap:13px">
+              <div class="thumb" style="width:52px; height:52px">${photo(SPOTS[0].img)}</div>
+              <div style="flex:1; min-width:0">
+                <div class="app-h3">${SPOTS[0].name}</div>
+                <div class="app-caption">${SPOTS[0].place}</div>
+              </div>
+              <div style="text-align:right">
+                <div class="num" style="font-size:20px; font-weight:600">240 m</div>
+                <div class="app-label" style="color:var(--accent)">Point me there</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        ${bottomBar("Map")}`,
+    },
+    {
+      id: "detail",
+      label: "Spot detail",
+      title: "Everything about one place",
+      body: "The photo full size, where it is, when you were there, and when the light will be good there — because the useful question about a spot is not only how far, but when to go.",
+      points: [
+        "Golden hour is computed from the spot's own coordinate, not yours.",
+        "Sharing produces a rendered postcard alongside the deep link, so it means something to someone without the app.",
+      ],
+      files: [
+        "Tradewind/Features/Detail/SpotDetailView.swift",
+        "Shared/Math/SolarTimes.swift",
+        "Tradewind/Features/Support/PostcardView.swift",
+      ],
+      scrolls: true,
+      render: () => `
+        <div style="position:relative; height:300px">
+          ${photo(SPOTS[0].img)}
+          <div style="position:absolute; inset:0;
+                      background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.82))"></div>
+          <div style="position:absolute; left:18px; right:18px; bottom:16px">
+            <p class="app-eyebrow" style="margin:0 0 4px">14 March 2026 at 17:52</p>
+            <div class="app-h2" style="color:#fff">${SPOTS[0].name} ✎</div>
+          </div>
+        </div>
+
+        <div class="pad" style="padding-top:18px; padding-bottom:40px; display:flex;
+                    flex-direction:column; gap:18px">
+          <div class="glass" style="padding:16px">
+            <div class="row" style="gap:16px">
+              ${arrow(40, 34)}
+              <div>
+                <div class="row" style="align-items:baseline; gap:3px">
+                  <span class="num" style="font-size:29px; font-weight:600">240</span>
+                  <span class="num" style="font-size:15px; color:var(--ink-muted)">m</span>
+                </div>
+                <div class="app-caption">3 min walk</div>
+              </div>
+              <div style="margin-left:auto; text-align:right">
+                <div class="num" style="font-size:20px; color:var(--accent); font-weight:600">NE</div>
+                <div class="app-label" style="color:var(--ink-muted)">34°</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="app-h3" style="margin-bottom:10px">Where it is</div>
+            <div class="glass" style="overflow:hidden; padding:0">
+              <div style="height:150px; position:relative">
+                <div class="map-plate"></div>
+                <div style="position:absolute; left:50%; top:44%; transform:translate(-50%,-100%);
+                            font-size:26px; color:var(--accent)">📍</div>
+              </div>
+              <div style="padding:6px 0">
+                ${[
+                  ["📍", "Coordinates", "6.83950, 81.05530"],
+                  ["⛰", "Elevation", "412 m"],
+                  ["⌖", "Fix accuracy", "±6 m"],
+                  ["🌅", "Best light", "Golden hour 17:34–18:21"],
+                ].map(([g, k, v]) => `
+                  <div class="row" style="padding:9px 15px; gap:12px">
+                    <span style="width:20px; color:var(--accent)">${g}</span>
+                    <span class="app-caption">${k}</span>
+                    <span class="app-caption num" style="margin-left:auto; color:var(--ink)">${v}</span>
+                  </div>`).join("")}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p class="app-eyebrow" style="margin:0 0 3px">For when there's no photo</p>
+            <div class="app-h3" style="margin-bottom:10px">Mark</div>
+            <div class="row" style="gap:8px">
+              ${["📍", "🌊", "🏝️", "🌴", "🍹", "⛩️"].map((g, i) => `
+                <span style="width:42px;height:42px;border-radius:50%;display:grid;
+                  place-items:center;font-size:19px;
+                  background:${i === 1 ? "color-mix(in srgb, var(--accent) 28%, transparent)" : "rgba(255,255,255,.1)"};
+                  border:1px solid ${i === 1 ? "var(--accent)" : "rgba(255,255,255,.12)"}">${g}</span>`).join("")}
+            </div>
+          </div>
+
+          <button class="btn-primary">Unpin from widgets</button>
+          <button class="btn-secondary">Share as a postcard</button>
+        </div>`,
+    },
+    {
+      id: "trips",
+      label: "Trips",
+      title: "One island, one week",
+      body: "Spots grouped into trips, each with a cover taken from its most recent photo. A trip can carry its own theme, so opening the Sri Lanka trip does not feel identical to opening the Thailand one.",
+      points: [
+        "The distance on a trip card is to its nearest spot — a trip is only as far away as its closest piece.",
+        "Spots not in a trip sit in a strip underneath rather than being hidden.",
+      ],
+      files: ["Tradewind/Features/Trips/TripsView.swift"],
+      scrolls: true,
+      render: () => `
+        <div class="pad" style="padding-top:6px; padding-bottom:96px">
+          <div class="row" style="justify-content:space-between; align-items:flex-start">
+            <div>
+              <p class="app-eyebrow" style="margin:0 0 3px">2 trips</p>
+              <div class="app-title">Trips</div>
+            </div>
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);
+                        color:var(--bg0);display:grid;place-items:center;font-size:20px">+</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:14px; margin-top:20px">
+            ${[
+              ["Sri Lanka, March", "waterfall", "3 spots", "240 m"],
+              ["Thailand", "temple", "1 spot", "3.8 km"],
+            ].map(([name, img, count, dist]) => `
+              <div style="position:relative; height:162px; border-radius:24px; overflow:hidden;
+                          border:1px solid rgba(255,255,255,.16)">
+                ${photo(img)}
+                <div style="position:absolute; inset:0; background:linear-gradient(to bottom,
+                            color-mix(in srgb, var(--bg0) 12%, transparent),
+                            color-mix(in srgb, var(--bg0) 88%, transparent))"></div>
+                <div style="position:absolute; left:16px; right:16px; bottom:14px">
+                  <div class="row" style="gap:6px; margin-bottom:6px">
+                    <span class="pill">🖼 ${count}</span>
+                    <span class="pill prominent">📍 ${dist}</span>
+                  </div>
+                  <div class="app-h2" style="color:#fff">${name}</div>
+                </div>
+              </div>`).join("")}
+          </div>
+
+          <div style="margin:24px 0 12px">
+            <p class="app-eyebrow" style="margin:0 0 3px">1 loose</p>
+            <div class="app-h3">Not in a trip</div>
+          </div>
+          <div class="row" style="gap:12px">
+            <div style="width:128px">
+              <div class="thumb" style="height:96px">${photo("hills")}</div>
+              <div class="app-caption" style="margin-top:7px; color:var(--ink)">Tea room</div>
+              <div class="app-label num" style="color:var(--ink-muted)">9.2 km</div>
+            </div>
+          </div>
+        </div>
+        ${bottomBar("Trips")}`,
+    },
+    {
+      id: "widgets",
+      label: "Widgets",
+      title: "Distance without opening anything",
+      body: "The configurable widget follows your pinned spot; the wide one lists everything by distance. Widgets read a small JSON snapshot the app leaves in the App Group — never the database.",
+      points: [
+        "They show the bearing with north up. WidgetKit cannot stream sensor updates, so a live needle would be a lie most of the time.",
+        "When the fix is cached rather than fresh, the widget says 'last known position'.",
+        "The buttons on the large widget move the pin without opening the app.",
+      ],
+      files: [
+        "TradewindWidgets/SpotCompassWidget.swift",
+        "TradewindWidgets/NearestSpotsWidget.swift",
+        "Shared/Snapshot/SharedSnapshot.swift",
+      ],
+      scrolls: true,
+      render: () => {
+        const listRows = SPOTS.slice(0, 3)
+          .map((spot, i) => `
+            <div class="row" style="gap:8px; margin-bottom:${i === 2 ? 0 : 7}px">
+              ${arrow(15, spot.bearing)}
+              <span class="app-label" style="font-weight:500">${spot.name}</span>
+              <span class="num" style="margin-left:auto; font-size:12px; font-weight:700;
+                    color:var(--accent)">${spot.d}${spot.u}</span>
+            </div>`)
+          .join("");
+
+        return `
+          <div class="pad" style="padding-top:14px; padding-bottom:40px">
+            <p class="app-eyebrow" style="margin:0 0 12px">Home screen</p>
+            <div class="home-grid">
+              <div class="widget small">
+                <div class="row" style="justify-content:space-between; align-items:flex-start">
+                  ${arrow(32, 34, { glow: 3 })}
+                  <span style="font-size:17px">🌊</span>
+                </div>
+                <div style="margin-top:22px">
+                  <div class="row" style="align-items:baseline; gap:2px">
+                    <span class="num" style="font-size:33px; font-weight:700">240</span>
+                    <span class="num" style="font-size:16px; color:var(--ink-muted)">m</span>
+                  </div>
+                  <div class="app-label">Ravana Falls</div>
+                  <div class="app-label" style="color:var(--ink-muted); font-weight:500">
+                    Ella, Sri Lanka
+                  </div>
+                </div>
+              </div>
+
+              <div class="widget small">
+                <div style="height:100%; display:flex; flex-direction:column; justify-content:center">
+                  ${listRows}
+                </div>
+              </div>
+
+              <div class="widget wide">
+                <div class="row" style="gap:14px">
+                  <div class="thumb" style="width:74px; height:74px">${photo("lagoon")}</div>
+                  <div style="min-width:0">
+                    <div class="row" style="align-items:baseline; gap:3px">
+                      <span class="num" style="font-size:27px; font-weight:700">1.4</span>
+                      <span class="num" style="font-size:14px; color:var(--ink-muted)">km</span>
+                    </div>
+                    <div class="app-label" style="white-space:nowrap">Beach shack</div>
+                    <div class="app-label" style="color:var(--ink-muted); font-weight:500;
+                         white-space:nowrap">
+                      Mirissa · SSE
+                    </div>
+                  </div>
+                  <div style="margin-left:auto; display:flex; flex-direction:column; gap:6px;
+                       align-items:flex-end; flex:0 0 auto">
+                    <span class="pill" style="font-size:9.5px">↻ Next</span>
+                    <span class="pill" style="font-size:9.5px">📌 Nearest</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="app-eyebrow" style="margin:26px 0 12px">Lock Screen</p>
+            <div class="lockscreen">
+              <div class="row" style="gap:16px; align-items:center">
+                <div class="ring"><span>240</span></div>
+                <div style="flex:1">
+                  <div class="app-label">Ravana Falls</div>
+                  <div class="app-label" style="color:var(--ink-muted); font-weight:500">
+                    Beach shack · 1.4km
+                  </div>
+                  <div class="app-label" style="color:var(--ink-muted); font-weight:500">
+                    Temple at dusk · 3.8km
+                  </div>
+                </div>
+              </div>
+              <div class="row" style="gap:6px; margin-top:12px; padding-top:11px;
+                          border-top:1px solid rgba(255,255,255,.14)">
+                <span style="font-size:11px">↑</span>
+                <span class="app-label" style="font-weight:500">Ravana Falls · 240 m</span>
+              </div>
+            </div>
+
+            <p class="app-eyebrow" style="margin:26px 0 12px">Live Activity</p>
+            <div class="lockscreen">
+              <div class="row" style="gap:14px">
+                <div style="width:58px;height:58px;border-radius:50%;
+                            background:color-mix(in srgb, var(--accent) 14%, transparent);
+                            border:1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+                            display:grid;place-items:center">${arrow(32, 34)}</div>
+                <div style="flex:1">
+                  <p class="app-eyebrow" style="margin:0 0 2px">Heading to</p>
+                  <div class="app-h3">Ravana Falls</div>
+                  <div class="app-caption">Ella, Sri Lanka</div>
+                </div>
+                <div style="text-align:right">
+                  <div class="row" style="align-items:baseline; gap:2px">
+                    <span class="num" style="font-size:27px; font-weight:700">240</span>
+                    <span class="num" style="font-size:13px; color:var(--ink-muted)">m</span>
+                  </div>
+                  <div class="app-label" style="color:var(--accent)">NE</div>
+                </div>
+              </div>
+              <div style="height:5px; border-radius:999px; background:rgba(255,255,255,.22);
+                          margin-top:12px; overflow:hidden">
+                <div style="width:76%; height:100%; background:var(--accent)"></div>
+              </div>
+            </div>
+          </div>`;
+      },
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      title: "Pick your weather",
+      body: "The theme picker is the part people come here for, so each tile is a miniature of the real backdrop and arrow rather than a colour chip. Changing it restyles the widgets too.",
+      points: [
+        "Units show a worked example rather than an explanation.",
+        "The iCloud row reports what the store actually opened, not what the toggle asked for.",
+      ],
+      files: [
+        "Tradewind/Features/Settings/SettingsView.swift",
+        "Shared/Services/AppSettings.swift",
+        "Shared/Models/AppModelContainer.swift",
+      ],
+      scrolls: true,
+      render: (theme) => {
+        const tiles = THEMES.map((t) => `
+          <div class="theme-tile ${t.id === theme.id ? "on" : ""}">
+            <div class="top" style="background:linear-gradient(178deg, ${t.bg[0]}, ${t.bg[1]} 46%, ${t.bg[2]})">
+              <div style="position:absolute; inset:0; background:radial-gradient(70% 60% at 80% 82%,
+                          ${t.accent}88, transparent 62%)"></div>
+              <svg width="24" height="38" viewBox="0 0 100 100" preserveAspectRatio="none"
+                   style="position:relative; transform:rotate(34deg)" aria-hidden="true">
+                <defs><linearGradient id="tg${t.id}" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stop-color="${t.arrow[0]}" />
+                  <stop offset="55%" stop-color="${t.arrow[1]}" />
+                  <stop offset="100%" stop-color="${t.arrow[2]}" />
+                </linearGradient></defs>
+                <path d="${ARROW_PATH}" fill="url(#tg${t.id})" />
+              </svg>
+            </div>
+            <div class="bottom" style="background:${t.bg[0]}">
+              <div class="row" style="gap:5px">
+                <span class="app-label" style="color:${t.accent}">◆</span>
+                <span class="app-label" style="color:${t.ink}">${t.name}</span>
+                ${t.id === theme.id ? `<span style="margin-left:auto; color:${t.accent}">✓</span>` : ""}
+              </div>
+              <div style="font-size:9.5px; color:${t.inkMuted}; line-height:1.3; margin-top:2px">
+                ${t.tagline}
+              </div>
+            </div>
+          </div>`).join("");
+
+        return `
+          <div class="pad" style="padding-top:10px; padding-bottom:40px; display:flex;
+                      flex-direction:column; gap:24px">
+            <div>
+              <p class="app-eyebrow" style="margin:0 0 3px">Pick your weather</p>
+              <div class="app-h3" style="margin-bottom:12px">Look</div>
+              <div class="theme-grid">${tiles}</div>
+            </div>
+
+            <div>
+              <div class="app-h3" style="margin-bottom:10px">Distances</div>
+              <div class="glass" style="padding:14px">
+                ${[
+                  ["Automatic", "240 m · 4.3 km", true],
+                  ["Metres & kilometres", "240 m · 4.3 km", false],
+                  ["Feet & miles", "787 ft · 2.7 mi", false],
+                ].map(([label, sample, on]) => `
+                  <div class="row" style="gap:12px; padding:6px 0">
+                    <span style="color:${"var(--accent)"}; opacity:${on ? 1 : 0.35}">
+                      ${on ? "◉" : "○"}</span>
+                    <div>
+                      <div class="app-body">${label}</div>
+                      <div class="app-label num" style="color:var(--ink-muted); font-weight:500">
+                        ${sample}</div>
+                    </div>
+                  </div>`).join("")}
+              </div>
+            </div>
+
+            <div>
+              <div class="app-h3" style="margin-bottom:10px">Feel</div>
+              <div class="glass" style="padding:14px; display:flex; flex-direction:column; gap:12px">
+                ${[
+                  ["Haptic pulse", "Taps you as you walk, faster the closer you get.", true],
+                  ["Sound", "A soft chime when you're facing the right way.", false],
+                  ["Shift with the sun", "Warms toward golden hour, cools after dark.", true],
+                ].map(([title, detail, on]) => `
+                  <div class="row" style="gap:12px; align-items:flex-start">
+                    <span style="color:var(--accent); width:18px">◆</span>
+                    <div style="flex:1">
+                      <div class="app-body">${title}</div>
+                      <div class="app-label" style="color:var(--ink-muted); font-weight:500">
+                        ${detail}</div>
+                    </div>
+                    <div class="toggle ${on ? "" : "off"}"></div>
+                  </div>`).join("")}
+              </div>
+            </div>
+
+            <div>
+              <div class="app-h3" style="margin-bottom:10px">iCloud</div>
+              <div class="glass" style="padding:14px">
+                <div class="row" style="gap:12px">
+                  <span style="color:var(--accent); width:18px">☁</span>
+                  <div style="flex:1">
+                    <div class="app-body">Sync my spots</div>
+                    <div class="app-label" style="color:var(--ink-muted); font-weight:500">
+                      Keeps spots and photos on all your devices.</div>
+                  </div>
+                  <div class="toggle"></div>
+                </div>
+                <div class="row" style="gap:10px; margin-top:12px; padding-top:11px;
+                            border-top:1px solid rgba(255,255,255,.14)">
+                  <span style="color:var(--accent)">✓</span>
+                  <span class="app-caption" style="color:var(--ink)">Syncing with iCloud</span>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      },
+    },
+  ];
+
+  /* -----------------------------------------------------------------------------------------
+     Wiring
+     ----------------------------------------------------------------------------------------- */
+
+  let themeIndex = 2;   // Hawaii Sunset — the app's default
+  let screenIndex = 1;  // the gallery
+
+  const PALETTE_ROLES = [
+    ["accent", "Arrow, active chip, ring when on target"],
+    ["accentSoft", "The contrast note — warnings, second confetti colour"],
+    ["glow", "Halo behind the arrow, button shadow"],
+    ["bg0", "Deepest backdrop stop; widget and launch background"],
+    ["bg1", "Middle backdrop stop"],
+    ["bg2", "Lightest backdrop stop"],
+    ["card", "Tint under frosted glass"],
+    ["ink", "Body text"],
+    ["inkMuted", "Secondary text"],
+  ];
+
+  function applyTheme(theme) {
+    const root = document.documentElement.style;
+    root.setProperty("--accent", theme.accent);
+    root.setProperty("--accent-soft", theme.accentSoft);
+    root.setProperty("--bg0", theme.bg[0]);
+    root.setProperty("--bg1", theme.bg[1]);
+    root.setProperty("--bg2", theme.bg[2]);
+    root.setProperty("--ink", theme.ink);
+    root.setProperty("--ink-muted", theme.inkMuted);
+    root.setProperty("--card", theme.card);
+    root.setProperty("--glow", theme.glow);
+    root.setProperty("--arrow-a", theme.arrow[0]);
+    root.setProperty("--arrow-b", theme.arrow[1]);
+    root.setProperty("--arrow-c", theme.arrow[2]);
+    root.setProperty("--grain", String(theme.grain));
+  }
+
+  function renderSwatches() {
+    document.getElementById("swatches").innerHTML = THEMES.map((t, i) => `
+      <button class="swatch" aria-pressed="${i === themeIndex}" data-theme="${i}">
+        <span class="chip" style="background:linear-gradient(160deg, ${t.bg[0]}, ${t.bg[1]} 48%, ${t.bg[2]});
+              --chip-accent:${t.accent}"></span>
+        <span>
+          <span class="name">${t.name}</span>
+          <span class="tag">${t.tagline}</span>
+        </span>
+      </button>`).join("");
+  }
+
+  function renderScreenList() {
+    document.getElementById("screens").innerHTML = SCREENS.map((s, i) => `
+      <button class="screen-btn" aria-pressed="${i === screenIndex}" data-screen="${i}">
+        <span class="idx">${String(i + 1).padStart(2, "0")}</span>
+        <span>${s.label}</span>
+      </button>`).join("");
+  }
+
+  function renderPalette(theme) {
+    document.getElementById("paletteCaption").textContent =
+      `Palette — ${theme.name} (ThemeCatalog.${theme.id})`;
+    document.getElementById("paletteBody").innerHTML = PALETTE_ROLES.map(([key, role]) => {
+      const value = key.startsWith("bg")
+        ? theme.bg[Number(key.slice(2))]
+        : theme[key];
+      return `<tr>
+        <td>${key}</td>
+        <td class="hex"><span class="dot" style="background:${value}"></span>${value.toUpperCase()}</td>
+        <td>${role}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  function render() {
+    const theme = THEMES[themeIndex];
+    const screen = SCREENS[screenIndex];
+
+    applyTheme(theme);
+    gradientSeq = 0;
+
+    const app = document.getElementById("app");
+    app.className = "app" + (screen.scrolls ? " scrolls" : "");
+    app.innerHTML = screen.render(theme);
+
+    document.getElementById("specTitle").textContent = screen.title;
+    document.getElementById("specBody").textContent = screen.body;
+    document.getElementById("specPoints").innerHTML =
+      screen.points.map((p) => `<li>${p}</li>`).join("");
+    document.getElementById("specFiles").innerHTML =
+      "<b>Implemented in</b>" + screen.files.join("<br>");
+
+    renderPalette(theme);
+    document.querySelectorAll("[data-theme]").forEach((el) => {
+      el.setAttribute("aria-pressed", String(Number(el.dataset.theme) === themeIndex));
+    });
+    document.querySelectorAll("[data-screen]").forEach((el) => {
+      el.setAttribute("aria-pressed", String(Number(el.dataset.screen) === screenIndex));
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    const themeButton = event.target.closest("[data-theme]");
+    if (themeButton) {
+      themeIndex = Number(themeButton.dataset.theme);
+      render();
+      return;
+    }
+    const screenButton = event.target.closest("[data-screen]");
+    if (screenButton) {
+      screenIndex = Number(screenButton.dataset.screen);
+      render();
+    }
+  });
+
+  /* Left/right steps through screens, up/down through themes. */
+  document.addEventListener("keydown", (event) => {
+    const count = SCREENS.length;
+    if (event.key === "ArrowRight") { screenIndex = (screenIndex + 1) % count; render(); }
+    if (event.key === "ArrowLeft") { screenIndex = (screenIndex + count - 1) % count; render(); }
+    if (event.key === "ArrowDown") { themeIndex = (themeIndex + 1) % THEMES.length; render(); }
+    if (event.key === "ArrowUp") {
+      themeIndex = (themeIndex + THEMES.length - 1) % THEMES.length;
+      render();
+    }
+  });
+
+  renderSwatches();
+  renderScreenList();
+  render();
+</script>

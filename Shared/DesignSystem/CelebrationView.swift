@@ -29,10 +29,12 @@ struct CelebrationView: View {
                     guard elapsed <= lifetime else { continue }
 
                     let t = elapsed
-                    // Ballistic, with drag so it settles instead of flying off screen.
+                    // Ballistic, with drag so it settles instead of flying off screen. The
+                    // trigonometry stays in Double and converts once, because mixing Double and
+                    // CGFloat in one expression makes cos and sin ambiguous.
                     let drag = 1 - exp(-t * 1.6)
-                    let x = origin.x + cos(angle) * speed * drag
-                    let y = origin.y + sin(angle) * speed * drag + 190 * t * t
+                    let x = origin.x + CGFloat(cos(angle) * speed * drag)
+                    let y = origin.y + CGFloat(sin(angle) * speed * drag + 190 * t * t)
 
                     let progress = t / lifetime
                     let opacity = (1 - progress) * (1 - progress)
