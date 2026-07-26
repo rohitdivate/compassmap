@@ -1,47 +1,112 @@
 import SwiftUI
 
-/// Type scale for Tradewind.
+/// The size ramp, which the two moods set differently.
 ///
-/// Two families, used deliberately: a serif for names and headings, which reads like a
-/// beach-bar menu, and a rounded face for every number, because rounded digits are easier
-/// to read at a glance and the whole app is really one big number.
-enum Typography {
+/// Tropical Spritz is a travel magazine: a 40pt serif masthead over 15pt body. Nomad Money is a
+/// ledger: a 28pt tight grotesk over 14.5pt body, with more of the page given to figures. Sizes are
+/// transcribed from the reference screens rather than derived from a ratio.
+struct TypeScale: Hashable, Sendable {
+    /// Screen titles.
+    var display: CGFloat
+    /// Secondary headings — a place name inside a card.
+    var title: CGFloat
+    var sectionHead: CGFloat
+    var cardTitle: CGFloat
+    var body: CGFloat
+    var caption: CGFloat
+    var label: CGFloat
+    /// Mono caps eyebrow labels.
+    var eyebrow: CGFloat
+    /// The distance readout on a card or detail row.
+    var readout: CGFloat
+    var cardNumber: CGFloat
+}
 
-    // MARK: Numbers
+extension Theme {
 
-    /// The distance on the arrow screen. Size is passed in because it shrinks as the
-    /// number gets longer.
-    static func hero(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .bold, design: .rounded)
+    // MARK: - Words
+
+    /// Screen titles. Instrument Serif in Spritz, tight Space Grotesk in Nomad.
+    var displayTitleFont: Font { .custom(displayFont, size: scale.display) }
+
+    var titleFont: Font { .custom(displayFont, size: scale.title) }
+
+    /// Section headings sit in the *body* face, not the display face: in Spritz the serif is
+    /// reserved for screen titles and feeling, and in Nomad section labels are mono caps entirely.
+    var sectionTitleFont: Font { .custom(bodyBoldFont, size: scale.sectionHead) }
+
+    var cardTitleFont: Font { .custom(bodyBoldFont, size: scale.cardTitle) }
+
+    var bodyTextFont: Font { .custom(bodyFont, size: scale.body) }
+
+    var bodyMediumTextFont: Font { .custom(bodyMediumFont, size: scale.body) }
+
+    // MARK: - Data
+    //
+    // "Serif for feeling, mono for fact. Never set a number in the serif." Both moods put every
+    // numeral, label and piece of metadata in their mono face.
+
+    var captionFont: Font { .custom(monoFont, size: scale.caption) }
+
+    var labelFont: Font { .custom(monoMediumFont, size: scale.label) }
+
+    var eyebrowFont: Font { .custom(monoMediumFont, size: scale.eyebrow) }
+
+    var readoutFont: Font { .custom(monoMediumFont, size: scale.readout) }
+
+    var readoutUnitFont: Font { .custom(monoFont, size: scale.readout * 0.5) }
+
+    var cardNumberFont: Font { .custom(monoMediumFont, size: scale.cardNumber) }
+
+    var widgetNumberFont: Font { .custom(monoMediumFont, size: 25) }
+
+    /// Compass-rose tick letters.
+    var tickFont: Font { .custom(monoMediumFont, size: 11) }
+
+    /// The arrow screen's distance. Size is passed in because it shrinks as the number lengthens.
+    func heroNumberFont(_ size: CGFloat) -> Font {
+        .custom(monoMediumFont, size: size)
     }
 
-    static let readout = Font.system(size: 34, weight: .semibold, design: .rounded)
-    static let readoutUnit = Font.system(size: 17, weight: .semibold, design: .rounded)
-    static let cardDistance = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let widgetDistance = Font.system(size: 26, weight: .bold, design: .rounded)
-    static let tick = Font.system(size: 11, weight: .semibold, design: .rounded)
+    /// Arbitrary mono, for the few places that need a size off the ramp.
+    func mono(_ size: CGFloat, medium: Bool = false) -> Font {
+        .custom(medium ? monoMediumFont : monoFont, size: size)
+    }
 
-    // MARK: Words
+    /// Arbitrary body face.
+    func sans(_ size: CGFloat, weight: SansWeight = .regular) -> Font {
+        switch weight {
+        case .regular: return .custom(bodyFont, size: size)
+        case .medium: return .custom(bodyMediumFont, size: size)
+        case .bold: return .custom(bodyBoldFont, size: size)
+        }
+    }
 
-    static let displayTitle = Font.system(size: 40, weight: .semibold, design: .serif)
-    static let title = Font.system(size: 26, weight: .semibold, design: .serif)
-    static let sectionTitle = Font.system(size: 19, weight: .semibold, design: .serif)
-    static let cardTitle = Font.system(size: 18, weight: .semibold, design: .serif)
-    static let body = Font.system(size: 16, weight: .regular)
-    static let caption = Font.system(size: 13, weight: .medium)
-    static let label = Font.system(size: 12, weight: .semibold)
+    enum SansWeight { case regular, medium, bold }
 
-    /// Wide letter-spacing small caps, for eyebrow labels above a heading.
-    static let eyebrow = Font.system(size: 11, weight: .bold)
+    /// Tracking for mono caps labels. Both moods track them out hard — .12em to .18em.
+    func labelTracking(_ size: CGFloat) -> CGFloat { size * 0.15 }
 }
 
 extension View {
-    /// Eyebrow label styling: tiny, uppercase, tracked out.
-    func eyebrowStyle(color: Color) -> some View {
+    /// Eyebrow label styling: tiny mono caps, tracked out. Used above nearly every heading in both
+    /// moods, which is why it is a modifier rather than repeated inline.
+    func eyebrowStyle(theme: Theme, color: Color? = nil) -> some View {
         self
-            .font(Typography.eyebrow)
+            .font(theme.eyebrowFont)
             .textCase(.uppercase)
-            .tracking(1.6)
-            .foregroundStyle(color)
+            .tracking(theme.labelTracking(theme.scale.eyebrow))
+            .foregroundStyle(color ?? theme.accent)
+    }
+
+    /// Applies the theme's numeral behaviour. Nomad requires tabular figures so columns line up;
+    /// Spritz's DM Mono is already fixed-width, so this is a no-op there.
+    @ViewBuilder
+    func numeric(_ theme: Theme) -> some View {
+        if theme.numerals == .tabularMono {
+            self.monospacedDigit()
+        } else {
+            self
+        }
     }
 }

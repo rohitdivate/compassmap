@@ -1,154 +1,86 @@
 import SwiftUI
 
-/// The backdrop every screen sits on.
+/// The backdrop every screen sits on: a flat canvas, and in Tropical Spritz a little grain.
 ///
-/// On iOS 18 and later it is a nine-point mesh gradient that drifts very slowly, which
-/// gives the app the feeling of light moving on water. On iOS 17 it falls back to the
-/// theme's linear gradient plus two soft radial blooms — different, but of the same family,
-/// never obviously degraded.
+/// This used to be a nine-point mesh gradient. Both moods in the design forbid that. Spritz allows
+/// "one gradient per screen, always behind a photo or as the hero — never on a button", so the
+/// canvas itself is flat cream and the gradient belongs to `HeroPanel`. Nomad forbids gradients
+/// outright: "no decoration — density is the aesthetic." What is left is deliberately plain, and the
+/// screens are stronger for it — the colour now comes from the photographs and the accent.
 struct ThemedBackground: View {
     var theme: Theme
-    /// Slow drift. Worth it on the hero screens, wasteful everywhere else.
-    var animated: Bool = false
-    /// Warms the palette toward golden hour and cools it after dark.
-    var timeTint: Bool = true
 
     var body: some View {
         ZStack {
-            base
-            bottomScrim
-            if timeTint {
-                TimeOfDay.current.overlay(for: theme)
-                    .blendMode(.plusLighter)
+            theme.canvas
+            if theme.grainOpacity > 0 {
+                // Spritz is paper, and paper has tooth. Nomad is a screen and takes none.
+                FilmGrain(opacity: theme.grainOpacity, tint: theme.text)
                     .allowsHitTesting(false)
             }
-            FilmGrain(opacity: theme.grainOpacity)
-                .allowsHitTesting(false)
         }
         .ignoresSafeArea()
     }
-
-    /// Every backdrop runs warm and bright at its foot — which is exactly where the floating bar
-    /// sits. Without this the tab labels land light-on-light and effectively disappear. Deep at the
-    /// top, the sunset band through the middle, and deep again at the bottom also simply looks
-    /// better: like watching the light from inside a dark room.
-    private var bottomScrim: some View {
-        LinearGradient(
-            stops: [
-                .init(color: .clear, location: 0.70),
-                .init(color: theme.deepest.opacity(0.50), location: 0.88),
-                .init(color: theme.deepest.opacity(0.80), location: 1.0),
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .allowsHitTesting(false)
-    }
-
-    @ViewBuilder
-    private var base: some View {
-        if #available(iOS 18.0, *) {
-            MeshBackdrop(theme: theme, animated: animated)
-        } else {
-            LegacyBackdrop(theme: theme)
-        }
-    }
 }
 
-// MARK: - iOS 18 mesh
-
-@available(iOS 18.0, *)
-private struct MeshBackdrop: View {
+/// The one gradient a screen is allowed, in the moods that allow one.
+///
+/// In Spritz this is Sunset Wash behind a hero header; in Nomad it resolves to a flat raised surface,
+/// because that mood permits no gradient at all. Callers do not need to know which — they ask for a
+/// hero panel and get whatever the theme's rules permit.
+struct HeroPanel<Content: View>: View {
     var theme: Theme
-    var animated: Bool
+    /// Rounded on three sides when it sits inside a screen; square when it is the top of one.
+    var cornerRadius: CGFloat = 0
+    @ViewBuilder var content: Content
 
     var body: some View {
-        if animated {
-            TimelineView(.animation(minimumInterval: 1.0 / 20.0, paused: false)) { context in
-                let t = context.date.timeIntervalSinceReferenceDate
-                mesh(phase: t)
+        content
+            .background {
+                ZStack {
+                    Rectangle().fill(theme.heroFill)
+                    if theme.heroGradient != nil {
+                        // A soft bloom in the top-left, as the reference screen has it.
+                        RadialGradient(
+                            colors: [theme.canvas.opacity(0.35), .clear],
+                            center: UnitPoint(x: 0.2, y: 0.1),
+                            startRadius: 0,
+                            endRadius: 320
+                        )
+                    }
+                }
             }
-        } else {
-            mesh(phase: 0)
-        }
-    }
-
-    private func mesh(phase: Double) -> some View {
-        // Corners stay pinned so the gradient never pulls away from the screen edges; only
-        // the interior points wander, which is what makes the light look alive.
-        let drift = { (i: Int, amount: Float) -> Float in
-            Float(sin(phase * 0.11 + Double(i) * 1.7)) * amount
-        }
-
-        let points: [SIMD2<Float>] = [
-            SIMD2(0.0, 0.0), SIMD2(0.5 + drift(0, 0.06), 0.0), SIMD2(1.0, 0.0),
-            SIMD2(0.0, 0.5 + drift(1, 0.05)),
-            SIMD2(0.5 + drift(2, 0.10), 0.5 + drift(3, 0.08)),
-            SIMD2(1.0, 0.5 + drift(4, 0.05)),
-            SIMD2(0.0, 1.0), SIMD2(0.5 + drift(5, 0.06), 1.0), SIMD2(1.0, 1.0),
-        ]
-
-        return MeshGradient(
-            width: 3,
-            height: 3,
-            points: points,
-            colors: theme.mesh.count == 9 ? theme.mesh : Array(repeating: theme.deepest, count: 9),
-            smoothsColors: true
-        )
-    }
-}
-
-// MARK: - iOS 17 fallback
-
-private struct LegacyBackdrop: View {
-    var theme: Theme
-
-    var body: some View {
-        ZStack {
-            theme.backdropGradient
-            RadialGradient(
-                colors: [theme.accent.opacity(0.35), .clear],
-                center: UnitPoint(x: 0.85, y: 0.12),
-                startRadius: 0,
-                endRadius: 420
-            )
-            RadialGradient(
-                colors: [theme.accentSoft.opacity(0.22), .clear],
-                center: UnitPoint(x: 0.1, y: 0.8),
-                startRadius: 0,
-                endRadius: 380
-            )
-        }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 }
 
 // MARK: - Grain
 
-/// A fixed field of faint dots laid over the gradient.
+/// A fixed field of faint dots laid over the canvas.
 ///
-/// Flat gradients on OLED show banding; a little noise hides it and gives the whole thing a
-/// printed, sun-faded quality. The field is generated from a fixed seed so it never
-/// shimmers between redraws.
+/// Generated from a fixed seed so it never shimmers between redraws. The tint follows the theme's
+/// ink rather than always being white: on cream paper, white noise is invisible and dark noise is
+/// what reads as texture.
 struct FilmGrain: View {
     var opacity: Double
+    var tint: Color = .white
     var density: Int = 1400
 
     var body: some View {
         Canvas { context, size in
             var rng = SplitMix64(seed: 0x5EED_1234)
             for _ in 0..<density {
-                let x = Double(rng.nextUnit()) * size.width
-                let y = Double(rng.nextUnit()) * size.height
-                let r = 0.4 + Double(rng.nextUnit()) * 1.1
-                let shade = 0.5 + Double(rng.nextUnit()) * 0.5
+                let x = rng.nextUnit() * size.width
+                let y = rng.nextUnit() * size.height
+                let r = 0.4 + rng.nextUnit() * 1.1
+                let shade = 0.5 + rng.nextUnit() * 0.5
                 context.fill(
                     Path(ellipseIn: CGRect(x: x, y: y, width: r, height: r)),
-                    with: .color(.white.opacity(shade))
+                    with: .color(tint.opacity(shade))
                 )
             }
         }
         .opacity(opacity)
-        .blendMode(.overlay)
         .drawingGroup()
     }
 }
@@ -180,8 +112,11 @@ struct SplitMix64 {
 
 // MARK: - Time of day
 
-/// The app warms up toward sunset and cools down after dark. Small effect, and the reason
-/// the same theme feels different at 7am and 7pm.
+/// Used for the greeting above the app title — "Golden hour", "After dark".
+///
+/// This used to tint the whole backdrop as well. That is gone: both moods are explicit about how much
+/// decoration they permit, and a drifting colour wash over the canvas is not among it. The copy
+/// survives because it costs nothing and both moods want warm, short wording.
 enum TimeOfDay {
     case dawn, day, goldenHour, dusk, night
 
@@ -198,28 +133,13 @@ enum TimeOfDay {
         }
     }
 
-    @ViewBuilder
-    func overlay(for theme: Theme) -> some View {
+    var greeting: String {
         switch self {
-        case .dawn:
-            LinearGradient(
-                colors: [theme.accentSoft.opacity(0.10), .clear],
-                startPoint: .top, endPoint: .center
-            )
-        case .day:
-            Color.white.opacity(0.03)
-        case .goldenHour:
-            LinearGradient(
-                colors: [.clear, theme.accent.opacity(0.16)],
-                startPoint: .top, endPoint: .bottom
-            )
-        case .dusk:
-            LinearGradient(
-                colors: [.clear, theme.accent.opacity(0.10)],
-                startPoint: .center, endPoint: .bottom
-            )
-        case .night:
-            Color.clear
+        case .dawn: return "Early start"
+        case .day: return "Somewhere to be"
+        case .goldenHour: return "Golden hour"
+        case .dusk: return "Last light"
+        case .night: return "After dark"
         }
     }
 }

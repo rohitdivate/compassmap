@@ -1,48 +1,57 @@
 import SwiftUI
 
-/// Frosted card. Everything that sits on the backdrop sits in one of these.
-struct GlassCard<Content: View>: View {
+/// A card or panel.
+///
+/// This is where the two moods differ most, and it is why `Theme` carries structure and not just
+/// colour. In Tropical Spritz a card is *white on cream, lifted on a soft shadow* — "cream, not
+/// white, is the canvas; white is reserved for cards so they lift". In Nomad Money a card is a
+/// slightly lighter surface separated by a 1pt hairline, and shadows are forbidden — "hairlines, not
+/// shadows; elevation is a lighter surface". One component, two genuinely different treatments.
+struct Surface<Content: View>: View {
     @Environment(\.theme) private var theme
 
-    var cornerRadius: CGFloat = 26
-    var tintStrength: Double = 0.55
-    var strokeStrength: Double = 0.22
-    var padding: CGFloat = 18
+    /// Nil takes the theme's card radius; rows and insets override it.
+    var cornerRadius: CGFloat?
+    var padding: CGFloat = 16
+    /// Raised panels sit one step above the surrounding surface.
+    var raised: Bool = false
     @ViewBuilder var content: Content
+
+    private var radius: CGFloat { cornerRadius ?? theme.radii.card }
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: radius, style: .continuous)
+    }
 
     var body: some View {
         content
             .padding(padding)
-            .background { glass }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .shadow(color: .black.opacity(0.28), radius: 18, x: 0, y: 10)
+            .background { shape.fill(raised ? theme.surfaceRaised : theme.surface) }
+            .overlay { border }
+            .clipShape(shape)
+            .modifier(SurfaceShadow(theme: theme))
     }
 
-    private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+    /// Only a hairline theme draws a border. In Spritz the shadow does that work, and adding a
+    /// border too makes the card look printed rather than lifted.
+    @ViewBuilder
+    private var border: some View {
+        if theme.usesHairlines {
+            shape.strokeBorder(theme.hairline, lineWidth: 1)
+        }
     }
+}
 
-    private var glass: some View {
-        shape
-            .fill(.ultraThinMaterial)
-            .overlay { shape.fill(theme.cardTint.opacity(tintStrength)).blendMode(.softLight) }
-            .overlay { rim }
-    }
+/// Applies the theme's card shadow, or nothing where the mood forbids it.
+private struct SurfaceShadow: ViewModifier {
+    var theme: Theme
 
-    /// One highlight running off the top-left corner: the single cue that reads as glass.
-    private var rim: some View {
-        shape.strokeBorder(
-            LinearGradient(
-                colors: [
-                    .white.opacity(strokeStrength + 0.18),
-                    .white.opacity(strokeStrength * 0.3),
-                    .clear,
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            lineWidth: 1
-        )
+    func body(content: Content) -> some View {
+        if let shadow = theme.cardShadow {
+            content.shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+        } else {
+            content
+        }
     }
 }
 
@@ -52,32 +61,46 @@ struct PillLabel: View {
 
     var text: String
     var symbol: String?
+    /// Filled in the accent, for the one thing on screen that matters most.
     var prominent: Bool = false
+    /// Filled in the highlight colour. "Lime is a highlight, not a surface" — badges only.
+    var badge: Bool = false
 
     var body: some View {
         HStack(spacing: 4) {
             if let symbol {
-                Image(systemName: symbol)
-                    .font(.system(size: 10, weight: .bold))
+                Image(systemName: symbol).font(.system(size: 9, weight: .bold))
             }
             Text(text)
-                .font(Typography.label)
+                .font(theme.labelFont)
+                .tracking(theme.labelTracking(theme.scale.label) * 0.5)
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
-        .foregroundStyle(prominent ? theme.deepest : theme.text)
+        .foregroundStyle(foreground)
         .background {
-            Capsule(style: .continuous)
-                .fill(prominent ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.ultraThinMaterial))
+            Capsule(style: .continuous).fill(background)
+            if !prominent, !badge, theme.usesHairlines {
+                Capsule(style: .continuous).strokeBorder(theme.hairline, lineWidth: 1)
+            }
         }
-        .overlay {
-            Capsule(style: .continuous)
-                .strokeBorder(.white.opacity(prominent ? 0 : 0.18), lineWidth: 1)
-        }
+    }
+
+    private var foreground: Color {
+        if badge { return theme.onHighlight }
+        if prominent { return theme.onAccent }
+        return theme.textMuted
+    }
+
+    private var background: Color {
+        if badge { return theme.highlight }
+        if prominent { return theme.accent }
+        // A quiet fill: a tinted wash of the ink in Spritz, a raised surface in Nomad.
+        return theme.usesHairlines ? theme.surfaceRaised : theme.text.opacity(0.07)
     }
 }
 
-/// Filter chip used for trips and theme selection.
+/// Filter chip. A pill in Spritz, a tight segmented control in Nomad.
 struct ChipButton: View {
     @Environment(\.theme) private var theme
 
@@ -90,27 +113,47 @@ struct ChipButton: View {
         Button(action: action) {
             HStack(spacing: 5) {
                 if let symbol {
-                    Image(systemName: symbol).font(.system(size: 11, weight: .bold))
+                    Image(systemName: symbol).font(.system(size: 10, weight: .bold))
                 }
-                Text(title).font(Typography.caption)
+                Text(title).font(theme.sans(theme.scale.caption, weight: .medium))
             }
             .padding(.horizontal, 13)
-            .padding(.vertical, 8)
-            .foregroundStyle(isSelected ? theme.deepest : theme.text)
-            .background {
-                Capsule(style: .continuous)
-                    .fill(isSelected ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.ultraThinMaterial))
-            }
+            .padding(.vertical, 7)
+            .foregroundStyle(foreground)
+            .background { shape.fill(background) }
             .overlay {
-                Capsule(style: .continuous)
-                    .strokeBorder(.white.opacity(isSelected ? 0 : 0.16), lineWidth: 1)
+                if !isSelected, theme.usesHairlines {
+                    shape.strokeBorder(theme.hairline, lineWidth: 1)
+                }
             }
         }
         .buttonStyle(PressableStyle())
     }
+
+    /// Spritz selects with the ink colour, as the reference screens do; Nomad selects with a raised
+    /// surface, keeping the lime free for the one live thing on screen.
+    private var foreground: Color {
+        guard isSelected else { return theme.textMuted }
+        return theme.usesHairlines ? theme.text : theme.canvas
+    }
+
+    private var background: Color {
+        guard isSelected else {
+            return theme.usesHairlines ? .clear : theme.text.opacity(0.07)
+        }
+        return theme.usesHairlines ? theme.surfaceRaised : theme.text
+    }
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: theme.radii.control, style: .continuous)
+    }
 }
 
-/// The app's primary button: accent fill, deep text, presses in.
+/// The primary action.
+///
+/// Spritz gives it a hard-offset shadow — `0 3px 0 #D8456B` — which is what makes that mood feel
+/// tactile, and it presses down by a point when tapped. Nomad has no shadows at all: a flat lime
+/// rectangle at 10pt radius.
 struct PrimaryButton: View {
     @Environment(\.theme) private var theme
 
@@ -122,24 +165,46 @@ struct PrimaryButton: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 if let symbol {
-                    Image(systemName: symbol).font(.system(size: 15, weight: .bold))
+                    Image(systemName: symbol).font(.system(size: 14, weight: .bold))
                 }
-                Text(title).font(.system(size: 16, weight: .semibold))
+                Text(title).font(theme.sans(15, weight: .bold))
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 15)
-            .foregroundStyle(theme.deepest)
-            .background {
-                Capsule(style: .continuous)
-                    .fill(theme.accent)
-                    .shadow(color: theme.glow.opacity(0.45), radius: 16, y: 6)
-            }
+            .padding(.vertical, 14)
+            .foregroundStyle(theme.onAccent)
         }
-        .buttonStyle(PressableStyle())
+        .buttonStyle(HardOffsetStyle(theme: theme))
     }
 }
 
-/// Quiet secondary button.
+/// Presses into its own shadow. Spritz only; in a hairline theme the offset collapses to nothing.
+private struct HardOffsetStyle: ButtonStyle {
+    var theme: Theme
+
+    private var offset: CGFloat { theme.usesHairlines ? 0 : 3 }
+
+    func makeBody(configuration: Configuration) -> some View {
+        let pressed = configuration.isPressed
+        let drop = pressed ? max(0, offset - 1) : offset
+
+        return configuration.label
+            .background {
+                RoundedRectangle(cornerRadius: theme.radii.control, style: .continuous)
+                    .fill(theme.accent)
+                    .background(alignment: .bottom) {
+                        if offset > 0 {
+                            RoundedRectangle(cornerRadius: theme.radii.control, style: .continuous)
+                                .fill(theme.accentShadow)
+                                .offset(y: drop)
+                        }
+                    }
+            }
+            .offset(y: pressed ? 1 : 0)
+            .animation(.spring(response: 0.22, dampingFraction: 0.7), value: pressed)
+    }
+}
+
+/// Quiet secondary action: outlined in Spritz, a raised surface in Nomad.
 struct SecondaryButton: View {
     @Environment(\.theme) private var theme
 
@@ -151,25 +216,30 @@ struct SecondaryButton: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 if let symbol {
-                    Image(systemName: symbol).font(.system(size: 14, weight: .semibold))
+                    Image(systemName: symbol).font(.system(size: 13, weight: .semibold))
                 }
-                Text(title).font(.system(size: 15, weight: .medium))
+                Text(title).font(theme.sans(14, weight: .medium))
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .padding(.vertical, 13)
             .foregroundStyle(theme.text)
-            .background {
-                Capsule(style: .continuous).fill(.ultraThinMaterial)
-            }
+            .background { shape.fill(theme.usesHairlines ? theme.surfaceRaised : Color.clear) }
             .overlay {
-                Capsule(style: .continuous).strokeBorder(.white.opacity(0.18), lineWidth: 1)
+                shape.strokeBorder(
+                    theme.usesHairlines ? theme.hairline : theme.text,
+                    lineWidth: theme.usesHairlines ? 1 : 1.5
+                )
             }
         }
         .buttonStyle(PressableStyle())
     }
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: theme.radii.control, style: .continuous)
+    }
 }
 
-/// Every tappable thing in Tradewind gives a little.
+/// Every tappable thing gives a little.
 struct PressableStyle: ButtonStyle {
     var scale: CGFloat = 0.96
 
@@ -181,7 +251,7 @@ struct PressableStyle: ButtonStyle {
     }
 }
 
-/// Section heading with an eyebrow above it.
+/// Section heading with a mono-caps eyebrow above it.
 struct SectionHeader: View {
     @Environment(\.theme) private var theme
 
@@ -199,15 +269,74 @@ struct SectionHeader: View {
         HStack(alignment: .lastTextBaseline) {
             VStack(alignment: .leading, spacing: 3) {
                 if let eyebrow {
-                    Text(eyebrow).eyebrowStyle(color: theme.accent)
+                    Text(eyebrow).eyebrowStyle(theme: theme, color: theme.textFaint)
                 }
                 Text(title)
-                    .font(Typography.sectionTitle)
+                    .font(theme.sectionTitleFont)
                     .foregroundStyle(theme.text)
             }
             Spacer()
             if let trailing { trailing }
         }
+    }
+}
+
+/// A figure and its label — the stat tile both moods build their home screen out of.
+struct StatTile: View {
+    @Environment(\.theme) private var theme
+
+    var value: String
+    var label: String
+    /// Spritz colours each tile's figure differently; Nomad leaves them all in paper white.
+    var valueColor: Color?
+    /// Nomad's delta chip: "+3", "0".
+    var delta: String?
+
+    var body: some View {
+        Surface(cornerRadius: theme.radii.row, padding: 15, raised: theme.usesHairlines) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(value)
+                        .font(theme.cardNumberFont)
+                        .numeric(theme)
+                        .foregroundStyle(valueColor ?? theme.text)
+                    if let delta {
+                        Text(delta)
+                            .font(theme.mono(11, medium: true))
+                            .numeric(theme)
+                            .foregroundStyle(theme.positive)
+                    }
+                }
+                Text(label)
+                    .font(theme.labelFont)
+                    .textCase(.uppercase)
+                    .tracking(theme.labelTracking(theme.scale.label))
+                    .foregroundStyle(theme.textFaint)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// A horizontal bar, used for arrival progress and range indicators.
+struct ThemedProgressBar: View {
+    @Environment(\.theme) private var theme
+
+    var fraction: Double
+    var height: CGFloat = 6
+    /// Progress is one of the few things the highlight colour is allowed to fill.
+    var color: Color?
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule().fill(theme.usesHairlines ? theme.surfaceRaised : theme.text.opacity(0.12))
+                Capsule()
+                    .fill(color ?? theme.highlight)
+                    .frame(width: max(height, geometry.size.width * min(max(fraction, 0), 1)))
+            }
+        }
+        .frame(height: height)
     }
 }
 
@@ -223,23 +352,14 @@ struct EmptyStateView: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(theme.accent.opacity(0.14))
-                    .frame(width: 92, height: 92)
-                Circle()
-                    .strokeBorder(theme.accent.opacity(0.35), lineWidth: 1)
-                    .frame(width: 92, height: 92)
-                Image(systemName: symbol)
-                    .font(.system(size: 34, weight: .light))
-                    .foregroundStyle(theme.accent)
-            }
+            mark
             Text(title)
-                .font(Typography.title)
+                .font(theme.titleFont)
+                .tracking(theme.displayTracking)
                 .foregroundStyle(theme.text)
                 .multilineTextAlignment(.center)
             Text(message)
-                .font(Typography.body)
+                .font(theme.bodyTextFont)
                 .foregroundStyle(theme.textMuted)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 8)
@@ -250,5 +370,54 @@ struct EmptyStateView: View {
             }
         }
         .padding(28)
+    }
+
+    private var mark: some View {
+        ZStack {
+            Circle().fill(theme.accent.opacity(0.12))
+            Circle().strokeBorder(theme.accent.opacity(0.3), lineWidth: 1)
+            Image(systemName: symbol)
+                .font(.system(size: 32, weight: .light))
+                .foregroundStyle(theme.accent)
+        }
+        .frame(width: 92, height: 92)
+    }
+}
+
+/// A round icon button — close, settings, the map controls.
+struct CircularButton: View {
+    @Environment(\.theme) private var theme
+
+    var symbol: String
+    var isActive: Bool = false
+    /// Set when the button sits on a photo or hero gradient rather than on the canvas.
+    var onHero: Bool = false
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(foreground)
+                .frame(width: 40, height: 40)
+                .background { Circle().fill(background) }
+                .overlay {
+                    if !isActive, !onHero, theme.usesHairlines {
+                        Circle().strokeBorder(theme.hairline, lineWidth: 1)
+                    }
+                }
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    private var foreground: Color {
+        if isActive { return theme.onAccent }
+        return onHero ? .white : theme.text
+    }
+
+    private var background: Color {
+        if isActive { return theme.accent }
+        if onHero { return .black.opacity(0.28) }
+        return theme.usesHairlines ? theme.surface : theme.text.opacity(0.07)
     }
 }

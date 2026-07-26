@@ -98,19 +98,19 @@ struct ArrowScreen: View {
     /// feels like a place rather than a readout.
     private var backdrop: some View {
         ZStack {
-            ThemedBackground(
-                theme: theme,
-                animated: true,
-                timeTint: settings.timeOfDayTintEnabled
-            )
+            // No photo (a spot saved from a shared link) still gets a hero: the mood's own gradient
+            // in Spritz, its deep surface in Nomad.
+            Rectangle().fill(theme.heroFill).ignoresSafeArea()
 
             if let photoData = destination.photoData {
                 blurredPhoto(photoData)
             }
 
-            // Keeps the readout legible over any photo.
+            // The photo is the hero here, so the scrim is dark and the text on top is white —
+            // in both moods. A cream scrim over a photograph washes it out, and this screen is
+            // the one place the design's "one gradient, behind a photo" rule clearly applies.
             LinearGradient(
-                colors: [theme.deepest.opacity(0.55), .clear, theme.deepest.opacity(0.85)],
+                colors: [.black.opacity(0.45), .black.opacity(0.05), .black.opacity(0.75)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -154,15 +154,16 @@ struct ArrowScreen: View {
 
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(engine.turnHint()).eyebrowStyle(color: theme.accent)
+            Text(engine.turnHint()).eyebrowStyle(theme: theme)
             Text(destination.name)
-                .font(Typography.title)
-                .foregroundStyle(theme.text)
+                .font(theme.titleFont)
+                .tracking(theme.displayTracking)
+                .foregroundStyle(.white)
                 .lineLimit(2)
             if let subtitle = destination.subtitle {
                 Text(subtitle)
-                    .font(Typography.caption)
-                    .foregroundStyle(theme.textMuted)
+                    .font(theme.captionFont)
+                    .foregroundStyle(.white.opacity(0.72))
                     .lineLimit(1)
             }
         }
@@ -201,10 +202,9 @@ struct ArrowScreen: View {
     private func circularGlyph(_ symbol: String) -> some View {
         Image(systemName: symbol)
             .font(.system(size: 15, weight: .bold))
-            .foregroundStyle(theme.text)
+            .foregroundStyle(.white)
             .frame(width: 40, height: 40)
-            .background { Circle().fill(.ultraThinMaterial) }
-            .overlay { Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
+            .background { Circle().fill(.black.opacity(0.28)) }
     }
 
     // MARK: - Compass
@@ -221,7 +221,8 @@ struct ArrowScreen: View {
                 heading: engine.headingIsUsable ? engine.roseAngle : 0,
                 targetBearing: engine.bearing,
                 onTarget: engine.onTarget,
-                diameter: 300
+                diameter: 300,
+                onPhoto: true
             )
 
             DirectionArrow(
@@ -259,13 +260,13 @@ struct ArrowScreen: View {
         if let distance = engine.distanceReadout() {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(distance.value)
-                    .font(Typography.hero(heroFontSize(for: distance.value)))
+                    .font(theme.heroNumberFont(heroFontSize(for: distance.value)))
                     .monospacedDigit()
                     .contentTransition(.numericText())
-                    .foregroundStyle(theme.text)
+                    .foregroundStyle(.white)
                 Text(distance.unit)
-                    .font(.system(size: 26, weight: .semibold, design: .rounded))
-                    .foregroundStyle(theme.textMuted)
+                    .font(theme.mono(26))
+                    .foregroundStyle(.white.opacity(0.7))
                     .padding(.bottom, 6)
             }
             .animation(.snappy(duration: 0.25), value: distance.value)
@@ -273,8 +274,8 @@ struct ArrowScreen: View {
             VStack(spacing: 6) {
                 ProgressView().tint(theme.accent)
                 Text(location.isAuthorized ? "Finding you" : "Location is off")
-                    .font(Typography.caption)
-                    .foregroundStyle(theme.textMuted)
+                    .font(theme.captionFont)
+                    .foregroundStyle(.white.opacity(0.72))
             }
             .frame(height: 80)
         }
@@ -304,20 +305,20 @@ struct ArrowScreen: View {
     @ViewBuilder
     private var statusNote: some View {
         if !engine.headingIsUsable {
-            noteText("No compass reading — showing the direction from north instead.", theme.textMuted)
+            noteText("No compass reading — showing the direction from north instead.", .white.opacity(0.7))
         } else if location.needsCalibration {
             noteText(
                 "Magnetic interference. Move away from metal, or wave the phone in a figure of eight.",
-                theme.accentSoft
+                theme.secondary
             )
         } else if let accuracy = engine.horizontalAccuracy, accuracy > 40 {
-            noteText("Rough fix — accurate to about \(Int(accuracy)) m", theme.textMuted)
+            noteText("Rough fix — accurate to about \(Int(accuracy)) m", .white.opacity(0.7))
         }
     }
 
     private func noteText(_ text: String, _ colour: Color) -> some View {
         Text(text)
-            .font(Typography.caption)
+            .font(theme.captionFont)
             .foregroundStyle(colour)
             .multilineTextAlignment(.center)
     }

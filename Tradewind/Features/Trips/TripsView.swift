@@ -124,9 +124,9 @@ struct TripsView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(trips.count) \(trips.count == 1 ? "trip" : "trips")")
-                    .eyebrowStyle(color: theme.accent)
+                    .eyebrowStyle(theme: theme)
                 Text("Trips")
-                    .font(Typography.displayTitle)
+                    .font(theme.displayTitleFont)
                     .foregroundStyle(theme.text)
             }
             Spacer()
@@ -135,7 +135,7 @@ struct TripsView: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(theme.deepest)
+                    .foregroundStyle(theme.canvas)
                     .frame(width: 42, height: 42)
                     .background { Circle().fill(theme.accent) }
             }
@@ -188,9 +188,9 @@ private struct TripCard: View {
             .overlay {
                 LinearGradient(
                     colors: [
-                        tripTheme.deepest.opacity(0.1),
-                        tripTheme.deepest.opacity(0.55),
-                        tripTheme.deepest.opacity(0.9),
+                        tripTheme.canvas.opacity(0.1),
+                        tripTheme.canvas.opacity(0.55),
+                        tripTheme.canvas.opacity(0.9),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -202,12 +202,12 @@ private struct TripCard: View {
         VStack(alignment: .leading, spacing: 6) {
             pills
             Text(trip.displayName)
-                .font(Typography.title)
+                .font(theme.titleFont)
                 .foregroundStyle(.white)
                 .lineLimit(1)
             if let subtitle = trip.subtitle, !subtitle.isEmpty {
                 Text(subtitle)
-                    .font(Typography.caption)
+                    .font(theme.captionFont)
                     .foregroundStyle(.white.opacity(0.75))
             }
         }
@@ -249,13 +249,13 @@ private struct LooseSpotChip: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             Text(ranked.spot.displayName)
-                .font(Typography.caption)
+                .font(theme.captionFont)
                 .foregroundStyle(theme.text)
                 .lineLimit(1)
 
             if let metres = ranked.metres {
                 Text(DistanceFormatting.string(metres: metres, preference: unitPreference))
-                    .font(Typography.label)
+                    .font(theme.labelFont)
                     .monospacedDigit()
                     .foregroundStyle(theme.textMuted)
             }
@@ -306,7 +306,7 @@ struct TripDetailView: View {
         }
         .scrollIndicators(.hidden)
         .background {
-            ThemedBackground(theme: theme, timeTint: settings.timeOfDayTintEnabled)
+            ThemedBackground(theme: theme)
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -315,9 +315,9 @@ struct TripDetailView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\(trip.spotCount) \(trip.spotCount == 1 ? "spot" : "spots")")
-                .eyebrowStyle(color: theme.accent)
+                .eyebrowStyle(theme: theme)
             Text(trip.displayName)
-                .font(Typography.displayTitle)
+                .font(theme.displayTitleFont)
                 .foregroundStyle(theme.text)
         }
         .padding(.horizontal, 18)
@@ -386,7 +386,7 @@ private struct TripSpotRow: View {
     var unitPreference: UnitPreference
 
     var body: some View {
-        GlassCard(cornerRadius: 20, padding: 12) {
+        Surface(cornerRadius: 20, padding: 12) {
             HStack(spacing: 14) {
                 PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph)
                     .frame(width: 56, height: 56)
@@ -394,11 +394,11 @@ private struct TripSpotRow: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(ranked.spot.displayName)
-                        .font(Typography.cardTitle)
+                        .font(theme.cardTitleFont)
                         .foregroundStyle(theme.text)
                         .lineLimit(1)
                     Text(ranked.spot.subtitle)
-                        .font(Typography.caption)
+                        .font(theme.captionFont)
                         .foregroundStyle(theme.textMuted)
                         .lineLimit(1)
                 }
@@ -419,11 +419,11 @@ private struct TripSpotRow: View {
         let readout = DistanceFormatting.readout(metres: metres, preference: unitPreference)
         return VStack(alignment: .trailing, spacing: 0) {
             Text(readout.value)
-                .font(Typography.cardDistance)
+                .font(theme.cardNumberFont)
                 .monospacedDigit()
                 .foregroundStyle(theme.text)
             Text(readout.unit)
-                .font(Typography.label)
+                .font(theme.labelFont)
                 .foregroundStyle(theme.textMuted)
         }
     }

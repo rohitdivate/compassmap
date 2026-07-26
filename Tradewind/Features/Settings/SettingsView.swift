@@ -29,7 +29,7 @@ struct SettingsView: View {
             }
             .scrollIndicators(.hidden)
             .background {
-                ThemedBackground(theme: theme, timeTint: settings.timeOfDayTintEnabled)
+                ThemedBackground(theme: theme)
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -48,7 +48,7 @@ struct SettingsView: View {
     private var measurements: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "Distances")
-            GlassCard(padding: 14) {
+            Surface(padding: 14) {
                 VStack(spacing: 4) {
                     ForEach(UnitPreference.allCases, id: \.rawValue) { preference in
                         SettingsRadioRow(
@@ -96,10 +96,6 @@ struct SettingsView: View {
         )
     }
 
-    private var timeTint: Binding<Bool> {
-        Binding(get: { settings.timeOfDayTintEnabled }, set: { settings.timeOfDayTintEnabled = $0 })
-    }
-
     private var cloudSync: Binding<Bool> {
         Binding(get: { settings.cloudSyncEnabled }, set: { settings.cloudSyncEnabled = $0 })
     }
@@ -109,7 +105,7 @@ struct SettingsView: View {
     private var compassSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "Compass")
-            GlassCard(padding: 14) {
+            Surface(padding: 14) {
                 VStack(spacing: 10) {
                     SettingsToggleRow(
                         symbol: "location.north.line.fill",
@@ -173,7 +169,7 @@ struct SettingsView: View {
     private var feedbackSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "Feel")
-            GlassCard(padding: 14) {
+            Surface(padding: 14) {
                 VStack(spacing: 10) {
                     SettingsToggleRow(
                         symbol: "hand.tap.fill",
@@ -188,13 +184,6 @@ struct SettingsView: View {
                         detail: "A soft chime when you're facing the right way and when you arrive.",
                         isOn: sound
                     )
-                    divider
-                    SettingsToggleRow(
-                        symbol: "sun.horizon.fill",
-                        title: "Shift with the sun",
-                        detail: "Warms the colours toward golden hour and cools them after dark.",
-                        isOn: timeTint
-                    )
                 }
             }
         }
@@ -205,7 +194,7 @@ struct SettingsView: View {
     private var syncSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "iCloud")
-            GlassCard(padding: 14) {
+            Surface(padding: 14) {
                 VStack(spacing: 10) {
                     SettingsToggleRow(
                         symbol: "icloud.fill",
@@ -225,14 +214,14 @@ struct SettingsView: View {
         let mode = settings.persistenceMode
         return HStack(spacing: 10) {
             Image(systemName: mode.isHealthy ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .foregroundStyle(mode.isHealthy ? theme.accent : theme.accentSoft)
+                .foregroundStyle(mode.isHealthy ? theme.accent : theme.secondary)
             VStack(alignment: .leading, spacing: 2) {
                 Text(mode.summary)
-                    .font(Typography.caption)
+                    .font(theme.captionFont)
                     .foregroundStyle(theme.text)
                 if settings.cloudSyncEnabled, mode != .syncing {
                     Text("Changing this takes effect next time Tradewind opens.")
-                        .font(Typography.label)
+                        .font(theme.labelFont)
                         .foregroundStyle(theme.textMuted)
                 }
             }
@@ -245,16 +234,16 @@ struct SettingsView: View {
     private var widgetHelp: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(eyebrow: "Home screen", title: "Widgets")
-            GlassCard {
+            Surface {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Touch and hold your home screen, tap the plus, and search for Tradewind.")
-                        .font(Typography.caption)
+                        .font(theme.captionFont)
                         .foregroundStyle(theme.textMuted)
                     ForEach(widgetLines, id: \.self) { line in
                         bullet(line)
                     }
                     Text("Pin a spot to choose which one the small widget follows — long-press any spot to pin it.")
-                        .font(Typography.label)
+                        .font(theme.labelFont)
                         .foregroundStyle(theme.textMuted)
                         .padding(.top, 2)
                 }
@@ -269,7 +258,7 @@ struct SettingsView: View {
                 .frame(width: 5, height: 5)
                 .padding(.top, 6)
             Text(text)
-                .font(Typography.caption)
+                .font(theme.captionFont)
                 .foregroundStyle(theme.text)
         }
     }
@@ -286,16 +275,16 @@ struct SettingsView: View {
     private var about: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "About")
-            GlassCard {
+            Surface {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Tradewind")
-                        .font(Typography.cardTitle)
+                        .font(theme.cardTitleFont)
                         .foregroundStyle(theme.text)
                     Text("Photograph a place. Walk away. Come back to it.")
-                        .font(Typography.caption)
+                        .font(theme.captionFont)
                         .foregroundStyle(theme.textMuted)
                     Text(versionLine)
-                        .font(Typography.label)
+                        .font(theme.labelFont)
                         .foregroundStyle(theme.textMuted)
                         .padding(.top, 4)
                 }
@@ -364,23 +353,45 @@ private struct ThemeTile: View {
         .shadow(color: .black.opacity(0.3), radius: isSelected ? 14 : 6, y: 5)
     }
 
-    /// A miniature of the real backdrop and arrow, not a colour chip: the point is to show what
-    /// the app will feel like.
+    /// A miniature of the mood rather than a colour chip: the real canvas, a card treated the way
+    /// that mood treats cards, the arrow, and one pill in the accent. It shows how the app will
+    /// *behave*, which two swatches of colour cannot.
     private var swatch: some View {
         ZStack {
-            candidate.backdropGradient
-            RadialGradient(
-                colors: [candidate.accent.opacity(0.5), .clear],
-                center: UnitPoint(x: 0.8, y: 0.2),
-                startRadius: 0,
-                endRadius: 90
-            )
-            FilmGrain(opacity: candidate.grainOpacity, density: 260)
-            ArrowShape()
-                .fill(candidate.arrowGradient)
-                .frame(width: 26, height: 42)
-                .rotationEffect(.degrees(34))
-                .shadow(color: candidate.glow.opacity(0.7), radius: 8)
+            candidate.canvas
+            if candidate.grainOpacity > 0 {
+                FilmGrain(opacity: candidate.grainOpacity, tint: candidate.text, density: 260)
+            }
+
+            HStack(spacing: 10) {
+                ArrowShape()
+                    .fill(candidate.arrowGradient)
+                    .frame(width: 22, height: 36)
+                    .rotationEffect(.degrees(34))
+
+                VStack(alignment: .leading, spacing: 5) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(candidate.text.opacity(0.75))
+                        .frame(width: 46, height: 5)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(candidate.textMuted.opacity(0.5))
+                        .frame(width: 30, height: 4)
+                    Capsule()
+                        .fill(candidate.accent)
+                        .frame(width: 34, height: 9)
+                }
+            }
+            .padding(11)
+            .background {
+                RoundedRectangle(cornerRadius: candidate.radii.row, style: .continuous)
+                    .fill(candidate.surface)
+                    .overlay {
+                        if candidate.usesHairlines {
+                            RoundedRectangle(cornerRadius: candidate.radii.row, style: .continuous)
+                                .strokeBorder(candidate.hairline, lineWidth: 1)
+                        }
+                    }
+            }
         }
         .frame(height: 96)
     }
@@ -392,7 +403,7 @@ private struct ThemeTile: View {
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(candidate.accent)
                 Text(candidate.name)
-                    .font(Typography.label)
+                    .font(candidate.labelFont)
                     .foregroundStyle(candidate.text)
                 Spacer(minLength: 0)
                 if isSelected {
@@ -408,13 +419,13 @@ private struct ThemeTile: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(candidate.deepest)
+        .background(candidate.canvas)
     }
 
     private var border: some View {
         RoundedRectangle(cornerRadius: 18, style: .continuous)
             .strokeBorder(
-                isSelected ? candidate.accent : .white.opacity(0.12),
+                isSelected ? candidate.accent : candidate.hairline,
                 lineWidth: isSelected ? 2 : 1
             )
     }
@@ -438,10 +449,10 @@ private struct SettingsToggleRow: View {
                 .frame(width: 22, height: 22)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(Typography.body)
+                    .font(theme.bodyTextFont)
                     .foregroundStyle(theme.text)
                 Text(detail)
-                    .font(Typography.label)
+                    .font(theme.labelFont)
                     .foregroundStyle(theme.textMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -469,10 +480,10 @@ private struct SettingsRadioRow: View {
                     .foregroundStyle(isSelected ? theme.accent : theme.textMuted)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(title)
-                        .font(Typography.body)
+                        .font(theme.bodyTextFont)
                         .foregroundStyle(theme.text)
                     Text(detail)
-                        .font(Typography.label)
+                        .font(theme.labelFont)
                         .monospacedDigit()
                         .foregroundStyle(theme.textMuted)
                 }
@@ -502,18 +513,18 @@ private struct SettingsInfoRow: View {
                 .frame(width: 22, height: 22)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(Typography.body)
+                    .font(theme.bodyTextFont)
                     .foregroundStyle(theme.text)
                 Text(detail)
-                    .font(Typography.label)
+                    .font(theme.labelFont)
                     .foregroundStyle(theme.textMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             if let actionTitle {
                 Button(actionTitle, action: action)
-                    .font(Typography.label)
-                    .foregroundStyle(theme.deepest)
+                    .font(theme.labelFont)
+                    .foregroundStyle(theme.canvas)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
                     .background { Capsule().fill(theme.accent) }

@@ -116,6 +116,15 @@ def build_targets() -> list[Target]:
     assets = "Tradewind/Resources/Assets.xcassets"
     resources = [assets] if os.path.isdir(os.path.join(ROOT, assets)) else []
 
+    # Fonts are added as individual files rather than a folder reference so they land at the
+    # bundle root, which is where `UIAppFonts` looks for them by bare filename. The OFL licence
+    # texts ship alongside, since the licence requires them to travel with the fonts.
+    fonts_dir = os.path.join(ROOT, "Tradewind", "Resources", "Fonts")
+    if os.path.isdir(fonts_dir):
+        for name in sorted(os.listdir(fonts_dir)):
+            if name.endswith((".ttf", ".otf", ".txt")):
+                resources.append(f"Tradewind/Resources/Fonts/{name}")
+
     common = {
         "SWIFT_VERSION": "5.0",
         "IPHONEOS_DEPLOYMENT_TARGET": DEPLOYMENT_TARGET,

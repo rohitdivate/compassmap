@@ -1,220 +1,288 @@
 import SwiftUI
 
-/// One complete look for the app: backdrop, arrow, glow, type colour, confetti.
+/// How a theme builds depth.
 ///
-/// Every screen and every widget reads its colour from a `Theme` — there are no ad-hoc
-/// colours anywhere else in the project. Adding a theme is adding one entry to
-/// `ThemeCatalog.all`, and it restyles the whole app including the home-screen widgets.
+/// This is the difference between the two moods that colour alone cannot carry. Tropical Spritz
+/// lifts white cards off a cream canvas with soft shadows; Nomad Money forbids shadows outright and
+/// separates everything with a 1pt hairline, using a lighter surface as its only elevation cue.
+enum Elevation: Hashable, Sendable {
+    /// Cards are a lighter surface than the canvas, lifted on a soft shadow.
+    case shadow
+    /// Cards are separated by hairline borders. Elevation is a lighter fill, never a shadow.
+    case hairline
+}
+
+/// Which family a theme sets its numerals in.
+enum NumeralStyle: Hashable, Sendable {
+    /// Proportional monospace — DM Mono. "Serif for feeling, mono for fact."
+    case mono
+    /// Tabular monospace — JetBrains Mono with `tabular-nums`, so columns of figures line up.
+    case tabularMono
+}
+
+/// The corner radii a theme uses, which the two moods specify quite differently: Spritz is round
+/// (999 pills, 20 cards), Nomad is tight (10 buttons, 14 rows, 16 cards).
+struct Radii: Hashable, Sendable {
+    /// Buttons and chips. A large value produces a pill.
+    var control: CGFloat
+    var card: CGFloat
+    var row: CGFloat
+    var avatar: CGFloat
+    /// The inner corner of a phone screen, used by the preview and any full-bleed sheet.
+    var screen: CGFloat
+
+    var isPill: Bool { control >= 100 }
+}
+
+/// One complete look: palette, surfaces, type roles, radii and the rules for depth.
+///
+/// Both moods come from the Been There theme reference. They are not two colourways of one design —
+/// one is a light editorial travel magazine, the other a dark financial ledger — so `Theme` carries
+/// structure as well as colour. Every screen, component and widget reads from here, and there are no
+/// ad-hoc colours anywhere else in the project.
 struct Theme: Identifiable, Hashable, Sendable {
 
     let id: String
-    /// Shown in the picker.
     let name: String
-    /// One line of flavour, shown under the name.
+    /// One line of flavour, shown under the name in the picker.
     let tagline: String
-    /// SF Symbol used as the theme's mark in the picker.
+    /// Longer characterisation, from the design's own description of the mood.
+    let blurb: String
+    /// SF Symbol used as the theme's mark.
     let symbol: String
 
-    /// Backdrop gradient, top to bottom. Three or more stops.
-    let backdrop: [Color]
-    /// Nine colours laid out row-major for `MeshGradient` on iOS 18+. On iOS 17 the
-    /// backdrop gradient is used instead, so this is enrichment and never a requirement.
-    let mesh: [Color]
+    /// Light or dark. Each theme fixes its own rather than following the system, because neither
+    /// mood survives being inverted.
+    let colorScheme: ColorScheme
 
-    /// Primary interactive colour: the arrow, the active chip, the ring when on target.
+    // MARK: Surfaces
+
+    /// The page. Cream in Spritz, near-black in Nomad.
+    let canvas: Color
+    /// Cards and rows sitting on the canvas.
+    let surface: Color
+    /// A step above `surface` — Nomad's only elevation cue; a pressed or nested state in Spritz.
+    let surfaceRaised: Color
+    /// Border colour. Load-bearing in Nomad, a whisper in Spritz.
+    let hairline: Color
+    let elevation: Elevation
+
+    // MARK: Colour
+
+    /// The primary action and identity colour.
     let accent: Color
-    /// Secondary accent, used for contrast against `accent` (the "citrus vs soda" pairing).
-    let accentSoft: Color
-    /// Gradient along the arrow, tip last.
-    let arrow: [Color]
-    /// The halo that blooms when the phone is pointing at the spot.
-    let glow: Color
+    /// Text and glyphs placed on top of `accent`.
+    let onAccent: Color
+    /// A darker cut of the accent, used for the hard-offset button shadow in Spritz.
+    let accentShadow: Color
+    /// The second colour, for contrast against `accent`.
+    let secondary: Color
+    /// Reserved for badges, progress and toggles-on. "Lime is a highlight, not a surface."
+    let highlight: Color
+    /// Text and glyphs on `highlight`.
+    let onHighlight: Color
+    /// Deep counterweight — Spritz's "You're in" card, Nomad's raised chrome.
+    let depth: Color
 
     let text: Color
     let textMuted: Color
-    /// Tint layered under the frosted glass of cards and sheets.
-    let cardTint: Color
+    /// Tertiary — the 10-11px mono caps labels.
+    let textFaint: Color
+
+    /// Positive and negative deltas. Nomad's rules require them; Spritz uses them sparingly.
+    let positive: Color
+    let negative: Color
+
+    // MARK: Signature
+
+    /// The one gradient a Spritz screen is allowed, behind a photo or as the hero. Nil in Nomad,
+    /// which forbids gradients entirely.
+    let heroGradient: [Color]?
+    /// The halo behind the arrow. Nomad keeps this to almost nothing — one accent, no decoration.
+    let glow: Color
+    /// Gradient along the arrow, tip last.
+    let arrow: [Color]
     /// Palette for the arrival celebration.
     let celebration: [Color]
-
-    /// How much film grain to lay over the backdrop. Small numbers; 0.05 is plenty.
+    /// Film grain over the backdrop. Spritz is paper and takes some; Nomad is a screen and takes none.
     let grainOpacity: Double
+
+    // MARK: Type
+
+    /// Display face — screen titles and headline numbers-adjacent text.
+    let displayFont: String
+    /// Body face.
+    let bodyFont: String
+    let bodyMediumFont: String
+    let bodyBoldFont: String
+    /// Numerals, labels, metadata.
+    let monoFont: String
+    let monoMediumFont: String
+    let numerals: NumeralStyle
+    /// Tracking for the display face. Both moods set it tight, Nomad more so.
+    let displayTracking: CGFloat
+    let scale: TypeScale
+
+    let radii: Radii
 
     // MARK: - Derived
 
-    var backdropGradient: LinearGradient {
-        LinearGradient(colors: backdrop, startPoint: .top, endPoint: .bottom)
+    /// True when the theme wants hairlines rather than shadows.
+    var usesHairlines: Bool { elevation == .hairline }
+
+    /// Shadow for a card, or nothing at all in a hairline theme.
+    var cardShadow: (color: Color, radius: CGFloat, y: CGFloat)? {
+        guard elevation == .shadow else { return nil }
+        return (text.opacity(0.10), 3, 1)
+    }
+
+    /// The gradient a hero area uses. Falls back to a flat canvas where the mood forbids gradients.
+    var heroFill: AnyShapeStyle {
+        if let heroGradient {
+            return AnyShapeStyle(LinearGradient(
+                colors: heroGradient,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ))
+        }
+        return AnyShapeStyle(depth)
     }
 
     var arrowGradient: LinearGradient {
         LinearGradient(colors: arrow, startPoint: .bottom, endPoint: .top)
     }
 
-    /// Deepest backdrop stop — used where a solid colour is needed (widget backgrounds,
-    /// launch screen, map tint).
-    var deepest: Color { backdrop.first ?? .black }
-
-    /// Lightest backdrop stop.
-    var shallowest: Color { backdrop.last ?? accent }
+    /// Colour for text and glyphs drawn over `heroFill`.
+    var onHero: Color {
+        heroGradient == nil ? text : Color.white
+    }
 }
 
-/// The six looks that ship with Tradewind. Tropical islands and long drinks: the two
-/// things worth walking somewhere for.
+/// The two moods from the Been There theme reference.
+///
+/// Palettes, type roles and radii are transcribed from that file; the swatch names are its names.
 enum ThemeCatalog {
 
-    static let margarita = Theme(
-        id: "margarita",
-        name: "Margarita",
-        tagline: "Lime zest, agave, salt on the rim",
-        symbol: "leaf.fill",
-        backdrop: [Color(hex: "#04231C"), Color(hex: "#0D4936"), Color(hex: "#1E8158")],
-        mesh: [
-            Color(hex: "#04231C"), Color(hex: "#07352A"), Color(hex: "#0B4433"),
-            Color(hex: "#0D4936"), Color(hex: "#16694A"), Color(hex: "#2A8F5F"),
-            Color(hex: "#1E8158"), Color(hex: "#5DAE6B"), Color(hex: "#C6F24E"),
-        ],
-        accent: Color(hex: "#C6F24E"),
-        accentSoft: Color(hex: "#F3EBCF"),
-        arrow: [Color(hex: "#4FBE71"), Color(hex: "#C6F24E"), Color(hex: "#EEFFA8")],
-        glow: Color(hex: "#C6F24E"),
-        text: Color(hex: "#F5FCEA"),
-        textMuted: Color(hex: "#A6C69A"),
-        cardTint: Color(hex: "#0B4433"),
-        celebration: [
-            Color(hex: "#C6F24E"), Color(hex: "#F3EBCF"),
-            Color(hex: "#E3B23C"), Color(hex: "#6FD69A"),
-        ],
-        grainOpacity: 0.05
-    )
-
-    static let paloma = Theme(
-        id: "paloma",
-        name: "Paloma",
-        tagline: "Grapefruit, soda, pink salt",
-        symbol: "bird.fill",
-        backdrop: [Color(hex: "#1E0B2B"), Color(hex: "#722A57"), Color(hex: "#E0736F")],
-        mesh: [
-            Color(hex: "#1E0B2B"), Color(hex: "#381240"), Color(hex: "#4C1A45"),
-            Color(hex: "#722A57"), Color(hex: "#A63C61"), Color(hex: "#CE5468"),
-            Color(hex: "#E0736F"), Color(hex: "#F2A08D"), Color(hex: "#9BD7E3"),
-        ],
-        accent: Color(hex: "#FF7A9C"),
-        accentSoft: Color(hex: "#9BD7E3"),
-        arrow: [Color(hex: "#FF5E86"), Color(hex: "#FF9DB4"), Color(hex: "#FFE1E8")],
-        glow: Color(hex: "#FF8FA8"),
-        text: Color(hex: "#FFF1F3"),
-        textMuted: Color(hex: "#D6A9B8"),
-        cardTint: Color(hex: "#4C1A45"),
-        celebration: [
-            Color(hex: "#FF7A9C"), Color(hex: "#9BD7E3"),
-            Color(hex: "#FFD9A0"), Color(hex: "#FFFFFF"),
-        ],
-        grainOpacity: 0.045
-    )
-
-    static let hawaii = Theme(
-        id: "hawaii",
-        name: "Hawaii Sunset",
-        tagline: "Mango, hibiscus, deep ocean violet",
+    /// Theme A — sun-soaked, editorial, tactile. Postcard warmth: cream paper, sunset photography,
+    /// a serif that behaves like a travel magazine masthead. Colour does the emotional work while
+    /// numerals stay mono so stats still read as data.
+    static let tropicalSpritz = Theme(
+        id: "tropicalSpritz",
+        name: "Tropical Spritz",
+        tagline: "Sun-soaked, editorial, tactile",
+        blurb: "Postcard warmth. Cream paper, sunset photography, and a serif that behaves like a travel magazine masthead.",
         symbol: "sun.horizon.fill",
-        backdrop: [Color(hex: "#250E4B"), Color(hex: "#9A2F6E"), Color(hex: "#FF8C42")],
-        mesh: [
-            Color(hex: "#1B0838"), Color(hex: "#33115A"), Color(hex: "#5A1C68"),
-            Color(hex: "#9A2F6E"), Color(hex: "#C24272"), Color(hex: "#E85F6B"),
-            Color(hex: "#FF8C42"), Color(hex: "#FFB25B"), Color(hex: "#FFD9A0"),
-        ],
-        accent: Color(hex: "#FFB25B"),
-        accentSoft: Color(hex: "#FF5E93"),
-        arrow: [Color(hex: "#FF6B35"), Color(hex: "#FFB25B"), Color(hex: "#FFE9A8")],
-        glow: Color(hex: "#FFA24C"),
-        text: Color(hex: "#FFF4E8"),
-        textMuted: Color(hex: "#DFB4C0"),
-        cardTint: Color(hex: "#5A1C68"),
+        colorScheme: .light,
+
+        canvas: Color(hex: "#FFF6E9"),        // Piña Cream
+        surface: Color(hex: "#FFFFFF"),       // white is reserved for cards, so they lift
+        surfaceRaised: Color(hex: "#FFEBD9"),
+        hairline: Color(hex: "#2B1B22").opacity(0.10),
+        elevation: .shadow,
+
+        accent: Color(hex: "#FF6B8B"),        // Paloma Pink · primary
+        onAccent: Color(hex: "#FFFFFF"),
+        accentShadow: Color(hex: "#D8456B"),  // the hard-offset button shadow
+        secondary: Color(hex: "#1FA3B8"),     // Lagoon Blue
+        highlight: Color(hex: "#B8E62E"),     // Margarita Lime · badges, progress, toggles on
+        onHighlight: Color(hex: "#2B1B22"),
+        depth: Color(hex: "#0E5C6B"),         // Deep Lagoon
+
+        text: Color(hex: "#2B1B22"),          // Cacao Ink
+        textMuted: Color(hex: "#2B1B22").opacity(0.66),
+        textFaint: Color(hex: "#2B1B22").opacity(0.45),
+
+        positive: Color(hex: "#3FA96B"),
+        negative: Color(hex: "#D8456B"),
+
+        // Sunset Wash — hero overlays only, never on a button.
+        heroGradient: [Color(hex: "#FF8C42"), Color(hex: "#FF6B8B"), Color(hex: "#B06AB3")],
+        glow: Color(hex: "#FF8C42"),          // Sunset Coral
+        arrow: [Color(hex: "#D8456B"), Color(hex: "#FF6B8B"), Color(hex: "#FFB08C")],
         celebration: [
-            Color(hex: "#FFB25B"), Color(hex: "#FF5E93"),
-            Color(hex: "#29C7C0"), Color(hex: "#FFE9A8"),
+            Color(hex: "#FF6B8B"), Color(hex: "#FF8C42"),
+            Color(hex: "#B8E62E"), Color(hex: "#1FA3B8"),
         ],
-        grainOpacity: 0.05
+        grainOpacity: 0.035,
+
+        displayFont: Fonts.Serif.regular,
+        bodyFont: Fonts.Sans.regular,
+        bodyMediumFont: Fonts.Sans.medium,
+        bodyBoldFont: Fonts.Sans.bold,
+        monoFont: Fonts.Mono.regular,
+        monoMediumFont: Fonts.Mono.medium,
+        numerals: .mono,
+        displayTracking: -0.4,
+        scale: TypeScale(
+            display: 40, title: 27, sectionHead: 20, cardTitle: 15, body: 15,
+            caption: 12, label: 11, eyebrow: 10.5, readout: 34, cardNumber: 26
+        ),
+
+        // 999 pills, 20 cards, 16 rows, 14 avatars, 36 screen.
+        radii: Radii(control: 999, card: 20, row: 16, avatar: 14, screen: 36)
     )
 
-    static let kingCoconut = Theme(
-        id: "kingCoconut",
-        name: "King Coconut",
-        tagline: "Tea fields, cinnamon, amber husk",
-        symbol: "cup.and.saucer.fill",
-        backdrop: [Color(hex: "#12241A"), Color(hex: "#37552F"), Color(hex: "#D2953A")],
-        mesh: [
-            Color(hex: "#0E1D15"), Color(hex: "#193020"), Color(hex: "#264227"),
-            Color(hex: "#37552F"), Color(hex: "#587038"), Color(hex: "#8C8B3C"),
-            Color(hex: "#D2953A"), Color(hex: "#E8B45C"), Color(hex: "#F6DDA6"),
-        ],
-        accent: Color(hex: "#F0A93B"),
-        accentSoft: Color(hex: "#9CC46A"),
-        arrow: [Color(hex: "#C97B22"), Color(hex: "#F0A93B"), Color(hex: "#FFDE9E")],
-        glow: Color(hex: "#F0A93B"),
-        text: Color(hex: "#FBF4E4"),
-        textMuted: Color(hex: "#BCC6A4"),
-        cardTint: Color(hex: "#264227"),
+    /// Theme B — Mercury × Revolut, tabular. Travel treated like a ledger: near-black surfaces,
+    /// hairline borders, tabular numerals with delta chips, and exactly one accent doing all the
+    /// signalling. No decoration; density is the aesthetic.
+    static let nomadMoney = Theme(
+        id: "nomadMoney",
+        name: "Nomad Money",
+        tagline: "Tabular, hairline, one accent",
+        blurb: "Travel as a ledger. Near-black surfaces, hairline borders, and exactly one accent doing all the signalling.",
+        symbol: "chart.bar.fill",
+        colorScheme: .dark,
+
+        canvas: Color(hex: "#0A0B0D"),        // Void
+        surface: Color(hex: "#131519"),       // Surface
+        surfaceRaised: Color(hex: "#1A1D22"),
+        hairline: Color(hex: "#23262C"),      // Hairline · borders
+        elevation: .hairline,
+
+        accent: Color(hex: "#C6F24E"),        // Electric Lime · the only accent
+        onAccent: Color(hex: "#0A0B0D"),
+        accentShadow: Color(hex: "#7E8F3C"),
+        secondary: Color(hex: "#8A9099"),     // Muted
+        highlight: Color(hex: "#C6F24E"),
+        onHighlight: Color(hex: "#0A0B0D"),
+        depth: Color(hex: "#1A1D22"),
+
+        text: Color(hex: "#F2F4F7"),          // Paper
+        textMuted: Color(hex: "#8A9099"),     // Muted
+        textFaint: Color(hex: "#5E646D"),
+
+        positive: Color(hex: "#4ADE80"),      // Gain
+        negative: Color(hex: "#FF6B5C"),      // Drop
+
+        heroGradient: nil,                    // no gradients in this mood
+        glow: Color(hex: "#C6F24E").opacity(0.55),
+        arrow: [Color(hex: "#7E8F3C"), Color(hex: "#9CBB3E"), Color(hex: "#C6F24E")],
         celebration: [
-            Color(hex: "#F0A93B"), Color(hex: "#9CC46A"),
-            Color(hex: "#A9552F"), Color(hex: "#FBF4E4"),
+            Color(hex: "#C6F24E"), Color(hex: "#9CBB3E"),
+            Color(hex: "#4ADE80"), Color(hex: "#F2F4F7"),
         ],
-        grainOpacity: 0.06
+        grainOpacity: 0,
+
+        displayFont: Fonts.Grotesk.bold,
+        bodyFont: Fonts.Grotesk.regular,
+        bodyMediumFont: Fonts.Grotesk.medium,
+        bodyBoldFont: Fonts.Grotesk.bold,
+        monoFont: Fonts.GroteskMono.regular,
+        monoMediumFont: Fonts.GroteskMono.medium,
+        numerals: .tabularMono,
+        displayTracking: -0.9,
+        scale: TypeScale(
+            display: 28, title: 22, sectionHead: 17, cardTitle: 14, body: 14.5,
+            caption: 11.5, label: 10.5, eyebrow: 10, readout: 32, cardNumber: 24
+        ),
+
+        // 10 buttons, 14 rows, 16 cards, 9 avatars, 36 screen.
+        radii: Radii(control: 10, card: 16, row: 14, avatar: 9, screen: 36)
     )
 
-    static let mangoTemple = Theme(
-        id: "mangoTemple",
-        name: "Mango Temple",
-        tagline: "Lagoon turquoise and temple gold",
-        symbol: "building.columns.fill",
-        backdrop: [Color(hex: "#07222A"), Color(hex: "#0F5F66"), Color(hex: "#F2B233")],
-        mesh: [
-            Color(hex: "#051A21"), Color(hex: "#08303A"), Color(hex: "#0B4750"),
-            Color(hex: "#0F5F66"), Color(hex: "#1B8A85"), Color(hex: "#34B39C"),
-            Color(hex: "#8FCB7A"), Color(hex: "#F2B233"), Color(hex: "#FFE066"),
-        ],
-        accent: Color(hex: "#FFC93C"),
-        accentSoft: Color(hex: "#34D2C3"),
-        arrow: [Color(hex: "#FF9F1C"), Color(hex: "#FFC93C"), Color(hex: "#FFF0A8")],
-        glow: Color(hex: "#FFC93C"),
-        text: Color(hex: "#F3FCFB"),
-        textMuted: Color(hex: "#A2CCCB"),
-        cardTint: Color(hex: "#0B4750"),
-        celebration: [
-            Color(hex: "#FFC93C"), Color(hex: "#34D2C3"),
-            Color(hex: "#D4A017"), Color(hex: "#FFFFFF"),
-        ],
-        grainOpacity: 0.05
-    )
+    static let all: [Theme] = [tropicalSpritz, nomadMoney]
 
-    static let midnightTide = Theme(
-        id: "midnightTide",
-        name: "Midnight Tide",
-        tagline: "Phosphorescence on a black sea",
-        symbol: "moon.stars.fill",
-        backdrop: [Color(hex: "#03070F"), Color(hex: "#091A2C"), Color(hex: "#123A4D")],
-        mesh: [
-            Color(hex: "#02050B"), Color(hex: "#040D18"), Color(hex: "#061423"),
-            Color(hex: "#091A2C"), Color(hex: "#0D2839"), Color(hex: "#123A4D"),
-            Color(hex: "#1A5560"), Color(hex: "#237A78"), Color(hex: "#4FE3C1"),
-        ],
-        accent: Color(hex: "#4FE3C1"),
-        accentSoft: Color(hex: "#7FA6FF"),
-        arrow: [Color(hex: "#1F9E92"), Color(hex: "#4FE3C1"), Color(hex: "#C9FFF1")],
-        glow: Color(hex: "#4FE3C1"),
-        text: Color(hex: "#EAF4FF"),
-        textMuted: Color(hex: "#8CA2BE"),
-        cardTint: Color(hex: "#0D2839"),
-        celebration: [
-            Color(hex: "#4FE3C1"), Color(hex: "#7FA6FF"),
-            Color(hex: "#C9FFF1"), Color(hex: "#FFFFFF"),
-        ],
-        grainOpacity: 0.04
-    )
-
-    static let all: [Theme] = [margarita, paloma, hawaii, kingCoconut, mangoTemple, midnightTide]
-
-    static let fallback = hawaii
+    static let fallback = tropicalSpritz
 
     static func theme(id: String?) -> Theme {
         guard let id, let match = all.first(where: { $0.id == id }) else { return fallback }

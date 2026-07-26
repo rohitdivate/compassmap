@@ -17,7 +17,7 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            ThemedBackground(theme: theme, animated: true, timeTint: false)
+            ThemedBackground(theme: theme)
 
             VStack(spacing: 0) {
                 TabView(selection: $page) {
@@ -58,7 +58,7 @@ struct OnboardingView: View {
                         Image(systemName: "checkmark.circle.fill")
                         Text("Location allowed")
                     }
-                    .font(Typography.caption)
+                    .font(theme.captionFont)
                     .foregroundStyle(theme.accent)
                 } else {
                     PrimaryButton(title: "Allow location", symbol: "location.fill") {
@@ -66,7 +66,7 @@ struct OnboardingView: View {
                     }
                 }
                 Text("The camera is asked for the first time you take a photo.")
-                    .font(Typography.label)
+                    .font(theme.labelFont)
                     .foregroundStyle(theme.textMuted)
                     .multilineTextAlignment(.center)
             }
@@ -87,12 +87,12 @@ struct OnboardingView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Last thing").eyebrowStyle(color: theme.accent)
+                    Text("Last thing").eyebrowStyle(theme: theme)
                     Text("Pick your weather")
-                        .font(Typography.displayTitle)
+                        .font(theme.displayTitleFont)
                         .foregroundStyle(theme.text)
                     Text("Six looks, and you can change your mind whenever. Your widgets follow along.")
-                        .font(Typography.body)
+                        .font(theme.bodyTextFont)
                         .foregroundStyle(theme.textMuted)
                 }
                 ThemeGallery()
@@ -132,7 +132,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, 30)
 
                 Button("Skip") { finish() }
-                    .font(Typography.caption)
+                    .font(theme.captionFont)
                     .foregroundStyle(theme.textMuted)
             }
         }
@@ -176,13 +176,13 @@ private struct OnboardingPage<Illustration: View, Extra: View>: View {
             illustration()
                 .frame(height: 240)
             VStack(spacing: 10) {
-                Text(eyebrow).eyebrowStyle(color: theme.accent)
+                Text(eyebrow).eyebrowStyle(theme: theme)
                 Text(title)
-                    .font(Typography.displayTitle)
+                    .font(theme.displayTitleFont)
                     .foregroundStyle(theme.text)
                     .multilineTextAlignment(.center)
                 Text(message)
-                    .font(Typography.body)
+                    .font(theme.bodyTextFont)
                     .foregroundStyle(theme.textMuted)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 30)
@@ -227,7 +227,7 @@ private struct PermissionIllustration: View {
         ZStack {
             // A photo frame with a location pin dropping into it.
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(theme.cardTint.opacity(0.7))
+                .fill(theme.surface.opacity(0.7))
                 .overlay {
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
                         .strokeBorder(.white.opacity(0.2), lineWidth: 1)
@@ -238,7 +238,7 @@ private struct PermissionIllustration: View {
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [theme.accent.opacity(0.5), theme.accentSoft.opacity(0.3)],
+                        colors: [theme.accent.opacity(0.5), theme.secondary.opacity(0.3)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -246,7 +246,7 @@ private struct PermissionIllustration: View {
                 .overlay {
                     Image(systemName: "camera.fill")
                         .font(.system(size: 34, weight: .light))
-                        .foregroundStyle(theme.deepest.opacity(0.7))
+                        .foregroundStyle(theme.canvas.opacity(0.7))
                 }
                 .frame(width: 190, height: 150)
                 .rotationEffect(.degrees(5))
@@ -255,7 +255,7 @@ private struct PermissionIllustration: View {
             Image(systemName: "mappin.circle.fill")
                 .font(.system(size: 46))
                 .foregroundStyle(theme.accent)
-                .background { Circle().fill(theme.deepest).padding(6) }
+                .background { Circle().fill(theme.canvas).padding(6) }
                 .offset(x: 84, y: -66)
                 .shadow(color: theme.glow.opacity(0.6), radius: 12)
         }
@@ -335,10 +335,10 @@ private struct FakeWidgetChrome: ViewModifier {
 
     private var plate: some View {
         RoundedRectangle(cornerRadius: 22, style: .continuous)
-            .fill(theme.deepest)
+            .fill(theme.canvas)
             .overlay {
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(theme.cardTint.opacity(0.6))
+                    .fill(theme.surface.opacity(0.6))
             }
     }
 }

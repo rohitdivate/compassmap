@@ -19,7 +19,6 @@ final class AppSettings {
         hapticsEnabled = defaults.object(forKey: Key.haptics) as? Bool ?? true
         soundEnabled = defaults.object(forKey: Key.sound) as? Bool ?? false
         usesTrueNorth = defaults.object(forKey: Key.trueNorth) as? Bool ?? true
-        timeOfDayTintEnabled = defaults.object(forKey: Key.timeTint) as? Bool ?? true
         cloudSyncEnabled = defaults.object(forKey: Key.cloudSync) as? Bool ?? true
         hasCompletedOnboarding = defaults.bool(forKey: Key.onboarded)
     }
@@ -53,10 +52,6 @@ final class AppSettings {
     /// because that is what matches a map.
     var usesTrueNorth: Bool {
         didSet { defaults.set(usesTrueNorth, forKey: Key.trueNorth) }
-    }
-
-    var timeOfDayTintEnabled: Bool {
-        didSet { defaults.set(timeOfDayTintEnabled, forKey: Key.timeTint) }
     }
 
     var cloudSyncEnabled: Bool {
@@ -95,7 +90,6 @@ final class AppSettings {
         static let haptics = "settings.haptics"
         static let sound = "settings.sound"
         static let trueNorth = "settings.trueNorth"
-        static let timeTint = "settings.timeOfDayTint"
         static let cloudSync = "settings.cloudSync"
         static let onboarded = "settings.onboardingComplete"
     }

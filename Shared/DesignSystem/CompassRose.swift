@@ -98,6 +98,9 @@ struct CompassRose: View {
     var targetBearing: Double?
     var onTarget: Bool
     var diameter: CGFloat = 300
+    /// True when the rose sits on a photograph rather than on the canvas. A white card reads as a
+    /// hole punched in the picture; a dark translucent disc reads as glass laid over it.
+    var onPhoto: Bool = false
 
     // As with the arrow, this is deliberately split: the whole rose in one expression exceeds
     // the type-checker's budget.
@@ -116,11 +119,18 @@ struct CompassRose: View {
         .accessibilityHidden(true)
     }
 
+    @ViewBuilder
     private var basePlate: some View {
-        Circle()
-            .fill(.ultraThinMaterial)
-            .overlay { Circle().fill(theme.deepest.opacity(0.35)) }
-            .overlay { Circle().strokeBorder(.white.opacity(0.14), lineWidth: 1) }
+        if onPhoto {
+            Circle()
+                .fill(.black.opacity(0.22))
+                .overlay { Circle().strokeBorder(.white.opacity(0.20), lineWidth: 1) }
+        } else {
+            Circle()
+                .fill(theme.surface)
+                .overlay { Circle().strokeBorder(theme.hairline, lineWidth: 1) }
+                .modifier(RoseShadow(theme: theme))
+        }
     }
 
     /// Lights up when the phone comes onto the bearing.
@@ -159,7 +169,7 @@ struct CompassRose: View {
             tick.move(to: inner)
             tick.addLine(to: outer)
 
-            let colour = isCardinal ? theme.accent : theme.text
+            let colour = isCardinal ? theme.accent : (onPhoto ? Color.white : theme.text)
             context.stroke(
                 tick,
                 with: .color(colour.opacity(opacity)),
@@ -172,9 +182,9 @@ struct CompassRose: View {
         let cardinals: [(Double, String)] = [(0, "N"), (90, "E"), (180, "S"), (270, "W")]
         for (degrees, letter) in cardinals {
             let position = point(on: centre, radius: radius - 42, degrees: degrees)
-            let colour = degrees == 0 ? theme.accent : theme.textMuted
+            let colour = degrees == 0 ? theme.accent : (onPhoto ? Color.white.opacity(0.7) : theme.textMuted)
             context.draw(
-                Text(letter).font(Typography.tick).foregroundColor(colour),
+                Text(letter).font(theme.tickFont).foregroundColor(colour),
                 at: position
             )
         }
@@ -251,5 +261,19 @@ struct RadarRings: View {
         .frame(width: diameter, height: diameter)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// The rose sits on a card, so it takes the theme's card shadow — which is nothing at all in a
+/// hairline mood.
+private struct RoseShadow: ViewModifier {
+    var theme: Theme
+
+    func body(content: Content) -> some View {
+        if let shadow = theme.cardShadow {
+            content.shadow(color: shadow.color, radius: shadow.radius * 3, y: shadow.y * 3)
+        } else {
+            content
+        }
     }
 }

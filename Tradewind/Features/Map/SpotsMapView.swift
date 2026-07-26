@@ -67,7 +67,7 @@ struct SpotsMapView: View {
         }
         .overlay {
             // Pulls the map into the app's palette without hiding the geography.
-            theme.deepest.opacity(0.18)
+            theme.canvas.opacity(0.18)
                 .allowsHitTesting(false)
                 .ignoresSafeArea()
         }
@@ -126,9 +126,9 @@ struct SpotsMapView: View {
     private var header: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(spots.count) saved").eyebrowStyle(color: theme.accent)
+                Text("\(spots.count) saved").eyebrowStyle(theme: theme)
                 Text("The map")
-                    .font(Typography.title)
+                    .font(theme.titleFont)
                     .foregroundStyle(theme.text)
             }
             Spacer()
@@ -146,7 +146,7 @@ struct SpotsMapView: View {
         } label: {
             Image(systemName: showsRangeRings ? "dot.circle.and.hand.point.up.left.fill" : "dot.circle")
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(showsRangeRings ? theme.deepest : theme.text)
+                .foregroundStyle(showsRangeRings ? theme.canvas : theme.text)
                 .frame(width: 40, height: 40)
                 .background { circleFill(active: showsRangeRings) }
         }
@@ -167,13 +167,13 @@ struct SpotsMapView: View {
     }
 
     private func circleFill(active: Bool) -> some View {
-        Circle().fill(active ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.ultraThinMaterial))
+        Circle().fill(active ? theme.accent : theme.surface)
     }
 
     /// Keeps the title legible over whatever geography happens to be underneath it.
     private var headerScrim: some View {
         LinearGradient(
-            colors: [theme.deepest.opacity(0.85), .clear],
+            colors: [theme.canvas.opacity(0.85), .clear],
             startPoint: .top,
             endPoint: .bottom
         )
@@ -237,9 +237,9 @@ private struct SpotMapPin: View {
                 if isPinned {
                     Image(systemName: "pin.fill")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(theme.deepest)
+                        .foregroundStyle(theme.canvas)
                         .padding(3)
-                        .background { Circle().fill(theme.accentSoft) }
+                        .background { Circle().fill(theme.secondary) }
                         .offset(x: 16, y: -16)
                 }
             }
@@ -276,7 +276,7 @@ private struct SelectedSpotBar: View {
 
     var body: some View {
         Button(action: onOpen) {
-            GlassCard(cornerRadius: 22, padding: 14) {
+            Surface(cornerRadius: 22, padding: 14) {
                 HStack(spacing: 14) {
                     PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph)
                         .frame(width: 52, height: 52)
@@ -284,11 +284,11 @@ private struct SelectedSpotBar: View {
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(ranked.spot.displayName)
-                            .font(Typography.cardTitle)
+                            .font(theme.cardTitleFont)
                             .foregroundStyle(theme.text)
                             .lineLimit(1)
                         Text(ranked.spot.subtitle)
-                            .font(Typography.caption)
+                            .font(theme.captionFont)
                             .foregroundStyle(theme.textMuted)
                             .lineLimit(1)
                     }
@@ -302,12 +302,12 @@ private struct SelectedSpotBar: View {
                                 preference: unitPreference
                             )
                             Text(readout.combined)
-                                .font(Typography.cardDistance)
+                                .font(theme.cardNumberFont)
                                 .monospacedDigit()
                                 .foregroundStyle(theme.text)
                         }
                         Text("Point me there")
-                            .font(Typography.label)
+                            .font(theme.labelFont)
                             .foregroundStyle(theme.accent)
                     }
                 }

@@ -24,9 +24,9 @@ struct TradewindApp: App {
                 .environment(settings)
                 .environment(router)
                 .environment(\.theme, settings.theme)
-                // Every theme is a night palette, so the app opts out of light mode rather
-                // than shipping six half-considered light variants.
-                .preferredColorScheme(.dark)
+                // Each theme fixes its own scheme: Tropical Spritz is a cream, light mood and
+                // Nomad Money a near-black one, and neither survives being inverted.
+                .preferredColorScheme(settings.theme.colorScheme)
                 .tint(settings.theme.accent)
                 .onOpenURL { url in
                     router.handle(url: url)

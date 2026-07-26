@@ -17,7 +17,7 @@ struct PostcardView: View {
 
     var body: some View {
         ZStack {
-            theme.backdropGradient
+            theme.canvas
 
             VStack(spacing: 0) {
                 photo
@@ -50,7 +50,7 @@ struct PostcardView: View {
                 .scaledToFill()
         } else {
             LinearGradient(
-                colors: [theme.cardTint, theme.deepest],
+                colors: [theme.surface, theme.canvas],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -61,7 +61,7 @@ struct PostcardView: View {
     /// A compass mark in the corner, sitting on the photo like an inked stamp.
     private var stamp: some View {
         ZStack {
-            Circle().fill(theme.deepest.opacity(0.75))
+            Circle().fill(theme.canvas.opacity(0.75))
             Circle().strokeBorder(theme.accent, lineWidth: 3)
             ArrowShape()
                 .fill(theme.accent)
@@ -94,7 +94,7 @@ struct PostcardView: View {
                     Text("·").foregroundStyle(theme.textMuted)
                     Text("\(distanceText) from me")
                         .font(.system(size: 30, weight: .medium, design: .rounded))
-                        .foregroundStyle(theme.accentSoft)
+                        .foregroundStyle(theme.secondary)
                 }
             }
         }

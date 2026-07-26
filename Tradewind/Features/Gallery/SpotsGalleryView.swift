@@ -35,15 +35,18 @@ struct SpotsGalleryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                header
-                if !location.isAuthorized { permissionPrompt }
-                if spots.isEmpty { emptyState } else { content }
+            VStack(alignment: .leading, spacing: 0) {
+                heroHeader
+                VStack(alignment: .leading, spacing: 22) {
+                    if !location.isAuthorized { permissionPrompt }
+                    if spots.isEmpty { emptyState } else { content }
+                }
+                .padding(.top, 20)
+                .padding(.bottom, 24)
             }
-            .padding(.top, 8)
-            .padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
+        .ignoresSafeArea(edges: .top)
         .refreshable {
             location.requestOneShotLocation()
             store.refreshSnapshot()
@@ -117,43 +120,59 @@ struct SpotsGalleryView: View {
 
     // MARK: - Pieces
 
-    private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(greeting).eyebrowStyle(color: theme.accent)
-                Text("Tradewind")
-                    .font(Typography.displayTitle)
-                    .foregroundStyle(theme.text)
+    /// The masthead, on the one gradient the mood allows.
+    ///
+    /// Structured after the reference Home screen: a hero block carrying the eyebrow, the title in
+    /// the display face, and a status pill, with the cream body starting underneath it. In Nomad the
+    /// same block resolves to a flat raised surface, because that mood permits no gradient.
+    private var heroHeader: some View {
+        HeroPanel(theme: theme) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(TimeOfDay.current.greeting)
+                            .font(theme.eyebrowFont)
+                            .textCase(.uppercase)
+                            .tracking(theme.labelTracking(theme.scale.eyebrow))
+                            .foregroundStyle(theme.onHero.opacity(0.8))
+                        Text("Tradewind")
+                            .font(theme.displayTitleFont)
+                            .tracking(theme.displayTracking)
+                            .foregroundStyle(theme.onHero)
+                    }
+                    Spacer()
+                    CircularButton(symbol: "slider.horizontal.3", onHero: true) {
+                        router.isShowingSettings = true
+                    }
+                    .accessibilityLabel("Settings")
+                }
+
                 if !spots.isEmpty {
-                    Text(summaryLine)
-                        .font(Typography.caption)
-                        .foregroundStyle(theme.textMuted)
+                    statusPill.padding(.top, 14)
                 }
             }
-            Spacer()
-            Button {
-                router.isShowingSettings = true
-            } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(theme.text)
-                    .frame(width: 42, height: 42)
-                    .background { Circle().fill(.ultraThinMaterial) }
-                    .overlay { Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
-            }
-            .buttonStyle(PressableStyle())
-            .accessibilityLabel("Settings")
+            .padding(.horizontal, 18)
+            .padding(.top, 58)
+            .padding(.bottom, 22)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 18)
     }
 
-    private var greeting: String {
-        switch TimeOfDay.current {
-        case .dawn: return "Early start"
-        case .day: return "Somewhere to be"
-        case .goldenHour: return "Golden hour"
-        case .dusk: return "Last light"
-        case .night: return "After dark"
+    /// "Nearest 240 m away" — the reference screen's "Currently in Honolulu" chip, doing the job
+    /// this app actually has.
+    private var statusPill: some View {
+        HStack(spacing: 7) {
+            Circle()
+                .fill(theme.highlight)
+                .frame(width: 7, height: 7)
+            Text(summaryLine)
+                .font(theme.sans(theme.scale.caption, weight: .medium))
+                .foregroundStyle(theme.onHero)
+        }
+        .padding(.horizontal, 13)
+        .padding(.vertical, 7)
+        .background {
+            Capsule().fill(theme.onHero.opacity(0.18))
         }
     }
 
@@ -164,7 +183,7 @@ struct SpotsGalleryView: View {
             return "\(count) \(noun) saved"
         }
         let distance = DistanceFormatting.string(metres: metres, preference: settings.unitPreference)
-        return "\(count) \(noun) · nearest \(distance) away"
+        return "Nearest is \(distance) away"
     }
 
     private var tripFilter: some View {
@@ -270,7 +289,7 @@ private struct FeaturedSpotCard: View {
         VStack(alignment: .leading, spacing: 10) {
             pills
             Text(ranked.spot.displayName)
-                .font(Typography.title)
+                .font(theme.titleFont)
                 .foregroundStyle(.white)
                 .lineLimit(2)
             distanceRow
@@ -310,22 +329,22 @@ private struct FeaturedSpotCard: View {
                 let readout = DistanceFormatting.readout(metres: metres, preference: unitPreference)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(readout.value)
-                        .font(Typography.readout)
+                        .font(theme.readoutFont)
                         .monospacedDigit()
                     Text(readout.unit)
-                        .font(Typography.readoutUnit)
+                        .font(theme.readoutUnitFont)
                         .foregroundStyle(.white.opacity(0.75))
                 }
                 .foregroundStyle(.white)
 
                 if let walk = DistanceFormatting.walkingTime(metres: metres) {
                     Text(walk)
-                        .font(Typography.caption)
+                        .font(theme.captionFont)
                         .foregroundStyle(.white.opacity(0.7))
                 }
             } else {
                 Text("Waiting for a fix")
-                    .font(Typography.caption)
+                    .font(theme.captionFont)
                     .foregroundStyle(.white.opacity(0.7))
             }
         }
@@ -376,7 +395,7 @@ private struct SpotGridCard: View {
             if ranked.spot.isPinned {
                 Image(systemName: "pin.fill")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(theme.deepest)
+                    .foregroundStyle(theme.canvas)
                     .padding(6)
                     .background { Circle().fill(theme.accent) }
                     .padding(8)
@@ -387,7 +406,7 @@ private struct SpotGridCard: View {
     private var caption: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(ranked.spot.displayName)
-                .font(Typography.cardTitle)
+                .font(theme.cardTitleFont)
                 .foregroundStyle(theme.text)
                 .lineLimit(1)
 
@@ -406,28 +425,23 @@ private struct SpotGridCard: View {
             let readout = DistanceFormatting.readout(metres: metres, preference: unitPreference)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(readout.value)
-                    .font(Typography.cardDistance)
+                    .font(theme.cardNumberFont)
                     .monospacedDigit()
                 Text(readout.unit)
-                    .font(Typography.label)
+                    .font(theme.labelFont)
                     .foregroundStyle(theme.textMuted)
             }
             .foregroundStyle(theme.text)
         } else {
             Text("—")
-                .font(Typography.cardDistance)
+                .font(theme.cardNumberFont)
                 .foregroundStyle(theme.textMuted)
         }
     }
 
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 22, style: .continuous)
-            .fill(.ultraThinMaterial)
-            .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(theme.cardTint.opacity(0.45))
-                    .blendMode(.softLight)
-            }
+        RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous)
+            .fill(theme.surface)
     }
 }
 
@@ -440,20 +454,20 @@ private struct LocationPromptCard: View {
     var onRequest: () -> Void
 
     var body: some View {
-        GlassCard {
+        Surface {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     Image(systemName: isDenied ? "location.slash.fill" : "location.fill")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(theme.accent)
                     Text(isDenied ? "Location is switched off" : "Tradewind needs your location")
-                        .font(Typography.cardTitle)
+                        .font(theme.cardTitleFont)
                         .foregroundStyle(theme.text)
                 }
                 Text(isDenied
                     ? "Distances and the arrow need location access. You can turn it back on in Settings › Privacy › Location Services."
                     : "Without it there is no arrow and no distance — everything else still works.")
-                    .font(Typography.caption)
+                    .font(theme.captionFont)
                     .foregroundStyle(theme.textMuted)
 
                 if isDenied {

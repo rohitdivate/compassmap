@@ -155,7 +155,7 @@ struct CaptureFlowView: View {
             } label: {
                 Image(systemName: camera.isFlashEnabled ? "bolt.fill" : "bolt.slash.fill")
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(camera.isFlashEnabled ? theme.deepest : .white)
+                    .foregroundStyle(camera.isFlashEnabled ? theme.canvas : .white)
                     .frame(width: 40, height: 40)
                     .background {
                         Circle().fill(camera.isFlashEnabled
@@ -192,9 +192,9 @@ struct CaptureFlowView: View {
         return HStack(spacing: 6) {
             Image(systemName: isGood ? "location.fill" : "location.slash.fill")
                 .font(.system(size: 11, weight: .bold))
-            Text("\(text) · ±\(Int(accuracy)) m").font(Typography.label)
+            Text("\(text) · ±\(Int(accuracy)) m").font(theme.labelFont)
         }
-        .foregroundStyle(isGood ? theme.deepest : .white)
+        .foregroundStyle(isGood ? theme.canvas : .white)
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
         .background { badgeShape(filled: isGood) }
@@ -203,7 +203,7 @@ struct CaptureFlowView: View {
     private var searchingBadge: some View {
         HStack(spacing: 6) {
             ProgressView().controlSize(.mini).tint(.white)
-            Text("Finding you").font(Typography.label)
+            Text("Finding you").font(theme.labelFont)
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 12)
@@ -216,8 +216,8 @@ struct CaptureFlowView: View {
             location.requestWhenInUseAuthorization()
         } label: {
             Text("Turn on location to save a spot")
-                .font(Typography.label)
-                .foregroundStyle(theme.deepest)
+                .font(theme.labelFont)
+                .foregroundStyle(theme.canvas)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
                 .background { badgeShape(filled: true) }
@@ -273,7 +273,7 @@ struct CaptureFlowView: View {
                     .frame(width: 62, height: 62)
                     .shadow(color: theme.glow.opacity(0.6), radius: 14)
                 if camera.isCapturing {
-                    ProgressView().tint(theme.deepest)
+                    ProgressView().tint(theme.canvas)
                 }
             }
         }
@@ -455,7 +455,7 @@ private struct ReviewView: View {
     }
 
     private var detailsCard: some View {
-        GlassCard {
+        Surface {
             VStack(alignment: .leading, spacing: 14) {
                 nameField
                 Divider().overlay(theme.textMuted.opacity(0.2))
@@ -471,9 +471,9 @@ private struct ReviewView: View {
 
     private var nameField: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Call it something").eyebrowStyle(color: theme.accent)
+            Text("Call it something").eyebrowStyle(theme: theme)
             TextField("The waterfall with the rope swing", text: nameBinding)
-                .font(Typography.body)
+                .font(theme.bodyTextFont)
                 .foregroundStyle(theme.text)
                 .focused($isNameFocused)
                 .submitLabel(.done)
@@ -493,7 +493,7 @@ private struct ReviewView: View {
 
     private var glyphPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Mark").eyebrowStyle(color: theme.accent)
+            Text("Mark").eyebrowStyle(theme: theme)
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
                     ForEach(Self.glyphs, id: \.self) { glyph in
@@ -521,16 +521,12 @@ private struct ReviewView: View {
     }
 
     private func glyphBackground(isSelected: Bool) -> some View {
-        Circle().fill(
-            isSelected
-                ? AnyShapeStyle(theme.accent.opacity(0.3))
-                : AnyShapeStyle(.ultraThinMaterial)
-        )
+        Circle().fill(isSelected ? theme.accent.opacity(0.28) : theme.surfaceRaised)
     }
 
     private var tripPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Trip").eyebrowStyle(color: theme.accent)
+            Text("Trip").eyebrowStyle(theme: theme)
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
                     ChipButton(title: "None", isSelected: pending.tripID == nil) {
@@ -566,8 +562,8 @@ private struct ReviewView: View {
                 }
             } else {
                 Text("Tradewind can't save a spot without a location.")
-                    .font(Typography.caption)
-                    .foregroundStyle(theme.accentSoft)
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.secondary)
                     .multilineTextAlignment(.center)
             }
             SecondaryButton(title: "Retake", symbol: "arrow.counterclockwise", action: onCancel)
@@ -576,24 +572,24 @@ private struct ReviewView: View {
     }
 
     private var coordinateSummary: some View {
-        GlassCard(padding: 14) {
+        Surface(padding: 14) {
             HStack(spacing: 12) {
                 Image(systemName: "mappin.and.ellipse")
                     .foregroundStyle(theme.accent)
                 VStack(alignment: .leading, spacing: 2) {
                     if let coordinate = pending.coordinate {
                         Text(String(format: "%.5f, %.5f", coordinate.latitude, coordinate.longitude))
-                            .font(Typography.caption)
+                            .font(theme.captionFont)
                             .monospacedDigit()
                             .foregroundStyle(theme.text)
                     } else {
                         Text("No location")
-                            .font(Typography.caption)
-                            .foregroundStyle(theme.accentSoft)
+                            .font(theme.captionFont)
+                            .foregroundStyle(theme.secondary)
                     }
                     if let accuracy = pending.horizontalAccuracy {
                         Text("Accurate to about \(Int(accuracy)) m")
-                            .font(Typography.label)
+                            .font(theme.labelFont)
                             .foregroundStyle(theme.textMuted)
                     }
                 }

@@ -37,7 +37,7 @@ struct HeadingLiveActivity: Widget {
                 expandedTitle(theme: theme, state: state, attributes: attributes)
             }
             DynamicIslandExpandedRegion(.bottom) {
-                ProgressBar(theme: theme, state: state)
+                ActivityProgress(theme: theme, state: state)
             }
         } compactLeading: {
             arrowGlyph(colour: theme.accent, bearing: state.bearing, width: 9, height: 15)
@@ -205,7 +205,7 @@ private struct LockScreenView: View {
 /// The starting distance is not stored in the activity state, so this uses a fixed reference of one
 /// kilometre — enough to give the last stretch a sense of closing in without claiming to know how
 /// far you set out from.
-private struct ProgressBar: View {
+private struct ActivityProgress: View {
     var theme: Theme
     var state: HeadingActivityAttributes.ContentState
 

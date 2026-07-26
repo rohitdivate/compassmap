@@ -152,21 +152,24 @@ enum SpotEntryBuilder {
 
 // MARK: - Shared widget pieces
 
-/// The widget backdrop: the theme's gradient, dimmed enough that white text stays readable over
-/// it in every theme.
+/// The widget backdrop.
+///
+/// Flat canvas, matching the app. Spritz spends its one permitted gradient on a soft accent bloom in
+/// the corner, which is what stops a cream widget looking like a blank card; Nomad has none at all.
 struct WidgetBackdrop: View {
     var theme: Theme
 
     var body: some View {
         ZStack {
-            theme.backdropGradient
-            RadialGradient(
-                colors: [theme.accent.opacity(0.28), .clear],
-                center: UnitPoint(x: 0.85, y: 0.1),
-                startRadius: 0,
-                endRadius: 180
-            )
-            theme.deepest.opacity(0.25)
+            theme.canvas
+            if theme.heroGradient != nil {
+                RadialGradient(
+                    colors: [theme.accent.opacity(0.20), .clear],
+                    center: UnitPoint(x: 0.88, y: 0.06),
+                    startRadius: 0,
+                    endRadius: 190
+                )
+            }
         }
     }
 }
@@ -251,7 +254,7 @@ struct WidgetPhoto: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [theme.cardTint, theme.deepest],
+                colors: [theme.surface, theme.canvas],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

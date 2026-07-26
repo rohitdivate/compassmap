@@ -12,7 +12,7 @@ struct CameraUnavailableView: View {
 
     var body: some View {
         ZStack {
-            ThemedBackground(theme: theme, timeTint: false)
+            ThemedBackground(theme: theme)
 
             VStack(spacing: 16) {
                 ZStack {
@@ -24,10 +24,10 @@ struct CameraUnavailableView: View {
                         .foregroundStyle(theme.accent)
                 }
                 Text(title)
-                    .font(Typography.title)
+                    .font(theme.titleFont)
                     .foregroundStyle(theme.text)
                 Text(message)
-                    .font(Typography.body)
+                    .font(theme.bodyTextFont)
                     .foregroundStyle(theme.textMuted)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 30)
@@ -42,7 +42,7 @@ struct CameraUnavailableView: View {
                 }
 
                 Text("You can still add a spot from your photo library.")
-                    .font(Typography.caption)
+                    .font(theme.captionFont)
                     .foregroundStyle(theme.textMuted)
                     .padding(.top, 4)
             }

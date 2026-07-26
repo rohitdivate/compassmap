@@ -64,11 +64,7 @@ struct RootView: View {
 
     private var stack: some View {
         ZStack {
-            ThemedBackground(
-                theme: theme,
-                animated: false,
-                timeTint: settings.timeOfDayTintEnabled
-            )
+            ThemedBackground(theme: theme)
 
             surface
                 .safeAreaInset(edge: .bottom) {
@@ -293,10 +289,10 @@ private struct FloatingBar: View {
         .padding(5)
         .background {
             Capsule(style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay { Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
+                .fill(theme.surface)
+                .overlay { Capsule().strokeBorder(theme.hairline, lineWidth: 1) }
         }
-        .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
+        .modifier(BarShadow(theme: theme))
     }
 
     private func tabButton(_ tab: AppRouter.Tab) -> some View {
@@ -327,7 +323,7 @@ private struct FloatingBar: View {
         Button(action: onCapture) {
             Image(systemName: "camera.fill")
                 .font(.system(size: 21, weight: .semibold))
-                .foregroundStyle(theme.deepest)
+                .foregroundStyle(theme.canvas)
                 .frame(width: 56, height: 56)
                 .background {
                     Circle()
@@ -338,5 +334,18 @@ private struct FloatingBar: View {
         }
         .buttonStyle(PressableStyle(scale: 0.9))
         .accessibilityLabel("Save this place")
+    }
+}
+
+/// The floating bar lifts off a cream canvas, and sits flat on a hairline one.
+private struct BarShadow: ViewModifier {
+    var theme: Theme
+
+    func body(content: Content) -> some View {
+        if let shadow = theme.cardShadow {
+            content.shadow(color: shadow.color, radius: shadow.radius * 4, y: shadow.y * 4)
+        } else {
+            content
+        }
     }
 }

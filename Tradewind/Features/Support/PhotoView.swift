@@ -80,7 +80,7 @@ struct PhotoView: View {
     @ViewBuilder
     private var placeholder: some View {
         LinearGradient(
-            colors: [theme.cardTint, theme.deepest],
+            colors: [theme.surface, theme.canvas],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -124,7 +124,7 @@ struct ThumbnailFileView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [theme.cardTint, theme.deepest],
+                colors: [theme.surface, theme.canvas],
                 startPoint: .top,
                 endPoint: .bottom
             )

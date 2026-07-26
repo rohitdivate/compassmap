@@ -64,7 +64,7 @@ struct SpotDetailView: View {
             }
             .scrollIndicators(.hidden)
             .background {
-                ThemedBackground(theme: theme, timeTint: settings.timeOfDayTintEnabled)
+                ThemedBackground(theme: theme)
             }
             .navigationTitle("")
             .toolbar {
@@ -104,13 +104,13 @@ struct SpotDetailView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(Self.dateFormatter.string(from: spot.capturedAt))
-                    .eyebrowStyle(color: theme.accent)
+                    .eyebrowStyle(theme: theme)
                 Button {
                     isEditingName = true
                 } label: {
                     HStack(spacing: 6) {
                         Text(spot.displayName)
-                            .font(Typography.title)
+                            .font(theme.titleFont)
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.leading)
                         Image(systemName: "pencil")
@@ -129,7 +129,7 @@ struct SpotDetailView: View {
     // MARK: - Distance
 
     private var distanceRow: some View {
-        GlassCard {
+        Surface {
             HStack(spacing: 16) {
                 if let bearing = bearingToSpot {
                     MiniArrow(theme: theme, angle: bearing, size: 40)
@@ -162,20 +162,20 @@ struct SpotDetailView: View {
                 )
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(readout.value)
-                        .font(Typography.readout)
+                        .font(theme.readoutFont)
                         .monospacedDigit()
-                    Text(readout.unit).font(Typography.readoutUnit)
+                    Text(readout.unit).font(theme.readoutUnitFont)
                 }
                 .foregroundStyle(theme.text)
 
                 if let walk = DistanceFormatting.walkingTime(metres: metres) {
                     Text(walk)
-                        .font(Typography.caption)
+                        .font(theme.captionFont)
                         .foregroundStyle(theme.textMuted)
                 }
             } else {
                 Text("No location fix")
-                    .font(Typography.cardTitle)
+                    .font(theme.cardTitleFont)
                     .foregroundStyle(theme.textMuted)
             }
         }
@@ -184,10 +184,10 @@ struct SpotDetailView: View {
     private func compassBlock(_ bearing: Double) -> some View {
         VStack(spacing: 0) {
             Text(BearingMath.compassPoint(forBearing: bearing))
-                .font(Typography.cardDistance)
+                .font(theme.cardNumberFont)
                 .foregroundStyle(theme.accent)
             Text("\(Int(bearing.rounded()))°")
-                .font(Typography.label)
+                .font(theme.labelFont)
                 .foregroundStyle(theme.textMuted)
         }
     }
@@ -197,7 +197,7 @@ struct SpotDetailView: View {
     private var facts: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "Where it is")
-            GlassCard(padding: 0) {
+            Surface(padding: 0) {
                 VStack(spacing: 0) {
                     mapInset
                     factRows.padding(.vertical, 4)
@@ -288,11 +288,7 @@ struct SpotDetailView: View {
                 .font(.system(size: 22))
                 .frame(width: 46, height: 46)
                 .background {
-                    Circle().fill(
-                        isSelected
-                            ? AnyShapeStyle(theme.accent.opacity(0.28))
-                            : AnyShapeStyle(.ultraThinMaterial)
-                    )
+                    Circle().fill(isSelected ? theme.accent.opacity(0.28) : theme.surfaceRaised)
                 }
                 .overlay {
                     Circle().strokeBorder(
@@ -337,13 +333,13 @@ struct SpotDetailView: View {
     private var noteField: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(eyebrow: "Optional", title: "Note")
-            GlassCard {
+            Surface {
                 TextField(
                     "The one with the mango tree out front",
                     text: $draftNote,
                     axis: .vertical
                 )
-                .font(Typography.body)
+                .font(theme.bodyTextFont)
                 .foregroundStyle(theme.text)
                 .lineLimit(3...6)
                 .onSubmit { store.update(spot, note: draftNote) }
@@ -421,11 +417,11 @@ private struct FactRow: View {
                 .foregroundStyle(theme.accent)
                 .frame(width: 22)
             Text(label)
-                .font(Typography.caption)
+                .font(theme.captionFont)
                 .foregroundStyle(theme.textMuted)
             Spacer()
             Text(value)
-                .font(Typography.caption)
+                .font(theme.captionFont)
                 .monospacedDigit()
                 .foregroundStyle(theme.text)
                 .multilineTextAlignment(.trailing)
