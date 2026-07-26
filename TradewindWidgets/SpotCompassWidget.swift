@@ -59,6 +59,9 @@ struct SpotCompassView: View {
 
     var entry: SpotEntry
 
+    /// The theme travels in the entry, since a widget has no environment to read it from.
+    private var theme: Theme { entry.theme }
+
     var body: some View {
         content
             .widgetURL(entry.spot?.deepLinkURL)
@@ -98,7 +101,7 @@ struct SpotCompassView: View {
                 WidgetArrow(theme: entry.theme, bearing: entry.bearing, size: 32)
                 Spacer()
                 if let glyph = entry.spot?.glyph, !glyph.isEmpty {
-                    Text(glyph).font(.system(size: 18))
+                    Text(glyph).font(theme.sans(18))
                 }
             }
 
@@ -109,11 +112,11 @@ struct SpotCompassView: View {
             } else {
                 WidgetDistanceText(readout: entry.readout, theme: entry.theme, numberSize: 34)
                 Text(entry.spot?.name ?? "No spot")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(theme.sans(12, weight: .bold))
                     .foregroundStyle(entry.theme.text)
                     .lineLimit(1)
                 Text(secondaryLine)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(theme.sans(10, weight: .medium))
                     .foregroundStyle(entry.theme.textMuted)
                     .lineLimit(1)
             }
@@ -127,7 +130,7 @@ struct SpotCompassView: View {
                 Spacer(minLength: 2)
                 WidgetDistanceText(readout: entry.readout, theme: entry.theme, numberSize: 30)
                 Text(entry.spot?.name ?? "No spot")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(theme.sans(12, weight: .bold))
                     .foregroundStyle(entry.theme.text)
                     .lineLimit(1)
             }
@@ -165,7 +168,7 @@ struct SpotCompassView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     WidgetDistanceText(readout: entry.readout, theme: entry.theme, numberSize: 32)
                     Text(entry.spot?.name ?? "No spot")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(theme.sans(13, weight: .bold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                 }
@@ -181,11 +184,11 @@ struct SpotCompassView: View {
         HStack(spacing: 10) {
             Button(intent: NextSpotIntent()) {
                 Label("Next", systemImage: "arrow.triangle.2.circlepath")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(theme.sans(11, weight: .bold))
             }
             Button(intent: PinNearestSpotIntent()) {
                 Label("Nearest", systemImage: "pin.fill")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(theme.sans(11, weight: .bold))
             }
         }
         .buttonStyle(.plain)
@@ -226,7 +229,7 @@ struct SpotCompassView: View {
             Image(systemName: "location.north.line.fill")
         } currentValueLabel: {
             Text(entry.readout?.value ?? "—")
-                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .font(theme.mono(15, medium: true))
                 .minimumScaleFactor(0.6)
         }
         .gaugeStyle(.accessoryCircular)
@@ -245,22 +248,22 @@ struct SpotCompassView: View {
     private var rectangularView: some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(entry.spot?.name ?? "Tradewind")
-                .font(.system(size: 13, weight: .semibold))
+                .font(theme.sans(13, weight: .bold))
                 .lineLimit(1)
                 .widgetAccentable()
 
             if entry.nearby.isEmpty {
                 Text(entry.placeholderMessage ?? "No spots yet")
-                    .font(.system(size: 11))
+                    .font(theme.sans(11))
             } else {
                 ForEach(Array(entry.nearby.prefix(2).enumerated()), id: \.offset) { _, item in
                     HStack(spacing: 4) {
                         Text(item.spot.name)
-                            .font(.system(size: 11))
+                            .font(theme.sans(11))
                             .lineLimit(1)
                         Spacer(minLength: 2)
                         Text(compact(item.metres))
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .font(theme.mono(11, medium: true))
                             .monospacedDigit()
                     }
                 }
@@ -312,7 +315,7 @@ struct NearbyRow: View {
                 .opacity(bearing == nil ? 0.3 : 1)
 
             Text(spot.name)
-                .font(.system(size: 11, weight: .medium))
+                .font(theme.sans(11, weight: .medium))
                 .foregroundStyle(theme.text)
                 .lineLimit(1)
 
@@ -321,7 +324,7 @@ struct NearbyRow: View {
             Text(metres.map {
                 DistanceFormatting.compact(metres: $0, preference: unitPreference)
             } ?? "—")
-                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .font(theme.mono(12, medium: true))
                 .monospacedDigit()
                 .foregroundStyle(theme.accent)
         }

@@ -183,11 +183,11 @@ struct WidgetDistanceText: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
             Text(readout?.value ?? "—")
-                .font(.system(size: numberSize, weight: .bold, design: .rounded))
+                .font(theme.mono(numberSize, medium: true))
                 .monospacedDigit()
             if let unit = readout?.unit, !unit.isEmpty {
                 Text(unit)
-                    .font(.system(size: numberSize * 0.5, weight: .semibold, design: .rounded))
+                    .font(theme.mono(numberSize * 0.5))
                     .foregroundStyle(theme.textMuted)
             }
         }
@@ -218,7 +218,7 @@ struct WidgetArrow: View {
                 .shadow(color: theme.glow.opacity(0.5), radius: 5)
             if showsCompassPoint, let bearing {
                 Text(BearingMath.compassPoint(forBearing: bearing))
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .font(theme.mono(9, medium: true))
                     .foregroundStyle(theme.textMuted)
             }
         }
@@ -237,7 +237,7 @@ struct WidgetPlaceholder: View {
                 .font(.system(size: compact ? 16 : 22, weight: .light))
                 .foregroundStyle(theme.accent)
             Text(message)
-                .font(.system(size: compact ? 10 : 12, weight: .medium))
+                .font(theme.sans(compact ? 10 : 12, weight: .medium))
                 .foregroundStyle(theme.textMuted)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
@@ -265,7 +265,7 @@ struct WidgetPhoto: View {
                     .resizable()
                     .scaledToFill()
             } else if let glyph = spot?.glyph, !glyph.isEmpty {
-                Text(glyph).font(.system(size: 26))
+                Text(glyph).font(theme.sans(26))
             }
         }
     }

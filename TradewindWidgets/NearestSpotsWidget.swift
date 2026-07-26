@@ -47,6 +47,9 @@ struct NearestSpotsView: View {
 
     var entry: SpotEntry
 
+    /// The theme travels in the entry, since a widget has no environment to read it from.
+    private var theme: Theme { entry.theme }
+
     /// The large family has room for more of them; the medium does not.
     private var rowLimit: Int { family == .systemLarge ? 6 : 3 }
 
@@ -63,14 +66,14 @@ struct NearestSpotsView: View {
     private var heading: some View {
         HStack(alignment: .firstTextBaseline) {
             Text("From here")
-                .font(.system(size: 11, weight: .bold))
+                .font(theme.sans(11, weight: .bold))
                 .textCase(.uppercase)
                 .tracking(1.4)
                 .foregroundStyle(entry.theme.accent)
             Spacer()
             if entry.isStale {
                 Text("last known")
-                    .font(.system(size: 9, weight: .medium))
+                    .font(theme.sans(9, weight: .medium))
                     .foregroundStyle(entry.theme.textMuted)
             }
         }
@@ -146,12 +149,12 @@ struct SpotListRow: View {
     private var labels: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(spot.name)
-                .font(.system(size: isFirst ? 13 : 12, weight: isFirst ? .semibold : .medium))
+                .font(theme.sans(isFirst ? 13 : 12, weight: isFirst ? .bold : .medium))
                 .foregroundStyle(theme.text)
                 .lineLimit(1)
             if showsPhoto, let place = spot.placeName, !place.isEmpty {
                 Text(place)
-                    .font(.system(size: 9))
+                    .font(theme.sans(9))
                     .foregroundStyle(theme.textMuted)
                     .lineLimit(1)
             }
@@ -164,12 +167,12 @@ struct SpotListRow: View {
         }
         return HStack(alignment: .firstTextBaseline, spacing: 1) {
             Text(readout?.value ?? "—")
-                .font(.system(size: isFirst ? 16 : 14, weight: .bold, design: .rounded))
+                .font(theme.mono(isFirst ? 16 : 14, medium: true))
                 .monospacedDigit()
                 .foregroundStyle(isFirst ? theme.accent : theme.text)
             if let unit = readout?.unit, !unit.isEmpty {
                 Text(unit)
-                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .font(theme.mono(9, medium: true))
                     .foregroundStyle(theme.textMuted)
             }
         }

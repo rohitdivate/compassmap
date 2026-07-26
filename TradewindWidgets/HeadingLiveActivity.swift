@@ -12,7 +12,7 @@ struct HeadingLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: HeadingActivityAttributes.self) { context in
             LockScreenView(context: context)
-                .activityBackgroundTint(theme(for: context).deepest.opacity(0.92))
+                .activityBackgroundTint(theme(for: context).canvas.opacity(0.95))
                 .activitySystemActionForegroundColor(theme(for: context).accent)
         } dynamicIsland: { context in
             island(for: context)
@@ -43,7 +43,7 @@ struct HeadingLiveActivity: Widget {
             arrowGlyph(colour: theme.accent, bearing: state.bearing, width: 9, height: 15)
         } compactTrailing: {
             Text(distanceText(state, attributes))
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .font(theme.mono(13, medium: true))
                 .monospacedDigit()
                 .foregroundStyle(theme.accent)
         } minimal: {
@@ -67,7 +67,7 @@ struct HeadingLiveActivity: Widget {
         attributes: HeadingActivityAttributes
     ) -> some View {
         Text(distanceText(state, attributes))
-            .font(.system(size: 20, weight: .bold, design: .rounded))
+            .font(theme.mono(20, medium: true))
             .monospacedDigit()
             .foregroundStyle(theme.accent)
             .padding(.trailing, 6)
@@ -83,10 +83,10 @@ struct HeadingLiveActivity: Widget {
             : "Head \(BearingMath.compassPoint(forBearing: state.bearing))"
         return VStack(spacing: 1) {
             Text(attributes.spotName)
-                .font(.system(size: 13, weight: .semibold))
+                .font(theme.sans(13, weight: .bold))
                 .lineLimit(1)
             Text(subtitle)
-                .font(.system(size: 10, weight: .medium))
+                .font(theme.sans(10, weight: .medium))
                 .foregroundStyle(theme.textMuted)
         }
     }
@@ -156,19 +156,19 @@ private struct LockScreenView: View {
     private var labels: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(context.state.isArrived ? "Arrived" : "Heading to")
-                .font(.system(size: 10, weight: .bold))
+                .font(theme.sans(10, weight: .bold))
                 .textCase(.uppercase)
                 .tracking(1.4)
                 .foregroundStyle(theme.accent)
 
             Text(context.attributes.spotName)
-                .font(.system(size: 17, weight: .semibold))
+                .font(theme.sans(17, weight: .bold))
                 .foregroundStyle(theme.text)
                 .lineLimit(1)
 
             if let place = context.attributes.placeName, !place.isEmpty {
                 Text(place)
-                    .font(.system(size: 11))
+                    .font(theme.sans(11))
                     .foregroundStyle(theme.textMuted)
                     .lineLimit(1)
             }
@@ -183,16 +183,16 @@ private struct LockScreenView: View {
         return VStack(alignment: .trailing, spacing: 2) {
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(readout.value)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(theme.mono(28, medium: true))
                     .monospacedDigit()
                 Text(readout.unit)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(theme.mono(13, medium: true))
                     .foregroundStyle(theme.textMuted)
             }
             .foregroundStyle(theme.text)
 
             Text(BearingMath.compassPoint(forBearing: context.state.bearing))
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(theme.mono(11, medium: true))
                 .foregroundStyle(theme.accent)
         }
     }
@@ -228,11 +228,11 @@ private struct ActivityProgress: View {
 
             HStack {
                 Text(state.isArrived ? "You made it" : "Closing in")
-                    .font(.system(size: 9, weight: .medium))
+                    .font(theme.sans(9, weight: .medium))
                     .foregroundStyle(theme.textMuted)
                 Spacer()
                 Text(state.updatedAt, style: .relative)
-                    .font(.system(size: 9, weight: .medium))
+                    .font(theme.sans(9, weight: .medium))
                     .foregroundStyle(theme.textMuted)
             }
         }

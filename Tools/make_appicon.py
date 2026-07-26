@@ -2,9 +2,13 @@
 """Draw Tradewind's app icon.
 
 The mark is the same dart the app uses for its arrow — `ArrowShape` in
-`Shared/DesignSystem/CompassRose.swift` — over the default Hawaii Sunset gradient, inside a
-ring of compass ticks. Generated rather than hand-drawn so the icon and the in-app arrow can
-never drift apart.
+`Shared/DesignSystem/CompassRose.swift` — over Tropical Spritz's Sunset Wash, inside a ring of
+compass ticks. Generated rather than hand-drawn so the icon and the in-app arrow can never
+drift apart.
+
+An app icon is the one place the "one gradient per screen" rule cannot apply — there is no
+screen, and a flat cream tile would vanish on a home screen. So it uses the mood's hero
+gradient, which is the gradient that mood does sanction.
 
     pip install pillow
     python3 Tools/make_appicon.py
@@ -27,13 +31,14 @@ OUTPUT = os.path.join(
 SIZE = 1024
 SUPERSAMPLE = 4  # draw large, downscale once: cheap anti-aliasing for the whole composition
 
-# Hawaii Sunset — the default theme, matching ThemeCatalog.hawaii.
-DEEP = (0x25, 0x0E, 0x4B)
-MID = (0x9A, 0x2F, 0x6E)
-TOP = (0xFF, 0x8C, 0x42)
-ACCENT = (0xFF, 0xB2, 0x5B)
-ARROW_LOW = (0xFF, 0x6B, 0x35)
-ARROW_HIGH = (0xFF, 0xE9, 0xA8)
+# Tropical Spritz — the default theme. Sunset Wash runs coral to Paloma Pink to a violet, and
+# the dart is the cream canvas so it reads as paper cut out of the sunset.
+DEEP = (0xB0, 0x6A, 0xB3)   # Sunset Wash, far end
+MID = (0xFF, 0x6B, 0x8B)    # Paloma Pink
+TOP = (0xFF, 0x8C, 0x42)    # Sunset Coral
+ACCENT = (0xB8, 0xE6, 0x2E) # Margarita Lime, for the tick ring
+ARROW_LOW = (0xFF, 0xE3, 0xC8)
+ARROW_HIGH = (0xFF, 0xF6, 0xE9)  # Piña Cream
 
 
 def lerp(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> tuple[int, int, int]:
