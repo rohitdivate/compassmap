@@ -1,0 +1,1996 @@
+<title>Tradewind — Tropical Spritz &amp; Nomad Money</title>
+
+<!--
+  Source template for docs/preview/index.html.
+
+  Run `python3 Tools/build_preview.py` to inline the painted placeholder images and the bundled
+  typefaces, and write the self-contained page.
+
+  Every token here is copied from Shared/DesignSystem/Theme.swift, which in turn transcribes the
+  Been There theme reference. If a palette or radius changes there, change it here too — this file
+  is the review surface for those tokens, so the two disagreeing would defeat the point.
+-->
+
+<style>
+/* __FONTS__ */
+</style>
+
+<style>
+  /* ---------------------------------------------------------------------------------------
+     The page chrome is a studio: quiet, so the two moods can be judged against something
+     neutral. It borrows only the accent from whichever mood is under inspection.
+     --------------------------------------------------------------------------------------- */
+
+  :root {
+    --studio-ground: #f1ede5;
+    --studio-panel: #fbf9f5;
+    --studio-line: #ddd6c9;
+    --studio-ink: #1b1d23;
+    --studio-muted: #6d6a63;
+    --studio-shadow: rgba(60, 50, 35, 0.16);
+
+    --chrome-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+    --chrome-serif: "Instrument Serif", Georgia, serif;
+    --chrome-mono: "DM Mono", ui-monospace, Menlo, monospace;
+
+    /* Mood tokens, replaced by JS. Defaults are Tropical Spritz. */
+    --canvas: #fff6e9;
+    --surface: #ffffff;
+    --surface-raised: #ffebd9;
+    --hairline: rgba(43, 27, 34, 0.1);
+    --accent: #ff6b8b;
+    --on-accent: #ffffff;
+    --accent-shadow: #d8456b;
+    --secondary: #1fa3b8;
+    --highlight: #b8e62e;
+    --on-highlight: #2b1b22;
+    --depth: #0e5c6b;
+    --text: #2b1b22;
+    --text-muted: rgba(43, 27, 34, 0.66);
+    --text-faint: rgba(43, 27, 34, 0.45);
+    --positive: #3fa96b;
+
+    --r-control: 999px;
+    --r-card: 20px;
+    --r-row: 16px;
+    --r-avatar: 14px;
+
+    --f-display: "Instrument Serif";
+    --f-body: "DM Sans";
+    --f-mono: "DM Mono";
+    --display-tracking: -0.01em;
+    --display-weight: 400;
+
+    --s-display: 40px; --s-title: 27px; --s-section: 20px; --s-card-title: 15px;
+    --s-body: 15px; --s-caption: 12px; --s-label: 11px; --s-eyebrow: 10.5px;
+    --s-readout: 34px; --s-card-number: 26px;
+
+    --card-shadow: 0 1px 3px rgba(43, 27, 34, 0.12);
+    --card-border: 0 solid transparent;
+    --grain: 0.035;
+  }
+
+  /* The studio follows the mood being previewed rather than the viewer's OS, so the phone never
+     sits on a ground that fights it. The mood is the subject; the room adapts. */
+  :root[data-studio="dark"] {
+    --studio-ground: #0b0d12;
+    --studio-panel: #14171f;
+    --studio-line: #262b36;
+    --studio-ink: #e9edf4;
+    --studio-muted: #8b94a6;
+    --studio-shadow: rgba(0, 0, 0, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--studio-ground);
+    color: var(--studio-ink);
+    font-family: var(--chrome-sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .page { max-width: 1220px; margin: 0 auto; padding: 40px 24px 72px; }
+
+  /* ---- Masthead ---- */
+
+  header.masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--studio-line);
+  }
+
+  .eyebrow {
+    font-family: var(--chrome-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+
+  h1 {
+    font-family: var(--chrome-serif);
+    font-size: clamp(32px, 4.6vw, 52px);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst { margin: 14px 0 0; max-width: 60ch; color: var(--studio-muted); font-size: 15px; }
+
+  .masthead-meta {
+    font-family: var(--chrome-mono);
+    font-size: 11px;
+    line-height: 1.9;
+    color: var(--studio-muted);
+    text-align: right;
+  }
+
+  .masthead-meta b { color: var(--studio-ink); font-weight: 500; }
+
+  /* ---- Workbench ---- */
+
+  .workbench {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 34px;
+    margin-top: 32px;
+    align-items: start;
+  }
+
+  @media (max-width: 940px) {
+    .workbench { grid-template-columns: 1fr; }
+    .rail { position: static !important; }
+  }
+
+  .rail { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 26px; }
+
+  .rail h2 {
+    font-family: var(--chrome-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--studio-muted);
+    margin: 0 0 10px;
+    font-weight: 500;
+  }
+
+  /* Mood cards in the rail: each previews its own canvas, card treatment and accent. */
+  .moods { display: flex; flex-direction: column; gap: 10px; }
+
+  .mood {
+    padding: 0;
+    border: 1px solid var(--studio-line);
+    border-radius: 14px;
+    background: var(--studio-panel);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    overflow: hidden;
+    transition: border-color 0.16s, transform 0.16s;
+    display: block;
+    width: 100%;
+  }
+
+  .mood:hover { transform: translateX(2px); }
+  .mood[aria-pressed="true"] { border-color: var(--accent); }
+
+  .mood .chip { height: 60px; display: flex; align-items: center; padding: 0 12px; }
+  .mood .card-mini { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
+  .mood .bars { display: flex; flex-direction: column; gap: 3px; }
+  .mood .bars i { display: block; border-radius: 2px; }
+  .mood .body { padding: 9px 12px 11px; }
+  .mood .name { font-size: 13px; font-weight: 500; display: block; }
+  .mood .tag { font-size: 10.5px; color: var(--studio-muted); line-height: 1.35; display: block; }
+
+  .screens { display: flex; flex-direction: column; gap: 3px; }
+
+  .screen-btn {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--studio-ink);
+    font: inherit;
+    font-size: 13.5px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.14s;
+  }
+
+  .screen-btn:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  .screen-btn[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    font-weight: 500;
+  }
+  .screen-btn .idx {
+    font-family: var(--chrome-mono);
+    font-size: 10px;
+    color: var(--studio-muted);
+    min-width: 14px;
+  }
+  .screen-btn[aria-pressed="true"] .idx { color: var(--accent); }
+
+  /* ---- Stage ---- */
+
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+
+  .stage-floor {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 34px 0 44px;
+    border-radius: 26px;
+    background:
+      radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 70%),
+      var(--studio-panel);
+    border: 1px solid var(--studio-line);
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    border-radius: 54px;
+    padding: 11px;
+    background: linear-gradient(160deg, #2b2f38, #0e1015 40%, #23262e);
+    box-shadow: 0 40px 80px -20px var(--studio-shadow), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    flex: 0 0 auto;
+  }
+
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 44px;
+    overflow: hidden;
+    background: var(--canvas);
+    color: var(--text);
+    font-family: var(--f-body), system-ui, sans-serif;
+    isolation: isolate;
+  }
+
+  /* Flat canvas. Both moods forbid a decorative gradient here — Spritz spends its one gradient on
+     a hero, Nomad has none at all. Grain is Spritz only, and dark, because on cream paper white
+     noise is invisible. */
+  .canvas-grain {
+    position: absolute;
+    inset: 0;
+    opacity: var(--grain);
+    pointer-events: none;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .status-bar {
+    position: relative;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 26px 0;
+    font-family: var(--f-mono);
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 5;
+    flex: none;
+  }
+
+  .status-bar.on-hero { color: #fff; }
+
+  .status-bar .island {
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 118px;
+    height: 33px;
+    border-radius: 20px;
+    background: #000;
+  }
+
+  .app { position: relative; z-index: 2; height: 100%; overflow: hidden; }
+  .app.scrolls { overflow-y: auto; scrollbar-width: none; }
+  .app.scrolls::-webkit-scrollbar { display: none; }
+
+  /* ---- App type roles, mirroring Typography.swift ---- */
+
+  .t-display {
+    font-family: var(--f-display);
+    font-size: var(--s-display);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    line-height: 1.04;
+  }
+  .t-title {
+    font-family: var(--f-display);
+    font-size: var(--s-title);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    line-height: 1.12;
+  }
+  .t-section { font-family: var(--f-body); font-size: var(--s-section); font-weight: 700; }
+  .t-card { font-family: var(--f-body); font-size: var(--s-card-title); font-weight: 700; }
+  .t-body { font-family: var(--f-body); font-size: var(--s-body); line-height: 1.6; }
+  .t-caption { font-family: var(--f-mono); font-size: var(--s-caption); color: var(--text-muted); }
+  .t-label { font-family: var(--f-mono); font-size: var(--s-label); font-weight: 500; }
+  .t-eyebrow {
+    font-family: var(--f-mono);
+    font-size: var(--s-eyebrow);
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .num {
+    font-family: var(--f-mono);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---- Surfaces ---- */
+
+  .card {
+    background: var(--surface);
+    border-radius: var(--r-card);
+    box-shadow: var(--card-shadow);
+    border: var(--card-border);
+  }
+
+  .card.row { border-radius: var(--r-row); }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-family: var(--f-mono);
+    font-size: var(--s-label);
+    font-weight: 500;
+    white-space: nowrap;
+    background: var(--pill-bg);
+    color: var(--text-muted);
+    border: var(--pill-border);
+  }
+
+  .pill.prominent { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+  .pill.badge { background: var(--highlight); color: var(--on-highlight); border-color: transparent; }
+  .pill.on-photo { background: rgba(255, 255, 255, 0.2); color: #fff; border-color: transparent; }
+
+  /* The primary button: a hard-offset shadow in Spritz, flat in Nomad. */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    border-radius: var(--r-control);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-family: var(--f-body);
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: var(--btn-shadow);
+    cursor: pointer;
+  }
+
+  .btn.secondary {
+    background: var(--secondary-btn-bg);
+    color: var(--text);
+    border: var(--secondary-btn-border);
+    box-shadow: none;
+    font-weight: 500;
+  }
+
+  /* On a photograph the secondary button cannot borrow the canvas — it borrows the picture. */
+  .btn.secondary.on-photo {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff;
+  }
+
+  .chip-filter {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 13px;
+    border-radius: var(--r-control);
+    font-family: var(--f-body);
+    font-size: var(--s-caption);
+    font-weight: 500;
+    background: var(--chip-bg);
+    color: var(--text-muted);
+    border: var(--chip-border);
+    white-space: nowrap;
+  }
+
+  .chip-filter.on {
+    background: var(--chip-on-bg);
+    color: var(--chip-on-fg);
+    border-color: transparent;
+  }
+
+  .circ {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--circ-bg);
+    border: var(--circ-border);
+    color: var(--text);
+    font-size: 15px;
+    flex: none;
+  }
+
+  .circ.on-hero { background: rgba(0, 0, 0, 0.28); color: #fff; border: 0; }
+  .circ.active { background: var(--accent); color: var(--on-accent); border: 0; }
+
+  .progress { height: 6px; border-radius: 99px; background: var(--track); overflow: hidden; }
+  .progress i { display: block; height: 100%; background: var(--highlight); border-radius: 99px; }
+
+  /* ---- Hero panel: the one gradient a mood may allow ---- */
+
+  .hero { position: relative; background: var(--hero-bg); color: var(--on-hero); overflow: hidden; }
+
+  .hero .bloom {
+    position: absolute;
+    inset: 0;
+    display: var(--hero-bloom);
+    background: radial-gradient(120% 80% at 20% 10%,
+      color-mix(in srgb, var(--canvas) 35%, transparent), transparent 60%);
+  }
+
+  .hero > .inner { position: relative; }
+
+  /* ---- Photo furniture ---- */
+
+  .photo { position: relative; overflow: hidden; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo .scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 32%, rgba(0, 0, 0, 0.3) 62%, rgba(0, 0, 0, 0.84));
+  }
+
+  .thumb { border-radius: var(--r-avatar); overflow: hidden; flex: 0 0 auto; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+
+  /* ---- Compass ---- */
+
+  .rose-wrap {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    display: grid;
+    place-items: center;
+  }
+  .rose-plate { position: absolute; inset: 0; border-radius: 50%; }
+  .rose-plate.on-photo {
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .rose-plate.on-canvas {
+    background: var(--surface);
+    border: var(--card-border);
+    box-shadow: var(--card-shadow);
+  }
+  .rose-plate.glow { box-shadow: 0 0 28px 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+  .hero-distance {
+    font-family: var(--f-mono);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 0.92;
+  }
+
+  /* ---- Bottom bar ---- */
+
+  .bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    z-index: 4;
+  }
+
+  .bar-strip {
+    display: flex;
+    gap: 2px;
+    padding: 5px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: var(--card-border);
+    box-shadow: var(--bar-shadow);
+  }
+
+  .bar-tab {
+    width: 62px;
+    height: 46px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 15px;
+    font-family: var(--f-mono);
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-faint);
+  }
+
+  .bar-tab.on { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+  .bar-tab svg { width: 17px; height: 17px; }
+
+  .bar-shutter {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: grid;
+    place-items: center;
+    box-shadow: var(--btn-shadow);
+  }
+
+  .bar-shutter svg { width: 21px; height: 21px; }
+
+  /* ---- Widgets ---- */
+
+  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .widget {
+    border-radius: 22px;
+    padding: 13px;
+    background: var(--canvas);
+    border: var(--widget-border);
+    box-shadow: var(--widget-shadow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .widget .bloom {
+    position: absolute;
+    inset: 0;
+    display: var(--hero-bloom);
+    background: radial-gradient(70% 60% at 88% 6%,
+      color-mix(in srgb, var(--accent) 20%, transparent), transparent 66%);
+  }
+
+  .widget > *:not(.bloom) { position: relative; }
+  .widget.small { aspect-ratio: 1; }
+  .widget.wide { grid-column: span 2; }
+
+  /* The Lock Screen is always over a wallpaper, so it is always light-on-dark. */
+  /* iOS tints accessory widgets white whatever the app looks like, so they are shown against a
+     dimmed wallpaper rather than the app canvas — on cream, white-on-white is unreadable and would
+     misrepresent how these actually appear. */
+  .lock-stage {
+    border-radius: 20px;
+    padding: 14px;
+    background:
+      radial-gradient(120% 80% at 30% 0%, rgba(255, 255, 255, 0.14), transparent 70%),
+      linear-gradient(165deg, #2c3138, #14161a);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .lock-stage .lock-time {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    margin: 2px 0 2px;
+  }
+
+  .lockscreen {
+    border-radius: 18px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+  }
+
+  .lockscreen .t-label { color: #fff; }
+  .lockscreen .num { color: #fff; }
+
+  .ring {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--f-mono);
+    font-size: 13px;
+    font-weight: 500;
+    background: conic-gradient(var(--accent) 0turn 0.62turn, rgba(255, 255, 255, 0.22) 0.62turn 1turn);
+    position: relative;
+    flex: none;
+  }
+  .ring::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #1b1d21; }
+  .ring span { position: relative; z-index: 1; }
+
+  /* ---- Map ---- */
+
+  .map-plate { position: absolute; inset: 0; background: var(--map-bg); }
+  .map-plate::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.28;
+    background-image:
+      linear-gradient(115deg, transparent 46%, var(--map-line) 46.4%, transparent 47%),
+      linear-gradient(72deg, transparent 62%, var(--map-line) 62.3%, transparent 63%),
+      radial-gradient(closest-side at 108% 96%, var(--map-water), transparent);
+  }
+  .map-pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .map-pin .disc {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--accent);
+    padding: 3px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+  }
+  .map-pin.sel .disc { width: 54px; height: 54px; }
+  .map-pin .disc img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .map-pin .stem {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--accent);
+  }
+  .rings-overlay {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .rings-overlay i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 50%;
+    display: block;
+  }
+
+  /* ---- Theme picker inside Settings ---- */
+
+  .mood-tile { border-radius: var(--r-row); overflow: hidden; border: 1px solid var(--hairline); }
+  .mood-tile.on { border-color: var(--accent); border-width: 2px; }
+
+  .toggle {
+    width: 44px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--highlight);
+    position: relative;
+    flex: 0 0 auto;
+  }
+  .toggle::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  }
+  .toggle.off { background: var(--track); }
+  .toggle.off::after { right: auto; left: 3px; }
+
+  /* ---- Spec strip ---- */
+
+  .spec {
+    width: 100%;
+    max-width: 760px;
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+  @media (max-width: 700px) { .spec { grid-template-columns: 1fr; } }
+  .spec h3 { font-family: var(--chrome-serif); font-size: 22px; font-weight: 400; margin: 0 0 6px; }
+  .spec p { margin: 0; color: var(--studio-muted); font-size: 14px; max-width: 58ch; }
+  .spec ul { margin: 10px 0 0; padding-left: 18px; color: var(--studio-muted); font-size: 13.5px; }
+  .spec li { margin-bottom: 5px; }
+
+  .files {
+    font-family: var(--chrome-mono);
+    font-size: 11.5px;
+    line-height: 1.85;
+    color: var(--studio-muted);
+    background: var(--studio-panel);
+    border: 1px solid var(--studio-line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    overflow-x: auto;
+  }
+  .files b {
+    display: block;
+    color: var(--studio-ink);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 9.5px;
+    margin-bottom: 4px;
+  }
+
+  /* ---- Token tables ---- */
+
+  .tokens {
+    width: 100%;
+    max-width: 760px;
+    display: grid;
+    gap: 26px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  @media (max-width: 700px) { .tokens { grid-template-columns: 1fr; } }
+
+  table.tk { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.tk caption {
+    text-align: left;
+    font-family: var(--chrome-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--studio-muted);
+    padding-bottom: 8px;
+  }
+  table.tk th,
+  table.tk td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--studio-line); }
+  table.tk th { font-weight: 500; font-size: 10.5px; color: var(--studio-muted); }
+  table.tk td.hex { font-family: var(--chrome-mono); font-variant-numeric: tabular-nums; }
+  table.tk .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    display: inline-block;
+    vertical-align: -3px;
+    margin-right: 7px;
+    border: 1px solid rgba(128, 128, 128, 0.4);
+  }
+
+  .rules { width: 100%; max-width: 760px; }
+  .rules h2 {
+    font-family: var(--chrome-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--studio-muted);
+    margin: 0;
+    font-weight: 500;
+  }
+  .rules ul { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+  .rules li { font-size: 13.5px; color: var(--studio-muted); padding-left: 15px; position: relative; }
+  .rules li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 5px;
+    height: 5px;
+    border-radius: 99px;
+    background: var(--accent);
+  }
+  .rules li b { color: var(--studio-ink); font-weight: 600; }
+
+  footer.note {
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--studio-line);
+    color: var(--studio-muted);
+    font-size: 13px;
+    max-width: 70ch;
+  }
+  footer.note code { font-family: var(--chrome-mono); font-size: 12px; color: var(--studio-ink); }
+
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Design preview · not a build</p>
+      <h1>Two moods, one compass.</h1>
+      <p class="standfirst">
+        Tradewind's screens in Tropical Spritz and Nomad Money, the two directions from the Been
+        There theme reference. These are HTML mockups of the SwiftUI views — same palettes, same
+        radii, same bundled typefaces — so the design can be judged before anyone opens Xcode.
+      </p>
+    </div>
+    <div class="masthead-meta">
+      <div><b>iOS 17+</b> · SwiftUI · WidgetKit</div>
+      <div>2 moods · 9 screens</div>
+      <div>Tokens from <b>Theme.swift</b></div>
+    </div>
+  </header>
+
+  <div class="workbench">
+    <nav class="rail" aria-label="Preview controls">
+      <div>
+        <h2>Mood</h2>
+        <div class="moods" id="moods"></div>
+      </div>
+      <div>
+        <h2>Screen</h2>
+        <div class="screens" id="screens"></div>
+      </div>
+    </nav>
+
+    <div class="stage">
+      <div class="stage-floor">
+        <div class="phone">
+          <div class="screen" id="screen">
+            <div class="canvas-grain"></div>
+            <div class="app" id="app"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div>
+          <h3 id="specTitle">—</h3>
+          <p id="specBody"></p>
+          <ul id="specPoints"></ul>
+        </div>
+        <div class="files" id="specFiles"></div>
+      </div>
+
+      <div class="rules">
+        <h2>Rules of the mood</h2>
+        <ul id="rulesList"></ul>
+      </div>
+
+      <div class="tokens">
+        <table class="tk">
+          <caption id="paletteCaption">Palette</caption>
+          <thead><tr><th>Token</th><th>Hex</th><th>Role</th></tr></thead>
+          <tbody id="paletteBody"></tbody>
+        </table>
+        <table class="tk">
+          <caption>Type &amp; structure</caption>
+          <thead><tr><th>Role</th><th>Value</th></tr></thead>
+          <tbody id="typeBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="note">
+    <p>
+      Rendered from <code>docs/preview/template.html</code> by
+      <code>python3 Tools/build_preview.py</code>, which inlines the painted placeholders from
+      <code>Tools/make_preview_images.py</code> and the bundled typefaces, subset to the glyphs this
+      page sets. The type you see is the type the app ships — Instrument Serif, DM Sans, DM Mono,
+      Space Grotesk and JetBrains Mono, all Open Font License. Photographs are painted abstractions,
+      not pictures of real places.
+    </p>
+  </footer>
+</div>
+
+<script>
+  "use strict";
+
+  const IMAGES = __IMAGES__;
+
+  /* -----------------------------------------------------------------------------------------
+     The two moods, transcribed from Shared/DesignSystem/Theme.swift.
+     ----------------------------------------------------------------------------------------- */
+  const MOODS = [
+    {
+      id: "tropicalSpritz",
+      name: "Tropical Spritz",
+      tagline: "Sun-soaked, editorial, tactile",
+      scheme: "light",
+      canvas: "#FFF6E9", surface: "#FFFFFF", surfaceRaised: "#FFEBD9",
+      hairline: "rgba(43,27,34,0.10)",
+      accent: "#FF6B8B", onAccent: "#FFFFFF", accentShadow: "#D8456B",
+      secondary: "#1FA3B8", highlight: "#B8E62E", onHighlight: "#2B1B22", depth: "#0E5C6B",
+      text: "#2B1B22", textMuted: "rgba(43,27,34,0.66)", textFaint: "rgba(43,27,34,0.45)",
+      positive: "#3FA96B",
+      heroGradient: ["#FF8C42", "#FF6B8B", "#B06AB3"],
+      arrow: ["#D8456B", "#FF6B8B", "#FFB08C"],
+      celebration: ["#FF6B8B", "#FF8C42", "#B8E62E", "#1FA3B8"],
+      elevation: "shadow",
+      radii: { control: "999px", card: "20px", row: "16px", avatar: "14px" },
+      fonts: { display: "Instrument Serif", body: "DM Sans", mono: "DM Mono" },
+      displayWeight: 400,
+      displayTracking: "-0.01em",
+      grain: 0.035,
+      scale: {
+        display: 40, title: 27, section: 20, cardTitle: 15, body: 15,
+        caption: 12, label: 11, eyebrow: 10.5, readout: 34, cardNumber: 26,
+      },
+      swatches: [
+        ["canvas", "#FFF6E9", "Piña Cream · the page"],
+        ["surface", "#FFFFFF", "Cards, so they lift off the cream"],
+        ["accent", "#FF6B8B", "Paloma Pink · primary"],
+        ["accentShadow", "#D8456B", "The hard-offset button shadow"],
+        ["highlight", "#B8E62E", "Margarita Lime · badges, progress, toggles"],
+        ["secondary", "#1FA3B8", "Lagoon Blue"],
+        ["depth", "#0E5C6B", "Deep Lagoon · the counterweight"],
+        ["text", "#2B1B22", "Cacao Ink"],
+      ],
+      rules: [
+        ["Serif for feeling, mono for fact.", "Never set a number in the serif."],
+        ["One gradient per screen,", "always behind a photo or as the hero. Never on a button."],
+        ["Cream, not white,", "is the canvas. White is reserved for cards so they lift."],
+        ["Radii:", "999 pills, 20 cards, 16 rows, 14 avatars, 36 screen."],
+        ["Lime is a highlight,", "not a surface — badges, progress, toggles on."],
+        ["Copy is warm and short.", "&ldquo;Every trip. Every sunset. Remembered.&rdquo;"],
+      ],
+      map: {
+        bg: "linear-gradient(150deg,#EDE3D2,#E4D8C4 55%,#D9CBB4)",
+        line: "rgba(43,27,34,.18)",
+        water: "rgba(31,163,184,.35)",
+      },
+    },
+    {
+      id: "nomadMoney",
+      name: "Nomad Money",
+      tagline: "Tabular, hairline, one accent",
+      scheme: "dark",
+      canvas: "#0A0B0D", surface: "#131519", surfaceRaised: "#1A1D22",
+      hairline: "#23262C",
+      accent: "#C6F24E", onAccent: "#0A0B0D", accentShadow: "#7E8F3C",
+      secondary: "#8A9099", highlight: "#C6F24E", onHighlight: "#0A0B0D", depth: "#1A1D22",
+      text: "#F2F4F7", textMuted: "#8A9099", textFaint: "#5E646D",
+      positive: "#4ADE80",
+      heroGradient: null,
+      arrow: ["#7E8F3C", "#9CBB3E", "#C6F24E"],
+      celebration: ["#C6F24E", "#9CBB3E", "#4ADE80", "#F2F4F7"],
+      elevation: "hairline",
+      radii: { control: "10px", card: "16px", row: "14px", avatar: "9px" },
+      fonts: { display: "Space Grotesk", body: "Space Grotesk", mono: "JetBrains Mono" },
+      displayWeight: 700,
+      displayTracking: "-0.03em",
+      grain: 0,
+      scale: {
+        display: 28, title: 22, section: 17, cardTitle: 14, body: 14.5,
+        caption: 11.5, label: 10.5, eyebrow: 10, readout: 32, cardNumber: 24,
+      },
+      swatches: [
+        ["canvas", "#0A0B0D", "Void · the page"],
+        ["surface", "#131519", "Surface · cards"],
+        ["surfaceRaised", "#1A1D22", "Elevation is a lighter surface, never a shadow"],
+        ["hairline", "#23262C", "1px separates everything"],
+        ["accent", "#C6F24E", "Electric Lime · the only accent"],
+        ["text", "#F2F4F7", "Paper"],
+        ["textMuted", "#8A9099", "Muted · secondary"],
+        ["positive", "#4ADE80", "Gain · delta chips"],
+      ],
+      rules: [
+        ["One accent, ever.", "Lime marks the live or primary thing on a screen — nothing else."],
+        ["Every number is tabular mono", "with a delta chip: +62 / &minus;3 / 0."],
+        ["Hairlines, not shadows.", "1px #23262C separates everything; elevation is a lighter surface."],
+        ["Radii:", "10 buttons, 14 rows, 16 cards, 36 screen."],
+        ["Labels are 10&ndash;11px mono caps,", "0.18em tracking, #5E646D."],
+        ["Copy is clipped.", "&ldquo;240 m.&rdquo; No adjectives."],
+      ],
+      map: {
+        bg: "linear-gradient(150deg,#151A1F,#10151A 55%,#0C1013)",
+        line: "rgba(242,244,247,.14)",
+        water: "rgba(90,140,150,.32)",
+      },
+    },
+  ];
+
+  const SPOTS = [
+    { name: "Ravana Falls", place: "Ella, Sri Lanka", img: "waterfall", d: "240", u: "m",
+      walk: "3 min walk", bearing: 34, point: "NE", glyph: "🌊" },
+    { name: "Beach shack", place: "Mirissa", img: "lagoon", d: "1.4", u: "km",
+      walk: "17 min walk", bearing: 156, point: "SSE", glyph: "🍹" },
+    { name: "Temple at dusk", place: "Ayutthaya", img: "temple", d: "3.8", u: "km",
+      walk: "47 min walk", bearing: 288, point: "WNW", glyph: "⛩️" },
+    { name: "Tea room", place: "Nuwara Eliya", img: "hills", d: "9.2", u: "km",
+      walk: null, bearing: 212, point: "SSW", glyph: "☕️" },
+  ];
+
+  /* The dart from ArrowShape in Shared/DesignSystem/CompassRose.swift. */
+  const ARROW_PATH = "M50 0 Q74 42 94 88 Q68 80 50 66 Q32 80 6 88 Q26 42 50 0 Z";
+  let seq = 0;
+
+  function arrow(size, rotation, opts) {
+    const o = opts || {};
+    const id = "ag" + (seq++);
+    const stops = o.solid
+      ? `<stop offset="0%" stop-color="${o.solid}"/><stop offset="100%" stop-color="${o.solid}"/>`
+      : `<stop offset="0%" stop-color="var(--arrow-a)"/>
+         <stop offset="55%" stop-color="var(--arrow-b)"/>
+         <stop offset="100%" stop-color="var(--arrow-c)"/>`;
+    const filter = o.glow
+      ? `<filter id="${id}f" x="-70%" y="-70%" width="240%" height="240%">
+           <feGaussianBlur stdDeviation="${o.glow}"/></filter>`
+      : "";
+    const halo = o.glow
+      ? `<path d="${ARROW_PATH}" fill="var(--accent)" filter="url(#${id}f)" opacity="0.6"/>`
+      : "";
+    return `<svg width="${size * 0.62}" height="${size}" viewBox="0 0 100 100"
+      preserveAspectRatio="none" aria-hidden="true"
+      style="display:block;overflow:visible;transform:rotate(${rotation}deg)">
+      <defs><linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0">${stops}</linearGradient>${filter}</defs>
+      ${halo}<path d="${ARROW_PATH}" fill="url(#${id})"/></svg>`;
+  }
+
+  /** The tick ring, generated the way CompassRose draws it. */
+  function rose(diameter, headingOffset, onPhoto) {
+    const r = diameter / 2;
+    const tick = onPhoto ? "#ffffff" : "var(--text)";
+    const letter = onPhoto ? "rgba(255,255,255,.7)" : "var(--text-muted)";
+    let marks = "";
+    for (let deg = 0; deg < 360; deg += 5) {
+      const cardinal = deg % 90 === 0, major = deg % 30 === 0;
+      const len = cardinal ? 16 : major ? 11 : 6;
+      const w = cardinal ? 2.4 : major ? 1.6 : 1;
+      const op = cardinal ? 0.95 : major ? 0.6 : 0.3;
+      const rad = ((deg - 90) * Math.PI) / 180;
+      marks += `<line x1="${r + Math.cos(rad) * (r - 12)}" y1="${r + Math.sin(rad) * (r - 12)}"
+        x2="${r + Math.cos(rad) * (r - 12 - len)}" y2="${r + Math.sin(rad) * (r - 12 - len)}"
+        stroke="${cardinal ? "var(--accent)" : tick}" stroke-opacity="${op}"
+        stroke-width="${w}" stroke-linecap="round"/>`;
+    }
+    [[0, "N"], [90, "E"], [180, "S"], [270, "W"]].forEach(([deg, ch]) => {
+      const rad = ((deg - 90) * Math.PI) / 180;
+      marks += `<text x="${r + Math.cos(rad) * (r - 42)}" y="${r + Math.sin(rad) * (r - 42) + 4}"
+        text-anchor="middle" font-size="11" font-weight="500" font-family="var(--f-mono)"
+        fill="${deg === 0 ? "var(--accent)" : letter}">${ch}</text>`;
+    });
+    return `<svg width="${diameter}" height="${diameter}" aria-hidden="true"
+      style="position:absolute;inset:0;transform:rotate(${-headingOffset}deg)">${marks}</svg>`;
+  }
+
+  const img = (key) => `<img src="${IMAGES[key]}" alt=""/>`;
+
+  function icon(name) {
+    const paths = {
+      photos: "M3 5h11v9H3z M6 8l2.5 3 2-2 3 3H6z",
+      map: "M2 4l4-2 4 2 4-2v11l-4 2-4-2-4 2z",
+      case: "M2 5h12v8H2z M6 5V3h4v2",
+      camera: "M2 5h3l1-1.5h4L11 5h3v8H2z M8 6.5a2.4 2.4 0 100 4.8 2.4 2.4 0 000-4.8z",
+      slider: "M2 4h12 M2 8h12 M2 12h12",
+      share: "M8 2.5v8 M5 5.5L8 2.5l3 3 M3.5 9.5v4h9v-4",
+    };
+    return `<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linejoin="round"><path d="${paths[name]}"/></svg>`;
+  }
+
+  function statusBar(onHero) {
+    return `<div class="status-bar ${onHero ? "on-hero" : ""}">
+      <span class="num">9:41</span>
+      <span class="island"></span>
+      <span style="display:flex;gap:5px;align-items:center;opacity:.85">
+        <svg width="17" height="11" viewBox="0 0 17 11" aria-hidden="true">
+          <rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/>
+          <rect x="4.5" y="5" width="3" height="6" rx="1" fill="currentColor"/>
+          <rect x="9" y="2.5" width="3" height="8.5" rx="1" fill="currentColor"/>
+          <rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor" opacity=".4"/>
+        </svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" aria-hidden="true">
+          <rect x=".5" y=".5" width="21" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".5"/>
+          <rect x="2.5" y="2.5" width="14" height="7" rx="1.8" fill="currentColor"/>
+          <path d="M23 4v4a2.2 2.2 0 000-4z" fill="currentColor" opacity=".5"/>
+        </svg>
+      </span>
+    </div>`;
+  }
+
+  function bottomBar(active) {
+    const tabs = [["Spots", "photos"], ["Map", "map"], ["Trips", "case"]];
+    return `<div class="bar">
+      <div class="bar-strip">${tabs.map(([l, k]) =>
+        `<div class="bar-tab ${l === active ? "on" : ""}">${icon(k)}<span>${l}</span></div>`).join("")}</div>
+      <div class="bar-shutter">${icon("camera")}</div>
+    </div>`;
+  }
+
+  /* -----------------------------------------------------------------------------------------
+     Screens
+     ----------------------------------------------------------------------------------------- */
+
+  const SCREENS = [
+    {
+      id: "onboarding", label: "Onboarding",
+      title: "First run",
+      body: "Four pages: what the app does, why it needs the camera and your location, what the widgets do, and which mood you want. The picker is the last page, so the first impression is choosing a look.",
+      points: [
+        "The compass is drawn, not shipped as an image, so it restyles with the mood picked on the last page.",
+        "Camera access is asked for at the first photo, not here.",
+      ],
+      files: ["Tradewind/Features/Onboarding/OnboardingView.swift"],
+      render: () => `
+        ${statusBar(false)}
+        <div style="height:calc(100% - 52px);display:flex;flex-direction:column;
+             justify-content:space-between;padding-bottom:26px">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;
+               justify-content:center;gap:28px">
+            <div class="rose-wrap" style="width:220px;height:220px">
+              <div class="rose-plate on-canvas"></div>
+              ${rose(220, 0, false)}
+              <div style="position:relative">${arrow(118, 34)}</div>
+            </div>
+            <div style="text-align:center;padding:0 30px">
+              <p class="t-eyebrow" style="margin:0 0 10px;color:var(--accent)">Tradewind</p>
+              <div class="t-display" style="margin-bottom:12px">Find your way back</div>
+              <p class="t-body" style="margin:0;color:var(--text-muted)">
+                Photograph somewhere worth returning to. Tradewind remembers exactly where you were
+                standing, and points you back whenever you want.
+              </p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;padding:0 30px">
+            <div style="display:flex;gap:6px;justify-content:center">
+              <i style="width:22px;height:7px;border-radius:99px;background:var(--accent);display:block"></i>
+              <i style="width:7px;height:7px;border-radius:99px;background:var(--track);display:block"></i>
+              <i style="width:7px;height:7px;border-radius:99px;background:var(--track);display:block"></i>
+              <i style="width:7px;height:7px;border-radius:99px;background:var(--track);display:block"></i>
+            </div>
+            <button class="btn">Next</button>
+            <p class="t-caption" style="text-align:center;margin:0">Skip</p>
+          </div>
+        </div>`,
+    },
+    {
+      id: "gallery", label: "Spots (home)",
+      title: "Your spots, nearest first",
+      body: "The list re-sorts as you move and the distances tick with it. The masthead sits on the one gradient the mood allows — in Nomad the same block resolves to a flat raised surface, because that mood permits none.",
+      points: [
+        "The status chip is the reference screen's “Currently in Honolulu”, doing the job this app actually has.",
+        "Cards are white on cream in Spritz and hairline-bordered panels in Nomad — one component, two treatments.",
+        "With no location fix the order falls back to most recent, and the eyebrow says so.",
+      ],
+      files: [
+        "Tradewind/Features/Gallery/SpotsGalleryView.swift",
+        "Shared/DesignSystem/Components.swift",
+      ],
+      scrolls: true,
+      render: (m) => {
+        const s = SPOTS[0];
+        const cards = SPOTS.slice(1, 3).map((sp) => `
+          <div class="card" style="overflow:hidden">
+            <div class="photo" style="height:104px">${img(sp.img)}</div>
+            <div style="padding:10px">
+              <div class="t-card" style="margin-bottom:7px">${sp.name}</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                ${arrow(20, sp.bearing)}
+                <span class="num" style="font-size:${m.scale.cardNumber - 4}px">${sp.d}</span>
+                <span class="t-label" style="color:var(--text-faint)">${sp.u}</span>
+              </div>
+            </div>
+          </div>`).join("");
+
+        return `
+          <div class="hero">
+            <div class="bloom"></div>
+            <div class="inner">
+              ${statusBar(m.heroGradient !== null)}
+              <div style="padding:2px 18px 18px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between">
+                  <div>
+                    <p class="t-eyebrow" style="margin:0 0 6px;color:${
+                      m.heroGradient ? "rgba(255,255,255,.8)" : "var(--text-faint)"}">Golden hour</p>
+                    <div class="t-display" style="color:var(--on-hero)">Tradewind</div>
+                  </div>
+                  <div class="circ ${m.heroGradient ? "on-hero" : ""}">
+                    <span style="width:16px;height:16px;display:block">${icon("slider")}</span>
+                  </div>
+                </div>
+                <div style="display:inline-flex;align-items:center;gap:7px;margin-top:14px;
+                     padding:7px 13px;border-radius:999px;background:var(--hero-chip)">
+                  <span style="width:7px;height:7px;border-radius:99px;background:var(--highlight)"></span>
+                  <span style="font-family:var(--f-body);font-size:${m.scale.caption}px;
+                        font-weight:500;color:var(--on-hero)">Nearest is 240 m away</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:16px 18px 108px">
+            <div style="display:flex;gap:7px;overflow:hidden;margin-bottom:14px">
+              <span class="chip-filter on">Everywhere</span>
+              <span class="chip-filter">Sri Lanka</span>
+              <span class="chip-filter">Thailand</span>
+            </div>
+
+            <div class="card" style="overflow:hidden">
+              <div class="photo" style="height:224px">
+                ${img(s.img)}<div class="scrim"></div>
+                <div style="position:absolute;left:0;right:0;bottom:0;padding:16px">
+                  <div style="display:flex;gap:6px;margin-bottom:9px">
+                    <span class="pill prominent">Pinned</span>
+                    <span class="pill on-photo">Sri Lanka</span>
+                    <span class="pill on-photo">${s.point}</span>
+                  </div>
+                  <div class="t-title" style="color:#fff;margin-bottom:9px">${s.name}</div>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    ${arrow(34, s.bearing, { solid: "#fff" })}
+                    <div>
+                      <div style="display:flex;align-items:baseline;gap:3px;color:#fff">
+                        <span class="num" style="font-size:${m.scale.readout}px">${s.d}</span>
+                        <span class="num" style="font-size:${m.scale.readout * 0.5}px;opacity:.75">${s.u}</span>
+                      </div>
+                      <div style="font-family:var(--f-mono);font-size:${m.scale.caption}px;
+                           color:rgba(255,255,255,.7)">${s.walk}</div>
+                    </div>
+                    <div style="margin-left:auto;color:var(--accent);font-size:26px">↗</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin:18px 0 10px">
+              <p class="t-eyebrow" style="margin:0 0 4px">Nearest first</p>
+              <div class="t-section">All your spots</div>
+            </div>
+            <div class="grid2">${cards}</div>
+          </div>
+          ${bottomBar("Spots")}`;
+      },
+    },
+    {
+      id: "arrow", label: "Arrow (walking)",
+      title: "The screen the app exists for",
+      body: "An arrow, a distance, and the photo of where you are going sitting blurred behind both. The photograph is the hero, so the type is white on a dark scrim in both moods — a cream scrim over a photo washes it out, and “one gradient, behind a photo” is exactly the case that rule is written for.",
+      points: [
+        "The compass plate goes dark and translucent here. A white card on a photograph reads as a hole punched in the picture.",
+        "The glow grows with proximity, so closing in is visible without reading anything.",
+        "Haptics pulse faster the nearer you get — the phone can stay in a pocket.",
+      ],
+      files: [
+        "Tradewind/Features/Arrow/ArrowScreen.swift",
+        "Shared/Services/CompassEngine.swift",
+        "Shared/DesignSystem/CompassRose.swift",
+      ],
+      render: () => `
+        <div style="position:absolute;inset:0;overflow:hidden">
+          <img src="${IMAGES[SPOTS[0].img]}" alt="" style="position:absolute;inset:-14%;width:128%;
+               height:128%;object-fit:cover;filter:blur(42px);opacity:.55"/>
+        </div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,
+             rgba(0,0,0,.45),rgba(0,0,0,.05) 42%,rgba(0,0,0,.75))"></div>
+
+        <div style="position:relative;height:100%;display:flex;flex-direction:column">
+          ${statusBar(true)}
+          <div style="padding:0 20px 22px;flex:1;display:flex;flex-direction:column">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="circ on-hero">⌄</div>
+              <div style="flex:1">
+                <p class="t-eyebrow" style="margin:0 0 3px;color:var(--accent)">Turn right</p>
+                <div class="t-title" style="color:#fff">${SPOTS[0].name}</div>
+                <p class="t-caption" style="margin:2px 0 0;color:rgba(255,255,255,.72)">${SPOTS[0].place}</p>
+              </div>
+              <div class="circ on-hero">···</div>
+            </div>
+
+            <div style="flex:1;display:grid;place-items:center">
+              <div class="rose-wrap">
+                <div class="rose-plate on-photo"></div>
+                ${rose(300, 18, true)}
+                <div style="position:relative">${arrow(176, 34, { glow: 7 })}</div>
+              </div>
+            </div>
+
+            <div style="text-align:center;margin-bottom:16px">
+              <div style="display:flex;justify-content:center;align-items:baseline;gap:6px;color:#fff">
+                <span class="hero-distance" style="font-size:88px">240</span>
+                <span class="num" style="font-size:26px;opacity:.7">m</span>
+              </div>
+              <div style="display:flex;justify-content:center;gap:8px;margin-top:12px">
+                <span class="pill on-photo">3 min walk</span>
+                <span class="pill on-photo">48 m above</span>
+                <span class="pill on-photo">NE 34°</span>
+              </div>
+            </div>
+
+            <button class="btn">Track on Lock Screen</button>
+          </div>
+        </div>`,
+    },
+    {
+      id: "arrival", label: "Arrival",
+      title: "You made it",
+      body: "Inside twenty-five metres the screen changes character: the ring lights up, confetti in the mood's own palette, and a stamp lands on the photo. The one place the app is allowed to celebrate.",
+      points: [
+        "Hysteresis on the radius, so standing on the boundary does not flicker the celebration.",
+        "The confetti is a pure function of (started, now) — nothing to keep in sync.",
+      ],
+      files: ["Shared/DesignSystem/CelebrationView.swift", "Shared/Services/CompassEngine.swift"],
+      render: (m) => {
+        let seed = 7;
+        const rand = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+        const palette = m.celebration;
+        let confetti = "";
+        for (let i = 0; i < 70; i++) {
+          const a = rand() * Math.PI * 2, dist = 66 + rand() * 168;
+          const x = 195 + Math.cos(a) * dist, y = 306 + Math.sin(a) * dist * 0.86;
+          const size = 4 + rand() * 6;
+          confetti += `<i style="position:absolute;left:${x}px;top:${y}px;width:${size}px;
+            height:${size * (0.6 + rand())}px;background:${palette[i % 4]};border-radius:2px;
+            transform:rotate(${rand() * 360}deg);opacity:${0.4 + rand() * 0.55};display:block"></i>`;
+        }
+        return `
+          <div style="position:absolute;inset:0;overflow:hidden">
+            <img src="${IMAGES[SPOTS[0].img]}" alt="" style="position:absolute;inset:-14%;width:128%;
+                 height:128%;object-fit:cover;filter:blur(40px);opacity:.5"/>
+          </div>
+          <div style="position:absolute;inset:0;background:linear-gradient(to bottom,
+               rgba(0,0,0,.4),rgba(0,0,0,.08) 40%,rgba(0,0,0,.8))"></div>
+          <div style="position:absolute;inset:0;pointer-events:none">${confetti}</div>
+          ${statusBar(true)}
+          <div style="position:relative;height:calc(100% - 52px);display:flex;flex-direction:column;
+               align-items:center;justify-content:center;gap:22px;padding:0 24px 130px">
+            <div class="rose-wrap">
+              <div class="rose-plate on-photo glow"></div>
+              ${rose(272, 4, true)}
+              <div style="position:relative">${arrow(168, 2, { glow: 11 })}</div>
+            </div>
+            <div style="border:2px solid var(--accent);border-radius:11px;padding:11px 22px;
+                 transform:rotate(-7deg);text-align:center;background:rgba(0,0,0,.42);
+                 backdrop-filter:blur(2px)">
+              <div class="t-title" style="color:var(--accent);font-size:23px">You made it</div>
+              <div class="t-label" style="letter-spacing:.22em;text-transform:uppercase;
+                   color:var(--accent);font-size:10px">${SPOTS[0].name}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="display:flex;align-items:baseline;gap:6px;color:#fff;justify-content:center">
+                <span class="hero-distance" style="font-size:60px">12</span>
+                <span class="num" style="font-size:22px;opacity:.7">m</span>
+              </div>
+              <p style="margin:8px 0 0;font-family:var(--f-body);font-size:${m.scale.body}px;
+                   color:rgba(255,255,255,.72);max-width:250px">
+                Close enough to see it. You photographed this spot 132 days ago.</p>
+            </div>
+          </div>
+          <div style="position:absolute;left:24px;right:24px;bottom:34px;display:flex;
+               flex-direction:column;gap:10px">
+            <button class="btn">Take another photo here</button>
+            <button class="btn secondary on-photo">Back to my spots</button>
+          </div>`;
+      },
+    },
+    {
+      id: "map", label: "Map",
+      title: "Which of these is actually near me",
+      body: "A list of distances cannot answer that; a map can. Photo-thumbnail pins, range rings at 100 m, 500 m and a kilometre, and a great-circle line to whichever spot is selected.",
+      points: [
+        "The line is sampled along the great circle, not drawn straight across the projection.",
+        "A tinted overlay pulls the map toward the mood without hiding the geography.",
+      ],
+      files: ["Tradewind/Features/Map/SpotsMapView.swift"],
+      render: () => `
+        <div class="map-plate"></div>
+        <div class="rings-overlay" style="left:188px;top:420px">
+          <i style="width:120px;height:120px"></i>
+          <i style="width:230px;height:230px"></i>
+          <i style="width:340px;height:340px"></i>
+        </div>
+        <svg width="100%" height="100%" style="position:absolute;inset:0" aria-hidden="true">
+          <path d="M188 420 C 208 356, 232 302, 264 254" fill="none" stroke="var(--accent)"
+            stroke-width="3" stroke-dasharray="8 8" stroke-linecap="round" opacity=".9"/>
+        </svg>
+        <div class="map-pin sel" style="left:264px;top:254px">
+          <div class="disc">${img(SPOTS[0].img)}</div><div class="stem"></div></div>
+        <div class="map-pin" style="left:96px;top:330px">
+          <div class="disc">${img(SPOTS[1].img)}</div><div class="stem"></div></div>
+        <div class="map-pin" style="left:300px;top:560px">
+          <div class="disc">${img(SPOTS[2].img)}</div><div class="stem"></div></div>
+        <div class="map-pin" style="left:120px;top:614px">
+          <div class="disc">${img(SPOTS[3].img)}</div><div class="stem"></div></div>
+        <div style="position:absolute;left:188px;top:420px;width:18px;height:18px;border-radius:50%;
+             transform:translate(-50%,-50%);background:var(--secondary);border:2.5px solid #fff;
+             box-shadow:0 0 0 7px color-mix(in srgb, var(--secondary) 25%, transparent)"></div>
+
+        ${statusBar(false)}
+        <div style="position:relative;padding:0 18px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <p class="t-eyebrow" style="margin:0 0 3px">4 saved</p>
+              <div class="t-title">The map</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div class="circ active">◎</div>
+              <div class="circ">⌖</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:18px;right:18px;bottom:88px">
+          <div class="card row" style="padding:13px">
+            <div style="display:flex;gap:13px;align-items:center">
+              <div class="thumb" style="width:52px;height:52px">${img(SPOTS[0].img)}</div>
+              <div style="flex:1;min-width:0">
+                <div class="t-card">${SPOTS[0].name}</div>
+                <div class="t-caption">${SPOTS[0].place}</div>
+              </div>
+              <div style="text-align:right">
+                <div class="num" style="font-size:19px">240 m</div>
+                <div class="t-label" style="color:var(--accent)">Point me there</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        ${bottomBar("Map")}`,
+    },
+    {
+      id: "detail", label: "Spot detail",
+      title: "Everything about one place",
+      body: "The photo full size, where it is, when you were there, and when the light will be good there — because the useful question about a spot is not only how far, but when to go.",
+      points: [
+        "Golden hour is computed from the spot's own coordinate, not yours.",
+        "Sharing produces a rendered postcard alongside the deep link, so it means something to someone without the app.",
+      ],
+      files: [
+        "Tradewind/Features/Detail/SpotDetailView.swift",
+        "Shared/Math/SolarTimes.swift",
+        "Tradewind/Features/Support/PostcardView.swift",
+      ],
+      scrolls: true,
+      render: (m) => `
+        <div class="photo" style="height:290px">
+          ${img(SPOTS[0].img)}<div class="scrim"></div>
+          <div style="position:absolute;left:0;right:0;top:0">
+            ${statusBar(true)}
+            <div style="display:flex;justify-content:space-between;padding:0 18px">
+              <div class="circ on-hero" style="font-size:20px;padding-bottom:2px">‹</div>
+              <div style="display:flex;gap:8px">
+                <div class="circ on-hero"><span style="width:15px;height:15px;display:block">${icon("share")}</span></div>
+                <div class="circ on-hero" style="letter-spacing:1px">···</div>
+              </div>
+            </div>
+          </div>
+          <div style="position:absolute;left:18px;right:18px;bottom:16px">
+            <p class="t-eyebrow" style="margin:0 0 5px;color:rgba(255,255,255,.8)">14 March 2026 · 17:52</p>
+            <div class="t-title" style="color:#fff">${SPOTS[0].name}</div>
+          </div>
+        </div>
+
+        <div style="padding:18px 18px 56px;display:flex;flex-direction:column;gap:18px">
+          <div class="card" style="padding:16px">
+            <div style="display:flex;gap:16px;align-items:center">
+              ${arrow(40, 34)}
+              <div>
+                <div style="display:flex;align-items:baseline;gap:3px">
+                  <span class="num" style="font-size:${m.scale.readout}px">240</span>
+                  <span class="num" style="font-size:${m.scale.readout * 0.5}px;color:var(--text-faint)">m</span>
+                </div>
+                <div class="t-caption">3 min walk</div>
+              </div>
+              <div style="margin-left:auto;text-align:right">
+                <div class="num" style="font-size:19px;color:var(--accent)">NE</div>
+                <div class="t-label" style="color:var(--text-faint)">34°</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="t-section" style="margin-bottom:10px">Where it is</div>
+            <div class="card" style="overflow:hidden">
+              <div style="height:148px;position:relative;overflow:hidden"><div class="map-plate"></div>
+                <svg width="100%" height="100%" style="position:absolute;inset:0" aria-hidden="true">
+                  <path d="M40 128 C 90 112, 120 86, 176 74" fill="none" stroke="var(--accent)"
+                    stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round" opacity=".85"/>
+                </svg>
+                <div class="map-pin" style="left:176px;top:74px">
+                  <div class="disc" style="width:34px;height:34px">${img(SPOTS[0].img)}</div>
+                  <div class="stem"></div>
+                </div>
+                <div style="position:absolute;left:40px;top:128px;width:12px;height:12px;
+                     border-radius:50%;transform:translate(-50%,-50%);background:var(--secondary);
+                     border:2px solid #fff"></div></div>
+              <div style="padding:6px 0">
+                ${[["Coordinates", "6.83950, 81.05530"], ["Elevation", "412 m"],
+                   ["Fix accuracy", "±6 m"], ["Best light", "17:34–18:21"]].map(([k, v]) => `
+                  <div style="display:flex;padding:9px 15px;gap:12px;align-items:center">
+                    <span class="t-caption">${k}</span>
+                    <span class="num" style="margin-left:auto;font-size:${m.scale.caption}px;
+                          color:var(--text)">${v}</span>
+                  </div>`).join("")}
+              </div>
+            </div>
+          </div>
+
+          <button class="btn">Unpin from widgets</button>
+          <button class="btn secondary">Share as a postcard</button>
+        </div>`,
+    },
+    {
+      id: "trips", label: "Trips",
+      title: "One island, one week",
+      body: "Spots grouped into trips, each with a cover taken from its most recent photo. A trip can carry its own mood, so opening one need not feel identical to opening another.",
+      points: [
+        "The distance on a trip card is to its nearest spot — a trip is only as far away as its closest piece.",
+        "Spots not in a trip sit in a strip underneath rather than being hidden.",
+      ],
+      files: ["Tradewind/Features/Trips/TripsView.swift"],
+      scrolls: true,
+      render: () => `
+        ${statusBar(false)}
+        <div style="padding:6px 18px 100px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <p class="t-eyebrow" style="margin:0 0 4px">2 trips</p>
+              <div class="t-display">Trips</div>
+            </div>
+            <div class="circ active">+</div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
+            ${[["Sri Lanka, March", "waterfall", "3 spots", "240 m"],
+               ["Thailand", "temple", "1 spot", "3.8 km"]].map(([name, key, count, dist]) => `
+              <div class="card" style="overflow:hidden">
+                <div class="photo" style="height:150px">
+                  ${img(key)}<div class="scrim"></div>
+                  <div style="position:absolute;left:16px;right:16px;bottom:14px">
+                    <div style="display:flex;gap:6px;margin-bottom:7px">
+                      <span class="pill on-photo">${count}</span>
+                      <span class="pill badge">${dist}</span>
+                    </div>
+                    <div class="t-title" style="color:#fff">${name}</div>
+                  </div>
+                </div>
+              </div>`).join("")}
+          </div>
+
+          <div style="margin:24px 0 12px">
+            <p class="t-eyebrow" style="margin:0 0 4px">1 loose</p>
+            <div class="t-section">Not in a trip</div>
+          </div>
+          <div class="card row" style="padding:12px">
+            <div style="display:flex;gap:13px;align-items:center">
+              <div class="thumb" style="width:52px;height:52px">${img("hills")}</div>
+              <div style="flex:1;min-width:0">
+                <div class="t-card">Tea room</div>
+                <div class="t-caption">Nuwara Eliya</div>
+              </div>
+              <div style="text-align:right">
+                <div class="num" style="font-size:18px">9.2 km</div>
+                <div class="t-label" style="color:var(--text-faint)">Add to a trip</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        ${bottomBar("Trips")}`,
+    },
+    {
+      id: "widgets", label: "Widgets",
+      title: "Distance without opening anything",
+      body: "The configurable widget follows your pinned spot; the wide one lists everything by distance. Widgets read a small JSON snapshot the app leaves in the App Group — never the database.",
+      points: [
+        "They show the bearing with north up. WidgetKit cannot stream sensor updates, so a live needle would be a lie most of the time.",
+        "When the fix is cached rather than fresh, the widget says “last known position”.",
+        "Widget typography follows the mood, numerals included.",
+      ],
+      files: [
+        "TradewindWidgets/SpotCompassWidget.swift",
+        "TradewindWidgets/NearestSpotsWidget.swift",
+        "Shared/Snapshot/SharedSnapshot.swift",
+      ],
+      scrolls: true,
+      render: () => {
+        const rows = SPOTS.slice(0, 3).map((sp, i) => `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:${i === 2 ? 0 : 7}px">
+            ${arrow(15, sp.bearing)}
+            <span class="t-label" style="color:var(--text)">${sp.name}</span>
+            <span class="num" style="margin-left:auto;font-size:12px;color:var(--accent)">${sp.d}${sp.u}</span>
+          </div>`).join("");
+
+        return `
+          ${statusBar(false)}
+          <div style="padding:14px 18px 40px">
+            <p class="t-eyebrow" style="margin:0 0 12px">Home screen</p>
+            <div class="home-grid">
+              <div class="widget small">
+                <div class="bloom"></div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                  ${arrow(30, 34)}
+                  <span class="t-label" style="color:var(--text-faint)">Pinned</span>
+                </div>
+                <div style="margin-top:20px">
+                  <div style="display:flex;align-items:baseline;gap:2px">
+                    <span class="num" style="font-size:32px">240</span>
+                    <span class="num" style="font-size:15px;color:var(--text-faint)">m</span>
+                  </div>
+                  <div class="t-label" style="color:var(--text)">Ravana Falls</div>
+                  <div class="t-label" style="color:var(--text-faint)">Ella, Sri Lanka</div>
+                </div>
+              </div>
+
+              <div class="widget small">
+                <div class="bloom"></div>
+                <div style="height:100%;display:flex;flex-direction:column;justify-content:center">${rows}</div>
+              </div>
+
+              <div class="widget wide">
+                <div class="bloom"></div>
+                <div style="display:flex;gap:14px;align-items:center">
+                  <div class="thumb" style="width:70px;height:70px">${img("lagoon")}</div>
+                  <div style="min-width:0">
+                    <div style="display:flex;align-items:baseline;gap:3px">
+                      <span class="num" style="font-size:26px">1.4</span>
+                      <span class="num" style="font-size:13px;color:var(--text-faint)">km</span>
+                    </div>
+                    <div class="t-label" style="white-space:nowrap;color:var(--text)">Beach shack</div>
+                    <div class="t-label" style="white-space:nowrap;color:var(--text-faint)">Mirissa · SSE</div>
+                  </div>
+                  <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px;
+                       align-items:flex-end">
+                    <span class="pill">Next</span><span class="pill">Nearest</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="t-eyebrow" style="margin:26px 0 12px">Lock Screen &amp; Live Activity</p>
+            <div class="lock-stage">
+            <p class="lock-time">Over your wallpaper</p>
+            <div class="lockscreen">
+              <div style="display:flex;gap:16px;align-items:center">
+                <div class="ring"><span>240</span></div>
+                <div style="flex:1">
+                  <div class="t-label">Ravana Falls</div>
+                  <div class="t-label" style="opacity:.65">Beach shack · 1.4km</div>
+                  <div class="t-label" style="opacity:.65">Temple at dusk · 3.8km</div>
+                </div>
+              </div>
+            </div>
+            <div class="lockscreen">
+              <div style="display:flex;gap:14px;align-items:center">
+                <div style="width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+                     background:color-mix(in srgb,var(--accent) 16%,transparent);
+                     border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)">${arrow(30, 34)}</div>
+                <div style="flex:1">
+                  <p class="t-eyebrow" style="margin:0 0 3px;color:var(--accent)">Heading to</p>
+                  <div class="t-card" style="color:#fff">Ravana Falls</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="display:flex;align-items:baseline;gap:2px">
+                    <span class="num" style="font-size:26px">240</span>
+                    <span class="num" style="font-size:13px;opacity:.7">m</span>
+                  </div>
+                  <div class="t-label" style="color:var(--accent)">NE</div>
+                </div>
+              </div>
+              <div class="progress" style="margin-top:12px"><i style="width:76%"></i></div>
+            </div>
+            </div>
+
+            <p class="t-eyebrow" style="margin:26px 0 12px">Without unlocking</p>
+            <div class="card" style="padding:14px">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="circ active">${icon("camera")}</div>
+                <div style="flex:1;min-width:0">
+                  <div class="t-card">Control Centre &amp; Action button</div>
+                  <div class="t-caption">Save where you are standing, or open the nearest spot.</div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      },
+    },
+    {
+      id: "settings", label: "Settings",
+      title: "Pick your mood",
+      body: "Two moods, and each tile previews how that mood behaves rather than what colours it uses — the real canvas, a card treated the way that mood treats cards, and one pill in the accent. Changing it restyles the widgets too.",
+      points: [
+        "Units show a worked example rather than an explanation.",
+        "The iCloud row reports what the store actually opened, not what the toggle asked for.",
+        "The time-of-day tint is gone: neither mood permits a drifting colour wash over the canvas.",
+      ],
+      files: [
+        "Tradewind/Features/Settings/SettingsView.swift",
+        "Shared/Services/AppSettings.swift",
+        "Shared/Models/AppModelContainer.swift",
+      ],
+      scrolls: true,
+      render: (m) => {
+        const tiles = MOODS.map((t) => `
+          <div class="mood-tile ${t.id === m.id ? "on" : ""}">
+            <div style="height:86px;position:relative;background:${t.canvas};display:grid;place-items:center">
+              <div style="display:flex;align-items:center;gap:9px;padding:10px;
+                   border-radius:${t.radii.row};background:${t.surface};${
+                     t.elevation === "hairline"
+                       ? `border:1px solid ${t.hairline}`
+                       : "box-shadow:0 1px 3px rgba(43,27,34,.14)"}">
+                <svg width="20" height="32" viewBox="0 0 100 100" preserveAspectRatio="none"
+                     style="transform:rotate(34deg)" aria-hidden="true">
+                  <path d="${ARROW_PATH}" fill="${t.accent}"/></svg>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <i style="display:block;width:44px;height:5px;border-radius:3px;
+                     background:${t.text};opacity:.75"></i>
+                  <i style="display:block;width:28px;height:4px;border-radius:3px;background:${t.textMuted}"></i>
+                  <i style="display:block;width:32px;height:9px;border-radius:99px;background:${t.accent}"></i>
+                </div>
+              </div>
+            </div>
+            <div style="padding:9px 10px;background:${t.canvas}">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span class="t-label" style="color:${t.text}">${t.name}</span>
+                ${t.id === m.id ? `<span style="margin-left:auto;color:${t.accent}">✓</span>` : ""}
+              </div>
+              <div style="font-family:var(--f-mono);font-size:9.5px;color:${t.textFaint};
+                   line-height:1.35;margin-top:3px">${t.tagline}</div>
+            </div>
+          </div>`).join("");
+
+        return `
+          ${statusBar(false)}
+          <div style="padding:10px 18px 40px;display:flex;flex-direction:column;gap:24px">
+            <div>
+              <p class="t-eyebrow" style="margin:0 0 4px">Pick your mood</p>
+              <div class="t-section" style="margin-bottom:12px">Look</div>
+              <div class="grid2">${tiles}</div>
+            </div>
+
+            <div>
+              <div class="t-section" style="margin-bottom:10px">Distances</div>
+              <div class="card" style="padding:14px">
+                ${[["Automatic", "240 m · 4.3 km", true],
+                   ["Metres &amp; kilometres", "240 m · 4.3 km", false],
+                   ["Feet &amp; miles", "787 ft · 2.7 mi", false]].map(([l, s, on]) => `
+                  <div style="display:flex;gap:12px;padding:6px 0;align-items:center">
+                    <span style="color:var(--accent);opacity:${on ? 1 : 0.35}">${on ? "◉" : "○"}</span>
+                    <div><div class="t-body">${l}</div>
+                    <div class="t-label num" style="color:var(--text-faint)">${s}</div></div>
+                  </div>`).join("")}
+              </div>
+            </div>
+
+            <div>
+              <div class="t-section" style="margin-bottom:10px">Feel</div>
+              <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:14px">
+                ${[["Haptic pulse", "Taps you as you walk, faster the closer you get.", true],
+                   ["Sound", "A soft chime when you're facing the right way.", false]].map(([t2, d, on]) => `
+                  <div style="display:flex;gap:12px;align-items:flex-start">
+                    <div style="flex:1"><div class="t-body">${t2}</div>
+                    <div class="t-label" style="color:var(--text-faint);font-weight:400">${d}</div></div>
+                    <div class="toggle ${on ? "" : "off"}"></div>
+                  </div>`).join("")}
+              </div>
+            </div>
+
+            <div>
+              <div class="t-section" style="margin-bottom:10px">iCloud</div>
+              <div class="card" style="padding:14px">
+                <div style="display:flex;gap:12px;align-items:center">
+                  <div style="flex:1"><div class="t-body">Sync my spots</div>
+                  <div class="t-label" style="color:var(--text-faint);font-weight:400">
+                    Keeps spots and photos on all your devices.</div></div>
+                  <div class="toggle"></div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:12px;padding-top:12px;
+                     border-top:1px solid var(--hairline);align-items:center">
+                  <span style="color:var(--positive)">✓</span>
+                  <span class="t-caption" style="color:var(--text)">Syncing with iCloud</span>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      },
+    },
+  ];
+
+  /* -----------------------------------------------------------------------------------------
+     Wiring
+     ----------------------------------------------------------------------------------------- */
+
+  let moodIndex = 0;
+  let screenIndex = 1;
+
+  function applyMood(m) {
+    const root = document.documentElement;
+    const set = (k, v) => root.style.setProperty(k, v);
+
+    set("--canvas", m.canvas);
+    set("--surface", m.surface);
+    set("--surface-raised", m.surfaceRaised);
+    set("--hairline", m.hairline);
+    set("--accent", m.accent);
+    set("--on-accent", m.onAccent);
+    set("--accent-shadow", m.accentShadow);
+    set("--secondary", m.secondary);
+    set("--highlight", m.highlight);
+    set("--on-highlight", m.onHighlight);
+    set("--depth", m.depth);
+    set("--text", m.text);
+    set("--text-muted", m.textMuted);
+    set("--text-faint", m.textFaint);
+    set("--positive", m.positive);
+
+    set("--r-control", m.radii.control);
+    set("--r-card", m.radii.card);
+    set("--r-row", m.radii.row);
+    set("--r-avatar", m.radii.avatar);
+
+    set("--f-display", `"${m.fonts.display}"`);
+    set("--f-body", `"${m.fonts.body}"`);
+    set("--f-mono", `"${m.fonts.mono}"`);
+    set("--display-weight", String(m.displayWeight));
+    set("--display-tracking", m.displayTracking);
+    set("--grain", String(m.grain));
+
+    Object.entries(m.scale).forEach(([key, value]) => {
+      set(`--s-${key.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase())}`, `${value}px`);
+    });
+
+    set("--arrow-a", m.arrow[0]);
+    set("--arrow-b", m.arrow[1]);
+    set("--arrow-c", m.arrow[2]);
+
+    // Elevation is the structural difference: a soft shadow, or a hairline and no shadow at all.
+    const hairline = m.elevation === "hairline";
+    const quiet = hairline ? m.surfaceRaised : "rgba(43,27,34,.07)";
+    set("--card-shadow", hairline ? "none" : "0 1px 3px rgba(43,27,34,.12)");
+    set("--card-border", hairline ? `1px solid ${m.hairline}` : "0 solid transparent");
+    set("--bar-shadow", hairline ? "none" : "0 6px 18px rgba(43,27,34,.16)");
+    set("--widget-border", hairline ? `1px solid ${m.hairline}` : "0 solid transparent");
+    set("--widget-shadow", hairline ? "none" : "0 8px 20px rgba(43,27,34,.16)");
+    set("--btn-shadow", hairline ? "none" : `0 3px 0 ${m.accentShadow}`);
+    set("--track", hairline ? m.surfaceRaised : "rgba(43,27,34,.12)");
+    set("--pill-bg", quiet);
+    set("--pill-border", hairline ? `1px solid ${m.hairline}` : "0 solid transparent");
+    set("--chip-bg", hairline ? "transparent" : quiet);
+    set("--chip-border", hairline ? `1px solid ${m.hairline}` : "0 solid transparent");
+    set("--chip-on-bg", hairline ? m.surfaceRaised : m.text);
+    set("--chip-on-fg", hairline ? m.text : m.canvas);
+    set("--circ-bg", hairline ? m.surface : quiet);
+    set("--circ-border", hairline ? `1px solid ${m.hairline}` : "0 solid transparent");
+    set("--secondary-btn-bg", hairline ? m.surfaceRaised : "transparent");
+    set("--secondary-btn-border", hairline ? `1px solid ${m.hairline}` : `1.5px solid ${m.text}`);
+
+    // The hero: one gradient where the mood allows one, a flat raised surface where it does not.
+    if (m.heroGradient) {
+      set("--hero-bg", `linear-gradient(135deg, ${m.heroGradient.join(", ")})`);
+      set("--on-hero", "#ffffff");
+      set("--hero-chip", "rgba(255,255,255,.2)");
+      set("--hero-bloom", "block");
+    } else {
+      set("--hero-bg", m.surfaceRaised);
+      set("--on-hero", m.text);
+      set("--hero-chip", m.surface);
+      set("--hero-bloom", "none");
+    }
+
+    set("--map-bg", m.map.bg);
+    set("--map-line", m.map.line);
+    set("--map-water", m.map.water);
+
+    root.setAttribute("data-studio", m.scheme);
+  }
+
+  function renderMoodList() {
+    document.getElementById("moods").innerHTML = MOODS.map((t, i) => {
+      const hairline = t.elevation === "hairline";
+      return `<button class="mood" aria-pressed="${i === moodIndex}" data-mood="${i}">
+        <span class="chip" style="background:${t.canvas}">
+          <span class="card-mini" style="border-radius:${t.radii.row};background:${t.surface};${
+            hairline ? `border:1px solid ${t.hairline}` : "box-shadow:0 1px 3px rgba(43,27,34,.16)"}">
+            <svg width="13" height="21" viewBox="0 0 100 100" preserveAspectRatio="none"
+              style="transform:rotate(34deg)" aria-hidden="true">
+              <path d="${ARROW_PATH}" fill="${t.accent}"/></svg>
+            <span class="bars">
+              <i style="width:34px;height:4px;background:${t.text};opacity:.72"></i>
+              <i style="width:22px;height:3px;background:${t.textMuted}"></i>
+              <i style="width:26px;height:7px;border-radius:99px;background:${t.accent}"></i>
+            </span>
+          </span>
+        </span>
+        <span class="body">
+          <span class="name">${t.name}</span>
+          <span class="tag">${t.tagline}</span>
+        </span>
+      </button>`;
+    }).join("");
+  }
+
+  function renderScreenList() {
+    document.getElementById("screens").innerHTML = SCREENS.map((s, i) => `
+      <button class="screen-btn" aria-pressed="${i === screenIndex}" data-screen="${i}">
+        <span class="idx">${String(i + 1).padStart(2, "0")}</span><span>${s.label}</span>
+      </button>`).join("");
+  }
+
+  function renderTokens(m) {
+    document.getElementById("paletteCaption").textContent =
+      `Palette — ${m.name} (ThemeCatalog.${m.id})`;
+    document.getElementById("paletteBody").innerHTML = m.swatches.map(([token, hex, role]) => `
+      <tr><td>${token}</td>
+      <td class="hex"><span class="dot" style="background:${hex}"></span>${hex}</td>
+      <td>${role}</td></tr>`).join("");
+
+    document.getElementById("typeBody").innerHTML = [
+      ["Display", `${m.fonts.display} · ${m.scale.display}px`],
+      ["Section head", `${m.fonts.body} 700 · ${m.scale.section}px`],
+      ["Body", `${m.fonts.body} 400 · ${m.scale.body}/1.6`],
+      ["Numerals", `${m.fonts.mono}${m.id === "nomadMoney" ? " · tabular" : ""}`],
+      ["Elevation", m.elevation === "hairline" ? "1px hairline, no shadows" : "Soft shadow, no borders"],
+      ["Radii", `${m.radii.control} · ${m.radii.card} · ${m.radii.row} · ${m.radii.avatar}`],
+      ["Scheme", m.scheme],
+    ].map(([k, v]) => `<tr><td>${k}</td><td class="hex">${v}</td></tr>`).join("");
+
+    document.getElementById("rulesList").innerHTML =
+      m.rules.map(([lead, rest]) => `<li><b>${lead}</b> ${rest}</li>`).join("");
+  }
+
+  function render() {
+    const mood = MOODS[moodIndex];
+    const screen = SCREENS[screenIndex];
+
+    applyMood(mood);
+    seq = 0;
+
+    const app = document.getElementById("app");
+    app.className = "app" + (screen.scrolls ? " scrolls" : "");
+    app.innerHTML = screen.render(mood);
+
+    document.getElementById("specTitle").textContent = screen.title;
+    document.getElementById("specBody").textContent = screen.body;
+    document.getElementById("specPoints").innerHTML =
+      screen.points.map((p) => `<li>${p}</li>`).join("");
+    document.getElementById("specFiles").innerHTML =
+      "<b>Implemented in</b>" + screen.files.join("<br>");
+
+    renderTokens(mood);
+    document.querySelectorAll("[data-mood]").forEach((el) => {
+      el.setAttribute("aria-pressed", String(Number(el.dataset.mood) === moodIndex));
+    });
+    document.querySelectorAll("[data-screen]").forEach((el) => {
+      el.setAttribute("aria-pressed", String(Number(el.dataset.screen) === screenIndex));
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    const mood = event.target.closest("[data-mood]");
+    if (mood) { moodIndex = Number(mood.dataset.mood); render(); return; }
+    const screen = event.target.closest("[data-screen]");
+    if (screen) { screenIndex = Number(screen.dataset.screen); render(); }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    const n = SCREENS.length;
+    if (event.key === "ArrowRight") { screenIndex = (screenIndex + 1) % n; render(); }
+    if (event.key === "ArrowLeft") { screenIndex = (screenIndex + n - 1) % n; render(); }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      moodIndex = (moodIndex + 1) % MOODS.length;
+      render();
+    }
+  });
+
+  renderMoodList();
+  renderScreenList();
+  render();
+</script>
