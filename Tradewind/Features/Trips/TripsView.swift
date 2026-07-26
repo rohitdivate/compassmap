@@ -25,71 +25,21 @@ struct TripsView: View {
     }
 
     var body: some View {
+        content
+            .alert("Name this trip", isPresented: $isNaming) {
+                TextField("Sri Lanka, March", text: $draftName)
+                Button("Create", action: createTrip)
+                Button("Cancel", role: .cancel) { draftName = "" }
+            }
+    }
+
+    private var content: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     header
-
-                    if trips.isEmpty {
-                        EmptyStateView(
-                            symbol: "suitcase",
-                            title: "No trips yet",
-                            message: "Group your spots into trips and each one gets its own cover — and its own look, if you want it.",
-                            actionTitle: "Start a trip",
-                            action: { isNaming = true }
-                        )
-                        .padding(.top, 30)
-                    } else {
-                        VStack(spacing: 14) {
-                            ForEach(trips) { trip in
-                                NavigationLink {
-                                    TripDetailView(trip: trip, hero: hero)
-                                        .environment(settings)
-                                        .environment(router)
-                                        .environment(\.theme, theme)
-                                } label: {
-                                    TripCard(
-                                        trip: trip,
-                                        origin: location.coordinate,
-                                        unitPreference: settings.unitPreference
-                                    )
-                                }
-                                .buttonStyle(PressableStyle(scale: 0.98))
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        store.delete(trip)
-                                    } label: {
-                                        Label("Delete trip", systemImage: "trash")
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 18)
-                    }
-
-                    if !unassigned.isEmpty {
-                        SectionHeader(
-                            eyebrow: "\(unassigned.count) loose",
-                            title: "Not in a trip"
-                        )
-                        .padding(.horizontal, 18)
-
-                        ScrollView(.horizontal) {
-                            HStack(spacing: 12) {
-                                ForEach(SpotRanking.rank(unassigned, from: location.coordinate)) { item in
-                                    LooseSpotChip(
-                                        ranked: item,
-                                        unitPreference: settings.unitPreference,
-                                        trips: trips,
-                                        onOpen: { router.openSpot(id: item.spot.id) },
-                                        onAssign: { trip in store.assign(item.spot, to: trip) }
-                                    )
-                                }
-                            }
-                            .padding(.horizontal, 18)
-                        }
-                        .scrollIndicators(.hidden)
-                    }
+                    if trips.isEmpty { emptyState } else { tripList }
+                    if !unassigned.isEmpty { looseSpots }
                 }
                 .padding(.top, 8)
                 .padding(.bottom, 24)
@@ -99,17 +49,75 @@ struct TripsView: View {
             .toolbarBackground(.hidden, for: .navigationBar)
         }
         .tint(theme.accent)
-        .alert("Name this trip", isPresented: $isNaming) {
-            TextField("Sri Lanka, March", text: $draftName)
-            Button("Create") {
-                let name = draftName.trimmingCharacters(in: .whitespaces)
-                guard !name.isEmpty else { return }
-                store.createTrip(name: name)
-                draftName = ""
-                FeedbackService.shared.lightTap()
+    }
+
+    private var emptyState: some View {
+        EmptyStateView(
+            symbol: "suitcase",
+            title: "No trips yet",
+            message: "Group your spots into trips and each one gets its own cover — and its own look, if you want it.",
+            actionTitle: "Start a trip",
+            action: { isNaming = true }
+        )
+        .padding(.top, 30)
+    }
+
+    private var tripList: some View {
+        VStack(spacing: 14) {
+            ForEach(trips) { trip in
+                NavigationLink {
+                    TripDetailView(trip: trip, hero: hero)
+                        .environment(settings)
+                        .environment(router)
+                        .environment(\.theme, theme)
+                } label: {
+                    TripCard(
+                        trip: trip,
+                        origin: location.coordinate,
+                        unitPreference: settings.unitPreference
+                    )
+                }
+                .buttonStyle(PressableStyle(scale: 0.98))
+                .contextMenu {
+                    Button(role: .destructive) {
+                        store.delete(trip)
+                    } label: {
+                        Label("Delete trip", systemImage: "trash")
+                    }
+                }
             }
-            Button("Cancel", role: .cancel) { draftName = "" }
         }
+        .padding(.horizontal, 18)
+    }
+
+    private var looseSpots: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(eyebrow: "\(unassigned.count) loose", title: "Not in a trip")
+                .padding(.horizontal, 18)
+            ScrollView(.horizontal) {
+                HStack(spacing: 12) {
+                    ForEach(SpotRanking.rank(unassigned, from: location.coordinate)) { item in
+                        LooseSpotChip(
+                            ranked: item,
+                            unitPreference: settings.unitPreference,
+                            trips: trips,
+                            onOpen: { router.openSpot(id: item.spot.id) },
+                            onAssign: { trip in store.assign(item.spot, to: trip) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 18)
+            }
+            .scrollIndicators(.hidden)
+        }
+    }
+
+    private func createTrip() {
+        let name = draftName.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        store.createTrip(name: name)
+        draftName = ""
+        FeedbackService.shared.lightTap()
     }
 
     private var header: some View {
@@ -162,45 +170,8 @@ private struct TripCard: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            PhotoView(data: trip.coverPhotoData, maxDimension: 1_000)
-                .frame(height: 168)
-                .overlay {
-                    LinearGradient(
-                        colors: [
-                            tripTheme.deepest.opacity(0.1),
-                            tripTheme.deepest.opacity(0.55),
-                            tripTheme.deepest.opacity(0.9),
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                }
-
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 6) {
-                    PillLabel(
-                        text: "\(trip.spotCount) \(trip.spotCount == 1 ? "spot" : "spots")",
-                        symbol: "photo.stack"
-                    )
-                    if let metres = nearestMetres {
-                        PillLabel(
-                            text: DistanceFormatting.string(metres: metres, preference: unitPreference),
-                            symbol: "location.fill",
-                            prominent: true
-                        )
-                    }
-                }
-                Text(trip.displayName)
-                    .font(Typography.title)
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                if let subtitle = trip.subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(Typography.caption)
-                        .foregroundStyle(.white.opacity(0.75))
-                }
-            }
-            .padding(16)
+            cover
+            caption.padding(16)
         }
         .frame(height: 168)
         .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
@@ -209,6 +180,54 @@ private struct TripCard: View {
                 .strokeBorder(.white.opacity(0.16), lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
+    }
+
+    private var cover: some View {
+        PhotoView(data: trip.coverPhotoData, maxDimension: 1_000)
+            .frame(height: 168)
+            .overlay {
+                LinearGradient(
+                    colors: [
+                        tripTheme.deepest.opacity(0.1),
+                        tripTheme.deepest.opacity(0.55),
+                        tripTheme.deepest.opacity(0.9),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+    }
+
+    private var caption: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            pills
+            Text(trip.displayName)
+                .font(Typography.title)
+                .foregroundStyle(.white)
+                .lineLimit(1)
+            if let subtitle = trip.subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(Typography.caption)
+                    .foregroundStyle(.white.opacity(0.75))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var pills: some View {
+        HStack(spacing: 6) {
+            PillLabel(
+                text: "\(trip.spotCount) \(trip.spotCount == 1 ? "spot" : "spots")",
+                symbol: "photo.stack"
+            )
+            if let metres = nearestMetres {
+                PillLabel(
+                    text: DistanceFormatting.string(metres: metres, preference: unitPreference),
+                    symbol: "location.fill",
+                    prominent: true
+                )
+            }
+        }
     }
 }
 
@@ -277,42 +296,8 @@ struct TripDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(trip.spotCount) \(trip.spotCount == 1 ? "spot" : "spots")")
-                        .eyebrowStyle(color: theme.accent)
-                    Text(trip.displayName)
-                        .font(Typography.displayTitle)
-                        .foregroundStyle(theme.text)
-                }
-                .padding(.horizontal, 18)
-
-                if ranked.isEmpty {
-                    EmptyStateView(
-                        symbol: "photo.badge.plus",
-                        title: "Nothing here yet",
-                        message: "Long-press a spot on the Trips screen to add it to \(trip.displayName)."
-                    )
-                } else {
-                    VStack(spacing: 10) {
-                        ForEach(ranked) { item in
-                            Button {
-                                router.openSpot(id: item.spot.id)
-                            } label: {
-                                TripSpotRow(ranked: item, unitPreference: settings.unitPreference)
-                            }
-                            .buttonStyle(PressableStyle(scale: 0.98))
-                            .contextMenu {
-                                Button {
-                                    store.assign(item.spot, to: nil)
-                                } label: {
-                                    Label("Remove from trip", systemImage: "minus.circle")
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 18)
-                }
-
+                header
+                if ranked.isEmpty { emptyState } else { spotList }
                 themePicker
                     .padding(.horizontal, 18)
                     .padding(.top, 8)
@@ -325,6 +310,46 @@ struct TripDetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(trip.spotCount) \(trip.spotCount == 1 ? "spot" : "spots")")
+                .eyebrowStyle(color: theme.accent)
+            Text(trip.displayName)
+                .font(Typography.displayTitle)
+                .foregroundStyle(theme.text)
+        }
+        .padding(.horizontal, 18)
+    }
+
+    private var emptyState: some View {
+        EmptyStateView(
+            symbol: "photo.badge.plus",
+            title: "Nothing here yet",
+            message: "Long-press a spot on the Trips screen to add it to \(trip.displayName)."
+        )
+    }
+
+    private var spotList: some View {
+        VStack(spacing: 10) {
+            ForEach(ranked) { item in
+                Button {
+                    router.openSpot(id: item.spot.id)
+                } label: {
+                    TripSpotRow(ranked: item, unitPreference: settings.unitPreference)
+                }
+                .buttonStyle(PressableStyle(scale: 0.98))
+                .contextMenu {
+                    Button {
+                        store.assign(item.spot, to: nil)
+                    } label: {
+                        Label("Remove from trip", systemImage: "minus.circle")
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 18)
     }
 
     /// A trip can carry its own look. Opening the Sri Lanka trip should not feel identical to
@@ -381,20 +406,25 @@ private struct TripSpotRow: View {
                 Spacer(minLength: 0)
 
                 if let metres = ranked.metres {
-                    VStack(alignment: .trailing, spacing: 0) {
-                        Text(DistanceFormatting.readout(metres: metres, preference: unitPreference).value)
-                            .font(Typography.cardDistance)
-                            .monospacedDigit()
-                            .foregroundStyle(theme.text)
-                        Text(DistanceFormatting.readout(metres: metres, preference: unitPreference).unit)
-                            .font(Typography.label)
-                            .foregroundStyle(theme.textMuted)
-                    }
+                    distanceBlock(metres)
                 }
                 if let bearing = ranked.bearing {
                     MiniArrow(theme: theme, angle: bearing, size: 22)
                 }
             }
+        }
+    }
+
+    private func distanceBlock(_ metres: Double) -> some View {
+        let readout = DistanceFormatting.readout(metres: metres, preference: unitPreference)
+        return VStack(alignment: .trailing, spacing: 0) {
+            Text(readout.value)
+                .font(Typography.cardDistance)
+                .monospacedDigit()
+                .foregroundStyle(theme.text)
+            Text(readout.unit)
+                .font(Typography.label)
+                .foregroundStyle(theme.textMuted)
         }
     }
 }

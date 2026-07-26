@@ -25,7 +25,34 @@ struct ArrowScreen: View {
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
+    // Split across two shorter modifier chains: one long chain carrying five closures was more
+    // than the type-checker would take in one expression.
     var body: some View {
+        screen
+            .onChange(of: engine.onTarget) { _, isOnTarget in
+                if isOnTarget { FeedbackService.shared.onTarget() }
+            }
+            .onChange(of: engine.proximity) { _, proximity in
+                FeedbackService.shared.updatePulse(proximity: proximity)
+            }
+            .onChange(of: engine.distanceMetres) { _, _ in
+                pushLiveActivityUpdate()
+            }
+            .onChange(of: engine.hasArrived) { _, arrived in
+                handleArrival(arrived)
+            }
+    }
+
+    private var screen: some View {
+        layers
+            // Gives the overlay a surface so taps do not fall through to the gallery behind it.
+            .background(Color.black.opacity(0.001))
+            .onAppear(perform: begin)
+            .onDisappear(perform: finish)
+            .sheet(isPresented: $isShowingDetail) { detailSheet }
+    }
+
+    private var layers: some View {
         ZStack {
             backdrop
 
@@ -45,31 +72,24 @@ struct ArrowScreen: View {
                     .ignoresSafeArea()
             }
         }
-        .background(Color.black.opacity(0.001))  // gives the overlay a hit-testing surface
-        .onAppear(perform: begin)
-        .onDisappear(perform: finish)
-        .onChange(of: engine.onTarget) { _, isOnTarget in
-            if isOnTarget { FeedbackService.shared.onTarget() }
+    }
+
+    @ViewBuilder
+    private var detailSheet: some View {
+        if let spot = destination.spot {
+            SpotDetailView(spot: spot)
+                .environment(settings)
+                .environment(\.theme, theme)
         }
-        .onChange(of: engine.proximity) { _, proximity in
-            FeedbackService.shared.updatePulse(proximity: proximity)
-        }
-        .onChange(of: engine.distanceMetres) { _, _ in pushLiveActivityUpdate() }
-        .onChange(of: engine.hasArrived) { _, arrived in
-            guard arrived, !hasAnnouncedArrival else { return }
-            hasAnnouncedArrival = true
-            celebrationStartedAt = Date()
-            FeedbackService.shared.arrived()
-            FeedbackService.shared.stopPulsing()
-            pushLiveActivityUpdate()
-        }
-        .sheet(isPresented: $isShowingDetail) {
-            if let spot = destination.spot {
-                SpotDetailView(spot: spot)
-                    .environment(settings)
-                    .environment(\.theme, theme)
-            }
-        }
+    }
+
+    private func handleArrival(_ arrived: Bool) {
+        guard arrived, !hasAnnouncedArrival else { return }
+        hasAnnouncedArrival = true
+        celebrationStartedAt = Date()
+        FeedbackService.shared.arrived()
+        FeedbackService.shared.stopPulsing()
+        pushLiveActivityUpdate()
     }
 
     // MARK: - Backdrop
@@ -85,17 +105,7 @@ struct ArrowScreen: View {
             )
 
             if let photoData = destination.photoData {
-                PhotoView(data: photoData, maxDimension: 1_200)
-                    .matchedGeometryEffect(id: "photo-\(destination.id)", in: hero)
-                    .scaleEffect(1.25)
-                    .blur(radius: 44, opaque: false)
-                    .opacity(0.5)
-                    .offset(
-                        x: CGFloat(sin(engine.arrowAngle * .pi / 180)) * -16,
-                        y: CGFloat(cos(engine.arrowAngle * .pi / 180)) * -10
-                    )
-                    .animation(.easeOut(duration: 0.6), value: engine.arrowAngle)
-                    .ignoresSafeArea()
+                blurredPhoto(photoData)
             }
 
             // Keeps the readout legible over any photo.
@@ -108,73 +118,93 @@ struct ArrowScreen: View {
         }
     }
 
+    /// The destination photo, out of focus and drifting a little with the arrow. The parallax is
+    /// small on purpose — enough to feel physical, not enough to notice as an effect.
+    private func blurredPhoto(_ data: Data) -> some View {
+        let radians = engine.arrowAngle * .pi / 180
+        return PhotoView(data: data, maxDimension: 1_200)
+            .matchedGeometryEffect(id: "photo-\(destination.id)", in: hero)
+            .scaleEffect(1.25)
+            .blur(radius: 44, opaque: false)
+            .opacity(0.5)
+            .offset(x: CGFloat(sin(radians)) * -16, y: CGFloat(cos(radians)) * -10)
+            .animation(.easeOut(duration: 0.6), value: engine.arrowAngle)
+            .ignoresSafeArea()
+    }
+
     // MARK: - Top bar
 
     private var topBar: some View {
         HStack(alignment: .top, spacing: 12) {
             Button(action: onClose) {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(theme.text)
-                    .frame(width: 40, height: 40)
-                    .background { Circle().fill(.ultraThinMaterial) }
-                    .overlay { Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
+                circularGlyph("chevron.down")
             }
             .buttonStyle(PressableStyle())
             .accessibilityLabel("Close")
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(engine.turnHint()).eyebrowStyle(color: theme.accent)
-                Text(destination.name)
-                    .font(Typography.title)
-                    .foregroundStyle(theme.text)
-                    .lineLimit(2)
-                if let subtitle = destination.subtitle {
-                    Text(subtitle)
-                        .font(Typography.caption)
-                        .foregroundStyle(theme.textMuted)
-                        .lineLimit(1)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            titleBlock
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             if let spot = destination.spot {
-                Menu {
-                    Button {
-                        store.setPinned(spot.isPinned ? nil : spot)
-                    } label: {
-                        Label(
-                            spot.isPinned ? "Unpin from widgets" : "Pin to widgets",
-                            systemImage: spot.isPinned ? "pin.slash" : "pin"
-                        )
-                    }
-                    Button {
-                        isShowingDetail = true
-                    } label: {
-                        Label("Spot details", systemImage: "info.circle")
-                    }
-                    if let url = spot.deepLinkURL {
-                        ShareLink(item: url) {
-                            Label("Share this spot", systemImage: "square.and.arrow.up")
-                        }
-                    }
-                    Button {
-                        openInMaps()
-                    } label: {
-                        Label("Open in Maps", systemImage: "map")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(theme.text)
-                        .frame(width: 40, height: 40)
-                        .background { Circle().fill(.ultraThinMaterial) }
-                        .overlay { Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
-                }
-                .accessibilityLabel("More options")
+                overflowMenu(for: spot)
             }
         }
         .padding(.top, 6)
+    }
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(engine.turnHint()).eyebrowStyle(color: theme.accent)
+            Text(destination.name)
+                .font(Typography.title)
+                .foregroundStyle(theme.text)
+                .lineLimit(2)
+            if let subtitle = destination.subtitle {
+                Text(subtitle)
+                    .font(Typography.caption)
+                    .foregroundStyle(theme.textMuted)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private func overflowMenu(for spot: Spot) -> some View {
+        Menu {
+            Button {
+                store.setPinned(spot.isPinned ? nil : spot)
+            } label: {
+                Label(
+                    spot.isPinned ? "Unpin from widgets" : "Pin to widgets",
+                    systemImage: spot.isPinned ? "pin.slash" : "pin"
+                )
+            }
+            Button {
+                isShowingDetail = true
+            } label: {
+                Label("Spot details", systemImage: "info.circle")
+            }
+            if let url = spot.deepLinkURL {
+                ShareLink(item: url) {
+                    Label("Share this spot", systemImage: "square.and.arrow.up")
+                }
+            }
+            Button(action: openInMaps) {
+                Label("Open in Maps", systemImage: "map")
+            }
+        } label: {
+            circularGlyph("ellipsis")
+        }
+        .accessibilityLabel("More options")
+    }
+
+    /// The frosted circular button shape used by both controls in the bar.
+    private func circularGlyph(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 15, weight: .bold))
+            .foregroundStyle(theme.text)
+            .frame(width: 40, height: 40)
+            .background { Circle().fill(.ultraThinMaterial) }
+            .overlay { Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
     }
 
     // MARK: - Compass
@@ -217,63 +247,79 @@ struct ArrowScreen: View {
 
     private var readout: some View {
         VStack(spacing: 10) {
-            if let distance = engine.distanceReadout() {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(distance.value)
-                        .font(Typography.hero(heroFontSize(for: distance.value)))
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                        .foregroundStyle(theme.text)
-                    Text(distance.unit)
-                        .font(.system(size: 26, weight: .semibold, design: .rounded))
-                        .foregroundStyle(theme.textMuted)
-                        .padding(.bottom, 6)
-                }
-                .animation(.snappy(duration: 0.25), value: distance.value)
-            } else {
-                VStack(spacing: 6) {
-                    ProgressView()
-                        .tint(theme.accent)
-                    Text(location.isAuthorized ? "Finding you" : "Location is off")
-                        .font(Typography.caption)
-                        .foregroundStyle(theme.textMuted)
-                }
-                .frame(height: 80)
-            }
-
-            HStack(spacing: 8) {
-                if let walk = engine.walkingTimeText() {
-                    PillLabel(text: walk, symbol: "figure.walk")
-                }
-                if let elevation = engine.elevationText() {
-                    PillLabel(text: elevation, symbol: "mountain.2.fill")
-                }
-                if let bearing = engine.bearing {
-                    PillLabel(
-                        text: "\(BearingMath.compassPoint(forBearing: bearing)) \(Int(bearing.rounded()))°",
-                        symbol: "location.north.line.fill"
-                    )
-                }
-            }
-            .frame(maxWidth: .infinity)
-
-            if !engine.headingIsUsable {
-                Text("No compass reading — showing the direction from north instead.")
-                    .font(Typography.caption)
-                    .foregroundStyle(theme.textMuted)
-                    .multilineTextAlignment(.center)
-            } else if location.needsCalibration {
-                Text("Magnetic interference. Move away from metal, or wave the phone in a figure of eight.")
-                    .font(Typography.caption)
-                    .foregroundStyle(theme.accentSoft)
-                    .multilineTextAlignment(.center)
-            } else if let accuracy = engine.horizontalAccuracy, accuracy > 40 {
-                Text("Rough fix — accurate to about \(Int(accuracy)) m")
-                    .font(Typography.caption)
-                    .foregroundStyle(theme.textMuted)
-            }
+            distanceBlock
+            pills.frame(maxWidth: .infinity)
+            statusNote
         }
         .padding(.bottom, 16)
+    }
+
+    @ViewBuilder
+    private var distanceBlock: some View {
+        if let distance = engine.distanceReadout() {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(distance.value)
+                    .font(Typography.hero(heroFontSize(for: distance.value)))
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .foregroundStyle(theme.text)
+                Text(distance.unit)
+                    .font(.system(size: 26, weight: .semibold, design: .rounded))
+                    .foregroundStyle(theme.textMuted)
+                    .padding(.bottom, 6)
+            }
+            .animation(.snappy(duration: 0.25), value: distance.value)
+        } else {
+            VStack(spacing: 6) {
+                ProgressView().tint(theme.accent)
+                Text(location.isAuthorized ? "Finding you" : "Location is off")
+                    .font(Typography.caption)
+                    .foregroundStyle(theme.textMuted)
+            }
+            .frame(height: 80)
+        }
+    }
+
+    @ViewBuilder
+    private var pills: some View {
+        HStack(spacing: 8) {
+            if let walk = engine.walkingTimeText() {
+                PillLabel(text: walk, symbol: "figure.walk")
+            }
+            if let elevation = engine.elevationText() {
+                PillLabel(text: elevation, symbol: "mountain.2.fill")
+            }
+            if let bearing = engine.bearing {
+                PillLabel(text: bearingLabel(bearing), symbol: "location.north.line.fill")
+            }
+        }
+    }
+
+    private func bearingLabel(_ bearing: Double) -> String {
+        let point = BearingMath.compassPoint(forBearing: bearing)
+        return "\(point) \(Int(bearing.rounded()))°"
+    }
+
+    /// The one line of small print, when there is something honest to say about the reading.
+    @ViewBuilder
+    private var statusNote: some View {
+        if !engine.headingIsUsable {
+            noteText("No compass reading — showing the direction from north instead.", theme.textMuted)
+        } else if location.needsCalibration {
+            noteText(
+                "Magnetic interference. Move away from metal, or wave the phone in a figure of eight.",
+                theme.accentSoft
+            )
+        } else if let accuracy = engine.horizontalAccuracy, accuracy > 40 {
+            noteText("Rough fix — accurate to about \(Int(accuracy)) m", theme.textMuted)
+        }
+    }
+
+    private func noteText(_ text: String, _ colour: Color) -> some View {
+        Text(text)
+            .font(Typography.caption)
+            .foregroundStyle(colour)
+            .multilineTextAlignment(.center)
     }
 
     /// Big numbers get a smaller face so "1,240" does not run off the edge.

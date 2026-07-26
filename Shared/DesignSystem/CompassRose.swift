@@ -99,77 +99,14 @@ struct CompassRose: View {
     var onTarget: Bool
     var diameter: CGFloat = 300
 
+    // As with the arrow, this is deliberately split: the whole rose in one expression exceeds
+    // the type-checker's budget.
     var body: some View {
         ZStack {
-            // Base plate
-            Circle()
-                .fill(.ultraThinMaterial)
-                .overlay { Circle().fill(theme.deepest.opacity(0.35)) }
-                .overlay { Circle().strokeBorder(.white.opacity(0.14), lineWidth: 1) }
-
-            // On-target halo
-            Circle()
-                .strokeBorder(theme.glow, lineWidth: 2)
-                .blur(radius: 6)
-                .opacity(onTarget ? 0.9 : 0)
-                .animation(.easeInOut(duration: 0.25), value: onTarget)
-
-            Canvas { context, size in
-                let centre = CGPoint(x: size.width / 2, y: size.height / 2)
-                let radius = min(size.width, size.height) / 2
-
-                for degrees in stride(from: 0, to: 360, by: 5) {
-                    let isCardinal = degrees % 90 == 0
-                    let isMajor = degrees % 30 == 0
-                    let length: CGFloat = isCardinal ? 16 : (isMajor ? 11 : 6)
-                    let width: CGFloat = isCardinal ? 2.4 : (isMajor ? 1.6 : 1)
-                    let opacity: Double = isCardinal ? 0.95 : (isMajor ? 0.6 : 0.3)
-
-                    let radians = (Double(degrees) - 90) * .pi / 180
-                    let outer = CGPoint(
-                        x: centre.x + cos(radians) * (radius - 12),
-                        y: centre.y + sin(radians) * (radius - 12)
-                    )
-                    let inner = CGPoint(
-                        x: centre.x + cos(radians) * (radius - 12 - length),
-                        y: centre.y + sin(radians) * (radius - 12 - length)
-                    )
-
-                    var tick = Path()
-                    tick.move(to: inner)
-                    tick.addLine(to: outer)
-                    context.stroke(
-                        tick,
-                        with: .color(isCardinal ? theme.accent.opacity(opacity) : theme.text.opacity(opacity)),
-                        style: StrokeStyle(lineWidth: width, lineCap: .round)
-                    )
-                }
-
-                for (degrees, letter) in [(0, "N"), (90, "E"), (180, "S"), (270, "W")] {
-                    let radians = (Double(degrees) - 90) * .pi / 180
-                    let point = CGPoint(
-                        x: centre.x + cos(radians) * (radius - 42),
-                        y: centre.y + sin(radians) * (radius - 42)
-                    )
-                    context.draw(
-                        Text(letter)
-                            .font(Typography.tick)
-                            .foregroundColor(degrees == 0 ? theme.accent : theme.textMuted),
-                        at: point
-                    )
-                }
-
-                // Where the spot actually is, marked on the ring.
-                if let targetBearing {
-                    let radians = (targetBearing - 90) * .pi / 180
-                    let point = CGPoint(
-                        x: centre.x + cos(radians) * (radius - 6),
-                        y: centre.y + sin(radians) * (radius - 6)
-                    )
-                    let pip = Path(ellipseIn: CGRect(x: point.x - 5, y: point.y - 5, width: 10, height: 10))
-                    context.fill(pip, with: .color(theme.accent))
-                    context.stroke(pip, with: .color(.white.opacity(0.7)), lineWidth: 1)
-                }
+            basePlate
+            halo
+            Canvas(rendersAsynchronously: false) { context, size in
+                draw(in: &context, size: size)
             }
             .padding(2)
         }
@@ -177,6 +114,89 @@ struct CompassRose: View {
         .rotationEffect(.degrees(-heading))
         .animation(.interpolatingSpring(stiffness: 70, damping: 13), value: heading)
         .accessibilityHidden(true)
+    }
+
+    private var basePlate: some View {
+        Circle()
+            .fill(.ultraThinMaterial)
+            .overlay { Circle().fill(theme.deepest.opacity(0.35)) }
+            .overlay { Circle().strokeBorder(.white.opacity(0.14), lineWidth: 1) }
+    }
+
+    /// Lights up when the phone comes onto the bearing.
+    private var halo: some View {
+        Circle()
+            .strokeBorder(theme.glow, lineWidth: 2)
+            .blur(radius: 6)
+            .opacity(onTarget ? 0.9 : 0)
+            .animation(.easeInOut(duration: 0.25), value: onTarget)
+    }
+
+    // MARK: - Drawing
+
+    private func draw(in context: inout GraphicsContext, size: CGSize) {
+        let centre = CGPoint(x: size.width / 2, y: size.height / 2)
+        let radius = min(size.width, size.height) / 2
+
+        drawTicks(in: &context, centre: centre, radius: radius)
+        drawCardinals(in: &context, centre: centre, radius: radius)
+        drawTargetPip(in: &context, centre: centre, radius: radius)
+    }
+
+    /// A tick every five degrees, longer at the thirties and longer again at the cardinals.
+    private func drawTicks(in context: inout GraphicsContext, centre: CGPoint, radius: CGFloat) {
+        for degrees in stride(from: 0, to: 360, by: 5) {
+            let isCardinal = degrees % 90 == 0
+            let isMajor = degrees % 30 == 0
+            let length: CGFloat = isCardinal ? 16 : (isMajor ? 11 : 6)
+            let lineWidth: CGFloat = isCardinal ? 2.4 : (isMajor ? 1.6 : 1)
+            let opacity: Double = isCardinal ? 0.95 : (isMajor ? 0.6 : 0.3)
+
+            let outer = point(on: centre, radius: radius - 12, degrees: Double(degrees))
+            let inner = point(on: centre, radius: radius - 12 - length, degrees: Double(degrees))
+
+            var tick = Path()
+            tick.move(to: inner)
+            tick.addLine(to: outer)
+
+            let colour = isCardinal ? theme.accent : theme.text
+            context.stroke(
+                tick,
+                with: .color(colour.opacity(opacity)),
+                style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+            )
+        }
+    }
+
+    private func drawCardinals(in context: inout GraphicsContext, centre: CGPoint, radius: CGFloat) {
+        let cardinals: [(Double, String)] = [(0, "N"), (90, "E"), (180, "S"), (270, "W")]
+        for (degrees, letter) in cardinals {
+            let position = point(on: centre, radius: radius - 42, degrees: degrees)
+            let colour = degrees == 0 ? theme.accent : theme.textMuted
+            context.draw(
+                Text(letter).font(Typography.tick).foregroundColor(colour),
+                at: position
+            )
+        }
+    }
+
+    /// Where the spot actually is, marked on the ring.
+    private func drawTargetPip(in context: inout GraphicsContext, centre: CGPoint, radius: CGFloat) {
+        guard let targetBearing else { return }
+        let position = point(on: centre, radius: radius - 6, degrees: targetBearing)
+        let box = CGRect(x: position.x - 5, y: position.y - 5, width: 10, height: 10)
+        let pip = Path(ellipseIn: box)
+        context.fill(pip, with: .color(theme.accent))
+        context.stroke(pip, with: .color(.white.opacity(0.7)), lineWidth: 1)
+    }
+
+    /// Compass degrees to a point on the ring, with zero at the top rather than at three o'clock.
+    private func point(on centre: CGPoint, radius: CGFloat, degrees: Double) -> CGPoint {
+        let radians = (degrees - 90) * .pi / 180
+        return CGPoint(
+            x: centre.x + cos(radians) * radius,
+            y: centre.y + sin(radians) * radius
+        )
     }
 }
 

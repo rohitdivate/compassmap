@@ -52,49 +52,58 @@ struct NearestSpotsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("From here")
-                    .font(.system(size: 11, weight: .bold))
-                    .textCase(.uppercase)
-                    .tracking(1.4)
-                    .foregroundStyle(entry.theme.accent)
-                Spacer()
-                if entry.isStale {
-                    Text("last known")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(entry.theme.textMuted)
-                }
-            }
-
-            if entry.nearby.isEmpty {
-                Spacer()
-                WidgetPlaceholder(
-                    theme: entry.theme,
-                    message: entry.placeholderMessage ?? "Save a spot in Tradewind to see it here."
-                )
-                .frame(maxWidth: .infinity)
-                Spacer()
-            } else {
-                VStack(spacing: family == .systemLarge ? 12 : 8) {
-                    ForEach(Array(entry.nearby.prefix(rowLimit).enumerated()), id: \.offset) { index, item in
-                        Link(destination: item.spot.deepLinkURL) {
-                            SpotListRow(
-                                theme: entry.theme,
-                                unitPreference: entry.unitPreference,
-                                spot: item.spot,
-                                metres: item.metres,
-                                bearing: item.bearing,
-                                isFirst: index == 0,
-                                showsPhoto: family == .systemLarge
-                            )
-                        }
-                    }
-                }
-                Spacer(minLength: 0)
-            }
+            heading
+            if entry.nearby.isEmpty { placeholder } else { rows }
         }
         .containerBackground(for: .widget) {
             WidgetBackdrop(theme: entry.theme)
+        }
+    }
+
+    private var heading: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("From here")
+                .font(.system(size: 11, weight: .bold))
+                .textCase(.uppercase)
+                .tracking(1.4)
+                .foregroundStyle(entry.theme.accent)
+            Spacer()
+            if entry.isStale {
+                Text("last known")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(entry.theme.textMuted)
+            }
+        }
+    }
+
+    private var placeholder: some View {
+        VStack {
+            Spacer()
+            WidgetPlaceholder(
+                theme: entry.theme,
+                message: entry.placeholderMessage ?? "Save a spot in Tradewind to see it here."
+            )
+            .frame(maxWidth: .infinity)
+            Spacer()
+        }
+    }
+
+    private var rows: some View {
+        VStack(spacing: family == .systemLarge ? 12 : 8) {
+            ForEach(Array(entry.nearby.prefix(rowLimit).enumerated()), id: \.offset) { index, item in
+                Link(destination: item.spot.deepLinkURL) {
+                    SpotListRow(
+                        theme: entry.theme,
+                        unitPreference: entry.unitPreference,
+                        spot: item.spot,
+                        metres: item.metres,
+                        bearing: item.bearing,
+                        isFirst: index == 0,
+                        showsPhoto: family == .systemLarge
+                    )
+                }
+            }
+            Spacer(minLength: 0)
         }
     }
 }
@@ -112,46 +121,56 @@ struct SpotListRow: View {
 
     var body: some View {
         HStack(spacing: 9) {
-            if showsPhoto {
-                WidgetPhoto(spot: spot, theme: theme)
-                    .frame(width: 34, height: 34)
-                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-            }
-
-            ArrowShape()
-                .fill(theme.arrowGradient)
-                .frame(width: isFirst ? 12 : 10, height: isFirst ? 19 : 16)
-                .rotationEffect(.degrees(bearing ?? 0))
-                .opacity(bearing == nil ? 0.3 : 1)
-
-            VStack(alignment: .leading, spacing: 0) {
-                Text(spot.name)
-                    .font(.system(size: isFirst ? 13 : 12, weight: isFirst ? .semibold : .medium))
-                    .foregroundStyle(theme.text)
-                    .lineLimit(1)
-                if showsPhoto, let place = spot.placeName, !place.isEmpty {
-                    Text(place)
-                        .font(.system(size: 9))
-                        .foregroundStyle(theme.textMuted)
-                        .lineLimit(1)
-                }
-            }
-
+            if showsPhoto { thumbnail }
+            arrow
+            labels
             Spacer(minLength: 4)
+            distance
+        }
+    }
 
-            let readout = metres.map {
-                DistanceFormatting.readout(metres: $0, preference: unitPreference)
+    private var thumbnail: some View {
+        WidgetPhoto(spot: spot, theme: theme)
+            .frame(width: 34, height: 34)
+            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+    }
+
+    private var arrow: some View {
+        ArrowShape()
+            .fill(theme.arrowGradient)
+            .frame(width: isFirst ? 12 : 10, height: isFirst ? 19 : 16)
+            .rotationEffect(.degrees(bearing ?? 0))
+            .opacity(bearing == nil ? 0.3 : 1)
+    }
+
+    private var labels: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(spot.name)
+                .font(.system(size: isFirst ? 13 : 12, weight: isFirst ? .semibold : .medium))
+                .foregroundStyle(theme.text)
+                .lineLimit(1)
+            if showsPhoto, let place = spot.placeName, !place.isEmpty {
+                Text(place)
+                    .font(.system(size: 9))
+                    .foregroundStyle(theme.textMuted)
+                    .lineLimit(1)
             }
-            HStack(alignment: .firstTextBaseline, spacing: 1) {
-                Text(readout?.value ?? "—")
-                    .font(.system(size: isFirst ? 16 : 14, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(isFirst ? theme.accent : theme.text)
-                if let unit = readout?.unit, !unit.isEmpty {
-                    Text(unit)
-                        .font(.system(size: 9, weight: .semibold, design: .rounded))
-                        .foregroundStyle(theme.textMuted)
-                }
+        }
+    }
+
+    private var distance: some View {
+        let readout = metres.map {
+            DistanceFormatting.readout(metres: $0, preference: unitPreference)
+        }
+        return HStack(alignment: .firstTextBaseline, spacing: 1) {
+            Text(readout?.value ?? "—")
+                .font(.system(size: isFirst ? 16 : 14, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(isFirst ? theme.accent : theme.text)
+            if let unit = readout?.unit, !unit.isEmpty {
+                Text(unit)
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(theme.textMuted)
             }
         }
     }

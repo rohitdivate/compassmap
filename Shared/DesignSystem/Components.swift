@@ -13,33 +13,36 @@ struct GlassCard<Content: View>: View {
     var body: some View {
         content
             .padding(padding)
-            .background {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(theme.cardTint.opacity(tintStrength))
-                            .blendMode(.softLight)
-                    }
-                    .overlay {
-                        // A single highlight along the top edge reads as glass catching light.
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [
-                                        .white.opacity(strokeStrength + 0.18),
-                                        .white.opacity(strokeStrength * 0.3),
-                                        .clear,
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    }
-            }
+            .background { glass }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .shadow(color: .black.opacity(0.28), radius: 18, x: 0, y: 10)
+    }
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+    }
+
+    private var glass: some View {
+        shape
+            .fill(.ultraThinMaterial)
+            .overlay { shape.fill(theme.cardTint.opacity(tintStrength)).blendMode(.softLight) }
+            .overlay { rim }
+    }
+
+    /// One highlight running off the top-left corner: the single cue that reads as glass.
+    private var rim: some View {
+        shape.strokeBorder(
+            LinearGradient(
+                colors: [
+                    .white.opacity(strokeStrength + 0.18),
+                    .white.opacity(strokeStrength * 0.3),
+                    .clear,
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            lineWidth: 1
+        )
     }
 }
 

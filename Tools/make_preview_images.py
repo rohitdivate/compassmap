@@ -58,6 +58,21 @@ def soft_shape(layer_size, drawer, blur):
     return layer.filter(ImageFilter.GaussianBlur(blur))
 
 
+def glint_layer(layer_size, colour, drawer, blur):
+    """A blurred layer of a single colour, with the shape carried in the alpha channel.
+
+    Blurring RGBA directly mixes the transparent background's black into the colour, which is
+    invisible on a large shape but turns thin bright marks into dark specks. Keeping the colour
+    flat and blurring only the mask avoids it. `drawer` fills opacity values, not colours.
+    """
+    mask = Image.new("L", layer_size, 0)
+    drawer(ImageDraw.Draw(mask))
+    mask = mask.filter(ImageFilter.GaussianBlur(blur))
+    layer = Image.new("RGBA", layer_size, colour + (0,))
+    layer.putalpha(mask)
+    return layer
+
+
 def grain(image, amount=6):
     """A little noise so the gradients do not read as flat vector art."""
     import random
@@ -132,20 +147,30 @@ def lagoon(size):
 
     base = Image.alpha_composite(base.convert("RGBA"), soft_shape(size, sun, width * 0.03))
 
-    # Sun glitter on the water, brightest directly below the sun.
+    # Sun glitter: broken dashes, not one continuous band. Drawn as a solid taper it blurs
+    # into a wedge that reads as a mountain rather than as light on water.
     def shimmer(draw):
-        for i in range(22):
-            t = i / 21
-            y = height * (0.34 + t * 0.42)
-            spread = width * (0.03 + t * 0.20)
-            cx = width * 0.74 - t * width * 0.06
-            draw.line(
-                [(cx - spread, y), (cx + spread, y)],
-                fill=(0xFF, 0xF6, 0xDC, int(150 * (1 - t))),
-                width=max(1, int(height * 0.006)),
-            )
+        import random
 
-    base = Image.alpha_composite(base, soft_shape(size, shimmer, width * 0.006))
+        random.seed(11)
+        for i in range(26):
+            t = i / 25
+            y = height * (0.34 + t * 0.42)
+            spread = width * (0.03 + t * 0.22)
+            cx = width * 0.74 - t * width * 0.06
+            dashes = 1 + int(t * 5)
+            for _ in range(dashes):
+                length = width * random.uniform(0.012, 0.055) * (0.4 + t)
+                x = cx + random.uniform(-spread, spread)
+                draw.line(
+                    [(x - length / 2, y), (x + length / 2, y)],
+                    fill=int(210 * (1 - t * 0.6)),
+                    width=max(1, int(height * 0.005)),
+                )
+
+    base = Image.alpha_composite(
+        base, glint_layer(size, (0xFF, 0xF8, 0xE2), shimmer, width * 0.004)
+    )
 
     # Two palm fronds cutting into the frame from the left.
     def frond(draw):

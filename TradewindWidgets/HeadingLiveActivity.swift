@@ -15,62 +15,96 @@ struct HeadingLiveActivity: Widget {
                 .activityBackgroundTint(theme(for: context).deepest.opacity(0.92))
                 .activitySystemActionForegroundColor(theme(for: context).accent)
         } dynamicIsland: { context in
-            let theme = theme(for: context)
-            let attributes = context.attributes
-            let state = context.state
-
-            return DynamicIsland {
-                DynamicIslandExpandedRegion(.leading) {
-                    ArrowShape()
-                        .fill(theme.arrowGradient)
-                        .frame(width: 18, height: 30)
-                        .rotationEffect(.degrees(state.bearing))
-                        .padding(.leading, 6)
-                }
-
-                DynamicIslandExpandedRegion(.trailing) {
-                    Text(distanceText(state, attributes))
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(theme.accent)
-                        .padding(.trailing, 6)
-                }
-
-                DynamicIslandExpandedRegion(.center) {
-                    VStack(spacing: 1) {
-                        Text(attributes.spotName)
-                            .font(.system(size: 13, weight: .semibold))
-                            .lineLimit(1)
-                        Text(state.isArrived
-                            ? "You made it"
-                            : "Head \(BearingMath.compassPoint(forBearing: state.bearing))")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(theme.textMuted)
-                    }
-                }
-
-                DynamicIslandExpandedRegion(.bottom) {
-                    ProgressBar(theme: theme, state: state)
-                }
-            } compactLeading: {
-                ArrowShape()
-                    .fill(theme.accent)
-                    .frame(width: 9, height: 15)
-                    .rotationEffect(.degrees(state.bearing))
-            } compactTrailing: {
-                Text(distanceText(state, attributes))
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(theme.accent)
-            } minimal: {
-                ArrowShape()
-                    .fill(theme.accent)
-                    .frame(width: 8, height: 13)
-                    .rotationEffect(.degrees(state.bearing))
-            }
-            .widgetURL(URL(string: "\(AppGroup.urlScheme)://spot?id=\(attributes.spotID.uuidString)"))
-            .keylineTint(theme.accent)
+            island(for: context)
         }
+    }
+
+    // Each region is its own method: the whole island in one expression is more than the
+    // type-checker will take.
+    private func island(for context: ActivityViewContext<HeadingActivityAttributes>) -> DynamicIsland {
+        let theme = theme(for: context)
+        let attributes = context.attributes
+        let state = context.state
+
+        return DynamicIsland {
+            DynamicIslandExpandedRegion(.leading) {
+                expandedArrow(theme: theme, bearing: state.bearing)
+            }
+            DynamicIslandExpandedRegion(.trailing) {
+                expandedDistance(theme: theme, state: state, attributes: attributes)
+            }
+            DynamicIslandExpandedRegion(.center) {
+                expandedTitle(theme: theme, state: state, attributes: attributes)
+            }
+            DynamicIslandExpandedRegion(.bottom) {
+                ProgressBar(theme: theme, state: state)
+            }
+        } compactLeading: {
+            arrowGlyph(colour: theme.accent, bearing: state.bearing, width: 9, height: 15)
+        } compactTrailing: {
+            Text(distanceText(state, attributes))
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(theme.accent)
+        } minimal: {
+            arrowGlyph(colour: theme.accent, bearing: state.bearing, width: 8, height: 13)
+        }
+        .widgetURL(deepLink(for: attributes))
+        .keylineTint(theme.accent)
+    }
+
+    private func expandedArrow(theme: Theme, bearing: Double) -> some View {
+        ArrowShape()
+            .fill(theme.arrowGradient)
+            .frame(width: 18, height: 30)
+            .rotationEffect(.degrees(bearing))
+            .padding(.leading, 6)
+    }
+
+    private func expandedDistance(
+        theme: Theme,
+        state: HeadingActivityAttributes.ContentState,
+        attributes: HeadingActivityAttributes
+    ) -> some View {
+        Text(distanceText(state, attributes))
+            .font(.system(size: 20, weight: .bold, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(theme.accent)
+            .padding(.trailing, 6)
+    }
+
+    private func expandedTitle(
+        theme: Theme,
+        state: HeadingActivityAttributes.ContentState,
+        attributes: HeadingActivityAttributes
+    ) -> some View {
+        let subtitle = state.isArrived
+            ? "You made it"
+            : "Head \(BearingMath.compassPoint(forBearing: state.bearing))"
+        return VStack(spacing: 1) {
+            Text(attributes.spotName)
+                .font(.system(size: 13, weight: .semibold))
+                .lineLimit(1)
+            Text(subtitle)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(theme.textMuted)
+        }
+    }
+
+    private func arrowGlyph(
+        colour: Color,
+        bearing: Double,
+        width: CGFloat,
+        height: CGFloat
+    ) -> some View {
+        ArrowShape()
+            .fill(colour)
+            .frame(width: width, height: height)
+            .rotationEffect(.degrees(bearing))
+    }
+
+    private func deepLink(for attributes: HeadingActivityAttributes) -> URL? {
+        URL(string: "\(AppGroup.urlScheme)://spot?id=\(attributes.spotID.uuidString)")
     }
 
     private func theme(
@@ -99,61 +133,68 @@ private struct LockScreenView: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(theme.accent.opacity(0.14))
-                Circle()
-                    .strokeBorder(theme.accent.opacity(0.4), lineWidth: 1)
-                ArrowShape()
-                    .fill(theme.arrowGradient)
-                    .frame(width: 20, height: 33)
-                    .rotationEffect(.degrees(context.state.bearing))
-            }
-            .frame(width: 62, height: 62)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(context.state.isArrived ? "Arrived" : "Heading to")
-                    .font(.system(size: 10, weight: .bold))
-                    .textCase(.uppercase)
-                    .tracking(1.4)
-                    .foregroundStyle(theme.accent)
-
-                Text(context.attributes.spotName)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(theme.text)
-                    .lineLimit(1)
-
-                if let place = context.attributes.placeName, !place.isEmpty {
-                    Text(place)
-                        .font(.system(size: 11))
-                        .foregroundStyle(theme.textMuted)
-                        .lineLimit(1)
-                }
-            }
-
+            dial
+            labels
             Spacer(minLength: 0)
-
-            VStack(alignment: .trailing, spacing: 2) {
-                let readout = DistanceFormatting.readout(
-                    metres: context.state.distanceMetres,
-                    preference: context.attributes.unitPreference
-                )
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(readout.value)
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                    Text(readout.unit)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(theme.textMuted)
-                }
-                .foregroundStyle(theme.text)
-
-                Text(BearingMath.compassPoint(forBearing: context.state.bearing))
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(theme.accent)
-            }
+            distance
         }
         .padding(16)
+    }
+
+    private var dial: some View {
+        ZStack {
+            Circle().fill(theme.accent.opacity(0.14))
+            Circle().strokeBorder(theme.accent.opacity(0.4), lineWidth: 1)
+            ArrowShape()
+                .fill(theme.arrowGradient)
+                .frame(width: 20, height: 33)
+                .rotationEffect(.degrees(context.state.bearing))
+        }
+        .frame(width: 62, height: 62)
+    }
+
+    private var labels: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(context.state.isArrived ? "Arrived" : "Heading to")
+                .font(.system(size: 10, weight: .bold))
+                .textCase(.uppercase)
+                .tracking(1.4)
+                .foregroundStyle(theme.accent)
+
+            Text(context.attributes.spotName)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(theme.text)
+                .lineLimit(1)
+
+            if let place = context.attributes.placeName, !place.isEmpty {
+                Text(place)
+                    .font(.system(size: 11))
+                    .foregroundStyle(theme.textMuted)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private var distance: some View {
+        let readout = DistanceFormatting.readout(
+            metres: context.state.distanceMetres,
+            preference: context.attributes.unitPreference
+        )
+        return VStack(alignment: .trailing, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(readout.value)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                Text(readout.unit)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(theme.textMuted)
+            }
+            .foregroundStyle(theme.text)
+
+            Text(BearingMath.compassPoint(forBearing: context.state.bearing))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(theme.accent)
+        }
     }
 }
 

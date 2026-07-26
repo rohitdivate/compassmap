@@ -30,41 +30,44 @@ struct PostcardView: View {
 
     private var photo: some View {
         ZStack(alignment: .topTrailing) {
-            Group {
-                if let data = spot.photoData, let image = UIImage(data: data) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    LinearGradient(
-                        colors: [theme.cardTint, theme.deepest],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .overlay {
-                        Text(spot.glyph ?? "📍").font(.system(size: 120))
-                    }
-                }
-            }
-            .frame(width: 992, height: 830)
-            .clipped()
-
-            // A stamp-like compass mark in the corner.
-            ZStack {
-                Circle().fill(theme.deepest.opacity(0.75))
-                Circle().strokeBorder(theme.accent, lineWidth: 3)
-                ArrowShape()
-                    .fill(theme.accent)
-                    .frame(width: 42, height: 68)
-            }
-            .frame(width: 118, height: 118)
-            .padding(28)
+            image
+                .frame(width: 992, height: 830)
+                .clipped()
+            stamp.padding(28)
         }
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .strokeBorder(.white.opacity(0.25), lineWidth: 2)
         }
+    }
+
+    @ViewBuilder
+    private var image: some View {
+        if let data = spot.photoData, let decoded = UIImage(data: data) {
+            Image(uiImage: decoded)
+                .resizable()
+                .scaledToFill()
+        } else {
+            LinearGradient(
+                colors: [theme.cardTint, theme.deepest],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay { Text(spot.glyph ?? "📍").font(.system(size: 120)) }
+        }
+    }
+
+    /// A compass mark in the corner, sitting on the photo like an inked stamp.
+    private var stamp: some View {
+        ZStack {
+            Circle().fill(theme.deepest.opacity(0.75))
+            Circle().strokeBorder(theme.accent, lineWidth: 3)
+            ArrowShape()
+                .fill(theme.accent)
+                .frame(width: 42, height: 68)
+        }
+        .frame(width: 118, height: 118)
     }
 
     private var caption: some View {

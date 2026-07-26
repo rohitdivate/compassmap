@@ -72,6 +72,38 @@ struct SettingsView: View {
         return "\(near) · \(far)"
     }
 
+    // MARK: - Bindings
+    //
+    // Lifted out of the view bodies: an inline Binding(get:set:) is a closure pair the
+    // type-checker has to work through, and several per section adds up fast.
+
+    private var trueNorth: Binding<Bool> {
+        Binding(get: { settings.usesTrueNorth }, set: { settings.usesTrueNorth = $0 })
+    }
+
+    private var haptics: Binding<Bool> {
+        Binding(get: { settings.hapticsEnabled }, set: { settings.hapticsEnabled = $0 })
+    }
+
+    private var sound: Binding<Bool> {
+        Binding(
+            get: { settings.soundEnabled },
+            set: { isOn in
+                settings.soundEnabled = isOn
+                // Play the chime as it is switched on, so the choice is audible immediately.
+                if isOn { FeedbackService.shared.onTarget() }
+            }
+        )
+    }
+
+    private var timeTint: Binding<Bool> {
+        Binding(get: { settings.timeOfDayTintEnabled }, set: { settings.timeOfDayTintEnabled = $0 })
+    }
+
+    private var cloudSync: Binding<Bool> {
+        Binding(get: { settings.cloudSyncEnabled }, set: { settings.cloudSyncEnabled = $0 })
+    }
+
     // MARK: - Compass
 
     private var compassSection: some View {
@@ -83,41 +115,47 @@ struct SettingsView: View {
                         symbol: "location.north.line.fill",
                         title: "Point to true north",
                         detail: "Matches a map. Turn off to follow the magnetic pole instead.",
-                        isOn: Binding(
-                            get: { settings.usesTrueNorth },
-                            set: { settings.usesTrueNorth = $0 }
-                        )
+                        isOn: trueNorth
                     )
-
-                    Divider().overlay(theme.textMuted.opacity(0.2))
-
-                    SettingsInfoRow(
-                        symbol: location.isAuthorized ? "location.fill" : "location.slash.fill",
-                        title: "Location access",
-                        detail: locationStatusText,
-                        actionTitle: location.isAuthorized ? nil : "Allow"
-                    ) {
-                        if location.isDenied {
-                            openSystemSettings()
-                        } else {
-                            location.requestWhenInUseAuthorization()
-                        }
-                    }
-
+                    divider
+                    locationRow
                     if location.authorizationStatus == .authorizedWhenInUse {
-                        Divider().overlay(theme.textMuted.opacity(0.2))
-                        SettingsInfoRow(
-                            symbol: "clock.arrow.circlepath",
-                            title: "Background updates",
-                            detail: "Allow 'Always' so widgets and the Lock Screen keep up while Tradewind is closed.",
-                            actionTitle: "Allow always"
-                        ) {
-                            location.requestAlwaysAuthorization()
-                        }
+                        divider
+                        backgroundRow
                     }
                 }
             }
         }
+    }
+
+    private var locationRow: some View {
+        SettingsInfoRow(
+            symbol: location.isAuthorized ? "location.fill" : "location.slash.fill",
+            title: "Location access",
+            detail: locationStatusText,
+            actionTitle: location.isAuthorized ? nil : "Allow"
+        ) {
+            if location.isDenied {
+                openSystemSettings()
+            } else {
+                location.requestWhenInUseAuthorization()
+            }
+        }
+    }
+
+    private var backgroundRow: some View {
+        SettingsInfoRow(
+            symbol: "clock.arrow.circlepath",
+            title: "Background updates",
+            detail: "Allow 'Always' so widgets and the Lock Screen keep up while Tradewind is closed.",
+            actionTitle: "Allow always"
+        ) {
+            location.requestAlwaysAuthorization()
+        }
+    }
+
+    private var divider: some View {
+        Divider().overlay(theme.textMuted.opacity(0.2))
     }
 
     private var locationStatusText: String {
@@ -141,33 +179,21 @@ struct SettingsView: View {
                         symbol: "hand.tap.fill",
                         title: "Haptic pulse",
                         detail: "Taps you as you walk, faster the closer you get.",
-                        isOn: Binding(
-                            get: { settings.hapticsEnabled },
-                            set: { settings.hapticsEnabled = $0 }
-                        )
+                        isOn: haptics
                     )
-                    Divider().overlay(theme.textMuted.opacity(0.2))
+                    divider
                     SettingsToggleRow(
                         symbol: "speaker.wave.2.fill",
                         title: "Sound",
                         detail: "A soft chime when you're facing the right way and when you arrive.",
-                        isOn: Binding(
-                            get: { settings.soundEnabled },
-                            set: {
-                                settings.soundEnabled = $0
-                                if $0 { FeedbackService.shared.onTarget() }
-                            }
-                        )
+                        isOn: sound
                     )
-                    Divider().overlay(theme.textMuted.opacity(0.2))
+                    divider
                     SettingsToggleRow(
                         symbol: "sun.horizon.fill",
                         title: "Shift with the sun",
                         detail: "Warms the colours toward golden hour and cools them after dark.",
-                        isOn: Binding(
-                            get: { settings.timeOfDayTintEnabled },
-                            set: { settings.timeOfDayTintEnabled = $0 }
-                        )
+                        isOn: timeTint
                     )
                 }
             }
@@ -185,33 +211,32 @@ struct SettingsView: View {
                         symbol: "icloud.fill",
                         title: "Sync my spots",
                         detail: "Keeps spots and photos on all your devices.",
-                        isOn: Binding(
-                            get: { settings.cloudSyncEnabled },
-                            set: { settings.cloudSyncEnabled = $0 }
-                        )
+                        isOn: cloudSync
                     )
-                    Divider().overlay(theme.textMuted.opacity(0.2))
-                    HStack(spacing: 10) {
-                        Image(systemName: settings.persistenceMode.isHealthy
-                            ? "checkmark.circle.fill"
-                            : "exclamationmark.triangle.fill")
-                            .foregroundStyle(settings.persistenceMode.isHealthy
-                                ? theme.accent
-                                : theme.accentSoft)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(settings.persistenceMode.summary)
-                                .font(Typography.caption)
-                                .foregroundStyle(theme.text)
-                            if settings.cloudSyncEnabled, settings.persistenceMode != .syncing {
-                                Text("Changing this takes effect next time Tradewind opens.")
-                                    .font(Typography.label)
-                                    .foregroundStyle(theme.textMuted)
-                            }
-                        }
-                        Spacer()
-                    }
+                    divider
+                    persistenceStatus
                 }
             }
+        }
+    }
+
+    /// Reports what the store actually managed to open, not what the toggle above asked for.
+    private var persistenceStatus: some View {
+        let mode = settings.persistenceMode
+        return HStack(spacing: 10) {
+            Image(systemName: mode.isHealthy ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .foregroundStyle(mode.isHealthy ? theme.accent : theme.accentSoft)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(mode.summary)
+                    .font(Typography.caption)
+                    .foregroundStyle(theme.text)
+                if settings.cloudSyncEnabled, mode != .syncing {
+                    Text("Changing this takes effect next time Tradewind opens.")
+                        .font(Typography.label)
+                        .foregroundStyle(theme.textMuted)
+                }
+            }
+            Spacer()
         }
     }
 
@@ -226,15 +251,7 @@ struct SettingsView: View {
                         .font(Typography.caption)
                         .foregroundStyle(theme.textMuted)
                     ForEach(widgetLines, id: \.self) { line in
-                        HStack(alignment: .top, spacing: 8) {
-                            Circle()
-                                .fill(theme.accent)
-                                .frame(width: 5, height: 5)
-                                .padding(.top, 6)
-                            Text(line)
-                                .font(Typography.caption)
-                                .foregroundStyle(theme.text)
-                        }
+                        bullet(line)
                     }
                     Text("Pin a spot to choose which one the small widget follows — long-press any spot to pin it.")
                         .font(Typography.label)
@@ -242,6 +259,18 @@ struct SettingsView: View {
                         .padding(.top, 2)
                 }
             }
+        }
+    }
+
+    private func bullet(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Circle()
+                .fill(theme.accent)
+                .frame(width: 5, height: 5)
+                .padding(.top, 6)
+            Text(text)
+                .font(Typography.caption)
+                .foregroundStyle(theme.text)
         }
     }
 
@@ -327,56 +356,67 @@ private struct ThemeTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ZStack {
-                candidate.backdropGradient
-                RadialGradient(
-                    colors: [candidate.accent.opacity(0.5), .clear],
-                    center: UnitPoint(x: 0.8, y: 0.2),
-                    startRadius: 0,
-                    endRadius: 90
-                )
-                FilmGrain(opacity: candidate.grainOpacity, density: 260)
-                ArrowShape()
-                    .fill(candidate.arrowGradient)
-                    .frame(width: 26, height: 42)
-                    .rotationEffect(.degrees(34))
-                    .shadow(color: candidate.glow.opacity(0.7), radius: 8)
-            }
-            .frame(height: 96)
-
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 5) {
-                    Image(systemName: candidate.symbol)
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(candidate.accent)
-                    Text(candidate.name)
-                        .font(Typography.label)
-                        .foregroundStyle(candidate.text)
-                    Spacer(minLength: 0)
-                    if isSelected {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(candidate.accent)
-                    }
-                }
-                Text(candidate.tagline)
-                    .font(.system(size: 10))
-                    .foregroundStyle(candidate.textMuted)
-                    .lineLimit(2, reservesSpace: true)
-            }
-            .padding(10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(candidate.deepest)
+            swatch
+            caption
         }
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(
-                    isSelected ? candidate.accent : .white.opacity(0.12),
-                    lineWidth: isSelected ? 2 : 1
-                )
-        }
+        .overlay { border }
         .shadow(color: .black.opacity(0.3), radius: isSelected ? 14 : 6, y: 5)
+    }
+
+    /// A miniature of the real backdrop and arrow, not a colour chip: the point is to show what
+    /// the app will feel like.
+    private var swatch: some View {
+        ZStack {
+            candidate.backdropGradient
+            RadialGradient(
+                colors: [candidate.accent.opacity(0.5), .clear],
+                center: UnitPoint(x: 0.8, y: 0.2),
+                startRadius: 0,
+                endRadius: 90
+            )
+            FilmGrain(opacity: candidate.grainOpacity, density: 260)
+            ArrowShape()
+                .fill(candidate.arrowGradient)
+                .frame(width: 26, height: 42)
+                .rotationEffect(.degrees(34))
+                .shadow(color: candidate.glow.opacity(0.7), radius: 8)
+        }
+        .frame(height: 96)
+    }
+
+    private var caption: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 5) {
+                Image(systemName: candidate.symbol)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(candidate.accent)
+                Text(candidate.name)
+                    .font(Typography.label)
+                    .foregroundStyle(candidate.text)
+                Spacer(minLength: 0)
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(candidate.accent)
+                }
+            }
+            Text(candidate.tagline)
+                .font(.system(size: 10))
+                .foregroundStyle(candidate.textMuted)
+                .lineLimit(2, reservesSpace: true)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(candidate.deepest)
+    }
+
+    private var border: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .strokeBorder(
+                isSelected ? candidate.accent : .white.opacity(0.12),
+                lineWidth: isSelected ? 2 : 1
+            )
     }
 }
 

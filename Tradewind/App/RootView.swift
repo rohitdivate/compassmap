@@ -24,7 +24,45 @@ struct RootView: View {
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
+    // The chain here is long — three presentations, an alert, and lifecycle handling — so it is
+    // split across three shorter chains rather than one the type-checker has to swallow whole.
     var body: some View {
+        presentations
+            .onAppear {
+                if location.isAuthorized { engine.start() }
+                syncWithOutsideWorld()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                handle(scenePhase: phase)
+            }
+    }
+
+    private var presentations: some View {
+        stack
+            .fullScreenCover(isPresented: hasNotOnboarded) {
+                OnboardingView()
+                    .environment(settings)
+                    .environment(\.theme, theme)
+            }
+            .fullScreenCover(isPresented: showingCapture) {
+                CaptureFlowView()
+                    .environment(settings)
+                    .environment(router)
+                    .environment(\.theme, theme)
+            }
+            .sheet(isPresented: showingSettings) {
+                SettingsView()
+                    .environment(settings)
+                    .environment(\.theme, theme)
+            }
+            .alert("Nothing to show", isPresented: hasUnresolvedLink) {
+                Button("OK", role: .cancel) { router.unresolvedLinkMessage = nil }
+            } message: {
+                Text(router.unresolvedLinkMessage ?? "")
+            }
+    }
+
+    private var stack: some View {
         ZStack {
             ThemedBackground(
                 theme: theme,
@@ -38,94 +76,83 @@ struct RootView: View {
                     Color.clear.frame(height: 78)
                 }
 
-            VStack {
-                Spacer()
-                FloatingBar(
-                    selection: router.tab,
-                    onSelect: { tab in
-                        FeedbackService.shared.lightTap()
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            router.tab = tab
-                        }
-                    },
-                    onCapture: {
-                        FeedbackService.shared.lightTap()
-                        router.isShowingCapture = true
-                    }
-                )
-                .padding(.bottom, 8)
-            }
-            .ignoresSafeArea(.keyboard)
+            bar
 
             if let destination {
-                ArrowScreen(
-                    destination: destination,
-                    engine: engine,
-                    hero: hero,
-                    onClose: {
-                        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-                            router.dismissDestination()
-                        }
-                    }
-                )
-                .zIndex(10)
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .scale(scale: 0.94)),
-                    removal: .opacity.combined(with: .scale(scale: 0.97))
-                ))
+                arrowScreen(for: destination)
             }
         }
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: router.activeSpotID)
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: router.guestDestination)
-        .fullScreenCover(isPresented: hasNotOnboarded) {
-            OnboardingView()
-                .environment(settings)
-                .environment(\.theme, theme)
-        }
-        .fullScreenCover(isPresented: Binding(
-            get: { router.isShowingCapture },
-            set: { router.isShowingCapture = $0 }
-        )) {
-            CaptureFlowView()
-                .environment(settings)
-                .environment(router)
-                .environment(\.theme, theme)
-        }
-        .sheet(isPresented: Binding(
-            get: { router.isShowingSettings },
-            set: { router.isShowingSettings = $0 }
-        )) {
-            SettingsView()
-                .environment(settings)
-                .environment(\.theme, theme)
-        }
-        .alert(
-            "Nothing to show",
-            isPresented: Binding(
-                get: { router.unresolvedLinkMessage != nil },
-                set: { if !$0 { router.unresolvedLinkMessage = nil } }
+    }
+
+    private var bar: some View {
+        VStack {
+            Spacer()
+            FloatingBar(
+                selection: router.tab,
+                onSelect: select(tab:),
+                onCapture: {
+                    FeedbackService.shared.lightTap()
+                    router.isShowingCapture = true
+                }
             )
-        ) {
-            Button("OK", role: .cancel) { router.unresolvedLinkMessage = nil }
-        } message: {
-            Text(router.unresolvedLinkMessage ?? "")
+            .padding(.bottom, 8)
         }
-        .onAppear {
+        .ignoresSafeArea(.keyboard)
+    }
+
+    private func arrowScreen(for destination: ArrowDestination) -> some View {
+        ArrowScreen(
+            destination: destination,
+            engine: engine,
+            hero: hero,
+            onClose: {
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                    router.dismissDestination()
+                }
+            }
+        )
+        .zIndex(10)
+        .transition(.asymmetric(
+            insertion: .opacity.combined(with: .scale(scale: 0.94)),
+            removal: .opacity.combined(with: .scale(scale: 0.97))
+        ))
+    }
+
+    private func select(tab: AppRouter.Tab) {
+        FeedbackService.shared.lightTap()
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            router.tab = tab
+        }
+    }
+
+    private func handle(scenePhase phase: ScenePhase) {
+        switch phase {
+        case .active:
             if location.isAuthorized { engine.start() }
             syncWithOutsideWorld()
+        case .background, .inactive:
+            engine.stop()
+            FeedbackService.shared.stopPulsing()
+        default:
+            break
         }
-        .onChange(of: scenePhase) { _, phase in
-            switch phase {
-            case .active:
-                if location.isAuthorized { engine.start() }
-                syncWithOutsideWorld()
-            case .background, .inactive:
-                engine.stop()
-                FeedbackService.shared.stopPulsing()
-            default:
-                break
-            }
-        }
+    }
+
+    private var showingCapture: Binding<Bool> {
+        Binding(get: { router.isShowingCapture }, set: { router.isShowingCapture = $0 })
+    }
+
+    private var showingSettings: Binding<Bool> {
+        Binding(get: { router.isShowingSettings }, set: { router.isShowingSettings = $0 })
+    }
+
+    private var hasUnresolvedLink: Binding<Bool> {
+        Binding(
+            get: { router.unresolvedLinkMessage != nil },
+            set: { if !$0 { router.unresolvedLinkMessage = nil } }
+        )
     }
 
     // MARK: - Behaviour
@@ -251,55 +278,65 @@ private struct FloatingBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            HStack(spacing: 2) {
-                ForEach(AppRouter.Tab.allCases) { tab in
-                    Button {
-                        onSelect(tab)
-                    } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: tab.symbol)
-                                .font(.system(size: 17, weight: .semibold))
-                            Text(tab.title)
-                                .font(.system(size: 10, weight: .semibold))
-                        }
-                        .frame(width: 62, height: 46)
-                        .foregroundStyle(selection == tab ? theme.accent : theme.textMuted)
-                        .background {
-                            if selection == tab {
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .fill(theme.accent.opacity(0.14))
-                            }
-                        }
-                    }
-                    .buttonStyle(PressableStyle(scale: 0.92))
-                    .accessibilityLabel(tab.title)
-                }
-            }
-            .padding(5)
-            .background {
-                Capsule(style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay { Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
-            }
-            .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
-
-            Button(action: onCapture) {
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 21, weight: .semibold))
-                    .foregroundStyle(theme.deepest)
-                    .frame(width: 56, height: 56)
-                    .background {
-                        Circle()
-                            .fill(theme.accent)
-                            .shadow(color: theme.glow.opacity(0.5), radius: 16, y: 6)
-                    }
-                    .overlay {
-                        Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1)
-                    }
-            }
-            .buttonStyle(PressableStyle(scale: 0.9))
-            .accessibilityLabel("Save this place")
+            tabStrip
+            shutter
         }
         .padding(.horizontal, 16)
+    }
+
+    private var tabStrip: some View {
+        HStack(spacing: 2) {
+            ForEach(AppRouter.Tab.allCases) { tab in
+                tabButton(tab)
+            }
+        }
+        .padding(5)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay { Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 1) }
+        }
+        .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
+    }
+
+    private func tabButton(_ tab: AppRouter.Tab) -> some View {
+        let isSelected = selection == tab
+        return Button {
+            onSelect(tab)
+        } label: {
+            VStack(spacing: 3) {
+                Image(systemName: tab.symbol)
+                    .font(.system(size: 17, weight: .semibold))
+                Text(tab.title)
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .frame(width: 62, height: 46)
+            .foregroundStyle(isSelected ? theme.accent : theme.textMuted)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(theme.accent.opacity(0.14))
+                }
+            }
+        }
+        .buttonStyle(PressableStyle(scale: 0.92))
+        .accessibilityLabel(tab.title)
+    }
+
+    private var shutter: some View {
+        Button(action: onCapture) {
+            Image(systemName: "camera.fill")
+                .font(.system(size: 21, weight: .semibold))
+                .foregroundStyle(theme.deepest)
+                .frame(width: 56, height: 56)
+                .background {
+                    Circle()
+                        .fill(theme.accent)
+                        .shadow(color: theme.glow.opacity(0.5), radius: 16, y: 6)
+                }
+                .overlay { Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1) }
+        }
+        .buttonStyle(PressableStyle(scale: 0.9))
+        .accessibilityLabel("Save this place")
     }
 }

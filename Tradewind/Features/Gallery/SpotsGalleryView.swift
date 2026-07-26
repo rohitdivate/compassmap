@@ -37,66 +37,8 @@ struct SpotsGalleryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 header
-
-                if !location.isAuthorized {
-                    LocationPromptCard(isDenied: location.isDenied) {
-                        location.requestWhenInUseAuthorization()
-                    }
-                    .padding(.horizontal, 18)
-                }
-
-                if spots.isEmpty {
-                    EmptyStateView(
-                        symbol: "camera.viewfinder",
-                        title: "Nowhere to go yet",
-                        message: "Photograph somewhere worth coming back to. Tradewind remembers where you were standing and points you back.",
-                        actionTitle: "Take the first photo",
-                        action: { router.isShowingCapture = true }
-                    )
-                    .padding(.top, 40)
-                } else {
-                    if trips.count > 0 {
-                        tripFilter
-                    }
-
-                    if let featured = SpotRanking.featured(in: ranked) {
-                        FeaturedSpotCard(
-                            ranked: featured,
-                            heading: heading,
-                            unitPreference: settings.unitPreference,
-                            hero: hero,
-                            onOpen: { open(featured.spot) }
-                        )
-                        .padding(.horizontal, 18)
-                    }
-
-                    if ranked.count > 1 {
-                        SectionHeader(
-                            eyebrow: location.coordinate == nil ? "Most recent" : "Nearest first",
-                            title: "All your spots"
-                        )
-                        .padding(.horizontal, 18)
-
-                        LazyVGrid(
-                            columns: [GridItem(spacing: 14), GridItem(spacing: 14)],
-                            spacing: 14
-                        ) {
-                            ForEach(Array(ranked.dropFirst(featuredIsFirst ? 1 : 0))) { item in
-                                SpotGridCard(
-                                    ranked: item,
-                                    heading: heading,
-                                    unitPreference: settings.unitPreference,
-                                    hero: hero,
-                                    onOpen: { open(item.spot) }
-                                )
-                                .contextMenu {
-                                    spotMenu(for: item.spot)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 18)
-                    }
-                }
+                if !location.isAuthorized { permissionPrompt }
+                if spots.isEmpty { emptyState } else { content }
             }
             .padding(.top, 8)
             .padding(.bottom, 24)
@@ -108,11 +50,69 @@ struct SpotsGalleryView: View {
         }
     }
 
-    /// True when the featured card is also the first item in the grid, which it is unless a
-    /// further-away spot has been pinned.
-    private var featuredIsFirst: Bool {
-        guard let featured = SpotRanking.featured(in: ranked) else { return false }
-        return ranked.first?.id == featured.id
+    @ViewBuilder
+    private var content: some View {
+        if !trips.isEmpty { tripFilter }
+        if let featured = SpotRanking.featured(in: ranked) {
+            FeaturedSpotCard(
+                ranked: featured,
+                heading: heading,
+                unitPreference: settings.unitPreference,
+                hero: hero,
+                onOpen: { open(featured.spot) }
+            )
+            .padding(.horizontal, 18)
+        }
+        if ranked.count > 1 { grid }
+    }
+
+    private var grid: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeader(
+                eyebrow: location.coordinate == nil ? "Most recent" : "Nearest first",
+                title: "All your spots"
+            )
+
+            LazyVGrid(columns: [GridItem(spacing: 14), GridItem(spacing: 14)], spacing: 14) {
+                ForEach(gridItems) { item in
+                    SpotGridCard(
+                        ranked: item,
+                        heading: heading,
+                        unitPreference: settings.unitPreference,
+                        hero: hero,
+                        onOpen: { open(item.spot) }
+                    )
+                    .contextMenu { spotMenu(for: item.spot) }
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+    }
+
+    /// Everything except the spot already shown as the hero card — unless a further-away spot is
+    /// pinned, in which case the hero is not the first item and nothing is dropped.
+    private var gridItems: [RankedSpot] {
+        guard let featured = SpotRanking.featured(in: ranked) else { return ranked }
+        guard ranked.first?.id == featured.id else { return ranked }
+        return Array(ranked.dropFirst())
+    }
+
+    private var permissionPrompt: some View {
+        LocationPromptCard(isDenied: location.isDenied) {
+            location.requestWhenInUseAuthorization()
+        }
+        .padding(.horizontal, 18)
+    }
+
+    private var emptyState: some View {
+        EmptyStateView(
+            symbol: "camera.viewfinder",
+            title: "Nowhere to go yet",
+            message: "Photograph somewhere worth coming back to. Tradewind remembers where you were standing and points you back.",
+            actionTitle: "Take the first photo",
+            action: { router.isShowingCapture = true }
+        )
+        .padding(.top, 40)
     }
 
     // MARK: - Pieces
@@ -236,70 +236,8 @@ private struct FeaturedSpotCard: View {
     var body: some View {
         Button(action: onOpen) {
             ZStack(alignment: .bottomLeading) {
-                PhotoView(data: ranked.spot.photoData, maxDimension: 1_400, glyph: ranked.spot.glyph)
-                    .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
-                    .frame(height: 300)
-                    .overlay {
-                        LinearGradient(
-                            colors: [.clear, .black.opacity(0.25), .black.opacity(0.78)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 6) {
-                        if ranked.spot.isPinned {
-                            PillLabel(text: "Pinned", symbol: "pin.fill", prominent: true)
-                        }
-                        if let trip = ranked.spot.trip?.name, !trip.isEmpty {
-                            PillLabel(text: trip, symbol: "suitcase.fill")
-                        }
-                        if let bearing = ranked.bearing {
-                            PillLabel(text: BearingMath.compassPoint(forBearing: bearing))
-                        }
-                    }
-
-                    Text(ranked.spot.displayName)
-                        .font(Typography.title)
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-
-                    HStack(alignment: .center, spacing: 12) {
-                        MiniArrow(theme: theme, angle: ranked.arrowAngle(heading: heading), size: 34)
-                        VStack(alignment: .leading, spacing: 0) {
-                            if let metres = ranked.metres {
-                                let readout = DistanceFormatting.readout(
-                                    metres: metres,
-                                    preference: unitPreference
-                                )
-                                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                                    Text(readout.value)
-                                        .font(Typography.readout)
-                                        .monospacedDigit()
-                                    Text(readout.unit)
-                                        .font(Typography.readoutUnit)
-                                        .foregroundStyle(.white.opacity(0.75))
-                                }
-                                .foregroundStyle(.white)
-                                if let walk = DistanceFormatting.walkingTime(metres: metres) {
-                                    Text(walk)
-                                        .font(Typography.caption)
-                                        .foregroundStyle(.white.opacity(0.7))
-                                }
-                            } else {
-                                Text("Waiting for a fix")
-                                    .font(Typography.caption)
-                                    .foregroundStyle(.white.opacity(0.7))
-                            }
-                        }
-                        Spacer()
-                        Image(systemName: "arrow.up.right.circle.fill")
-                            .font(.system(size: 30))
-                            .foregroundStyle(theme.accent)
-                    }
-                }
-                .padding(18)
+                photo
+                caption.padding(18)
             }
             .frame(height: 300)
             .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
@@ -313,6 +251,84 @@ private struct FeaturedSpotCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
         .accessibilityHint("Opens the compass for this spot")
+    }
+
+    private var photo: some View {
+        PhotoView(data: ranked.spot.photoData, maxDimension: 1_400, glyph: ranked.spot.glyph)
+            .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
+            .frame(height: 300)
+            .overlay {
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.25), .black.opacity(0.78)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+    }
+
+    private var caption: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            pills
+            Text(ranked.spot.displayName)
+                .font(Typography.title)
+                .foregroundStyle(.white)
+                .lineLimit(2)
+            distanceRow
+        }
+    }
+
+    @ViewBuilder
+    private var pills: some View {
+        HStack(spacing: 6) {
+            if ranked.spot.isPinned {
+                PillLabel(text: "Pinned", symbol: "pin.fill", prominent: true)
+            }
+            if let trip = ranked.spot.trip?.name, !trip.isEmpty {
+                PillLabel(text: trip, symbol: "suitcase.fill")
+            }
+            if let bearing = ranked.bearing {
+                PillLabel(text: BearingMath.compassPoint(forBearing: bearing))
+            }
+        }
+    }
+
+    private var distanceRow: some View {
+        HStack(alignment: .center, spacing: 12) {
+            MiniArrow(theme: theme, angle: ranked.arrowAngle(heading: heading), size: 34)
+            distanceBlock
+            Spacer()
+            Image(systemName: "arrow.up.right.circle.fill")
+                .font(.system(size: 30))
+                .foregroundStyle(theme.accent)
+        }
+    }
+
+    @ViewBuilder
+    private var distanceBlock: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let metres = ranked.metres {
+                let readout = DistanceFormatting.readout(metres: metres, preference: unitPreference)
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(readout.value)
+                        .font(Typography.readout)
+                        .monospacedDigit()
+                    Text(readout.unit)
+                        .font(Typography.readoutUnit)
+                        .foregroundStyle(.white.opacity(0.75))
+                }
+                .foregroundStyle(.white)
+
+                if let walk = DistanceFormatting.walkingTime(metres: metres) {
+                    Text(walk)
+                        .font(Typography.caption)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+            } else {
+                Text("Waiting for a fix")
+                    .font(Typography.caption)
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+        }
     }
 
     private var accessibilityText: String {
@@ -337,62 +353,10 @@ private struct SpotGridCard: View {
     var body: some View {
         Button(action: onOpen) {
             VStack(alignment: .leading, spacing: 0) {
-                ZStack(alignment: .topTrailing) {
-                    PhotoView(data: ranked.spot.photoData, maxDimension: 700, glyph: ranked.spot.glyph)
-                        .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
-                        .frame(height: 132)
-
-                    if ranked.spot.isPinned {
-                        Image(systemName: "pin.fill")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(theme.deepest)
-                            .padding(6)
-                            .background { Circle().fill(theme.accent) }
-                            .padding(8)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(ranked.spot.displayName)
-                        .font(Typography.cardTitle)
-                        .foregroundStyle(theme.text)
-                        .lineLimit(1)
-
-                    HStack(spacing: 8) {
-                        MiniArrow(theme: theme, angle: ranked.arrowAngle(heading: heading), size: 20)
-                        if let metres = ranked.metres {
-                            let readout = DistanceFormatting.readout(
-                                metres: metres,
-                                preference: unitPreference
-                            )
-                            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                                Text(readout.value)
-                                    .font(Typography.cardDistance)
-                                    .monospacedDigit()
-                                Text(readout.unit)
-                                    .font(Typography.label)
-                                    .foregroundStyle(theme.textMuted)
-                            }
-                            .foregroundStyle(theme.text)
-                        } else {
-                            Text("—")
-                                .font(Typography.cardDistance)
-                                .foregroundStyle(theme.textMuted)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                }
-                .padding(12)
+                photo
+                caption
             }
-            .background {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(theme.cardTint.opacity(0.45))
-                            .blendMode(.softLight)
-                    }
-            }
+            .background { cardBackground }
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -401,6 +365,69 @@ private struct SpotGridCard: View {
         }
         .buttonStyle(PressableStyle(scale: 0.97))
         .accessibilityElement(children: .combine)
+    }
+
+    private var photo: some View {
+        ZStack(alignment: .topTrailing) {
+            PhotoView(data: ranked.spot.photoData, maxDimension: 700, glyph: ranked.spot.glyph)
+                .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
+                .frame(height: 132)
+
+            if ranked.spot.isPinned {
+                Image(systemName: "pin.fill")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(theme.deepest)
+                    .padding(6)
+                    .background { Circle().fill(theme.accent) }
+                    .padding(8)
+            }
+        }
+    }
+
+    private var caption: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(ranked.spot.displayName)
+                .font(Typography.cardTitle)
+                .foregroundStyle(theme.text)
+                .lineLimit(1)
+
+            HStack(spacing: 8) {
+                MiniArrow(theme: theme, angle: ranked.arrowAngle(heading: heading), size: 20)
+                distanceText
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(12)
+    }
+
+    @ViewBuilder
+    private var distanceText: some View {
+        if let metres = ranked.metres {
+            let readout = DistanceFormatting.readout(metres: metres, preference: unitPreference)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(readout.value)
+                    .font(Typography.cardDistance)
+                    .monospacedDigit()
+                Text(readout.unit)
+                    .font(Typography.label)
+                    .foregroundStyle(theme.textMuted)
+            }
+            .foregroundStyle(theme.text)
+        } else {
+            Text("—")
+                .font(Typography.cardDistance)
+                .foregroundStyle(theme.textMuted)
+        }
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .fill(.ultraThinMaterial)
+            .overlay {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(theme.cardTint.opacity(0.45))
+                    .blendMode(.softLight)
+            }
     }
 }
 

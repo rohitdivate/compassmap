@@ -28,6 +28,27 @@ struct SpotDetailView: View {
     private static let glyphs = ["📍", "🌊", "🏝️", "🌴", "🍹", "🛺", "⛩️", "🐘", "☕️", "🏛️", "🌅", "🥥"]
 
     var body: some View {
+        content
+            .alert("Rename spot", isPresented: $isEditingName) {
+                TextField("Name", text: $draftName)
+                Button("Save") { store.rename(spot, to: draftName) }
+                Button("Cancel", role: .cancel) { draftName = spot.name }
+            }
+            .alert("Delete this spot?", isPresented: $isConfirmingDelete) {
+                Button("Delete", role: .destructive) {
+                    store.delete(spot)
+                    dismiss()
+                }
+                Button("Keep it", role: .cancel) {}
+            } message: {
+                Text("The photo goes with it. This cannot be undone.")
+            }
+            .sheet(item: $shareImage) { postcard in
+                ShareSheet(items: shareItems(for: postcard))
+            }
+    }
+
+    private var content: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
@@ -58,23 +79,13 @@ struct SpotDetailView: View {
             draftName = spot.name
             draftNote = spot.note ?? ""
         }
-        .alert("Rename spot", isPresented: $isEditingName) {
-            TextField("Name", text: $draftName)
-            Button("Save") { store.rename(spot, to: draftName) }
-            Button("Cancel", role: .cancel) { draftName = spot.name }
-        }
-        .alert("Delete this spot?", isPresented: $isConfirmingDelete) {
-            Button("Delete", role: .destructive) {
-                store.delete(spot)
-                dismiss()
-            }
-            Button("Keep it", role: .cancel) {}
-        } message: {
-            Text("The photo goes with it. This cannot be undone.")
-        }
-        .sheet(item: $shareImage) { postcard in
-            ShareSheet(items: [postcard.image, spot.deepLinkURL as Any].compactMap { $0 })
-        }
+    }
+
+    /// The postcard image plus the deep link, so a recipient gets both the picture and a way in.
+    private func shareItems(for postcard: ShareablePostcard) -> [Any] {
+        var items: [Any] = [postcard.image]
+        if let url = spot.deepLinkURL { items.append(url) }
+        return items
     }
 
     // MARK: - Photo
@@ -118,56 +129,67 @@ struct SpotDetailView: View {
     // MARK: - Distance
 
     private var distanceRow: some View {
-        let metres = location.coordinate.map {
-            BearingMath.distance(from: $0, to: spot.coordinate)
-        }
-        let bearing = location.coordinate.map {
-            BearingMath.initialBearing(from: $0, to: spot.coordinate)
-        }
-
-        return GlassCard {
+        GlassCard {
             HStack(spacing: 16) {
-                if let bearing {
+                if let bearing = bearingToSpot {
                     MiniArrow(theme: theme, angle: bearing, size: 40)
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    if let metres {
-                        let readout = DistanceFormatting.readout(
-                            metres: metres,
-                            preference: settings.unitPreference
-                        )
-                        HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text(readout.value)
-                                .font(Typography.readout)
-                                .monospacedDigit()
-                            Text(readout.unit).font(Typography.readoutUnit)
-                        }
-                        .foregroundStyle(theme.text)
-                        if let walk = DistanceFormatting.walkingTime(metres: metres) {
-                            Text(walk)
-                                .font(Typography.caption)
-                                .foregroundStyle(theme.textMuted)
-                        }
-                    } else {
-                        Text("No location fix")
-                            .font(Typography.cardTitle)
-                            .foregroundStyle(theme.textMuted)
-                    }
-                }
+                distanceBlock
                 Spacer()
-                if let bearing {
-                    VStack(spacing: 0) {
-                        Text(BearingMath.compassPoint(forBearing: bearing))
-                            .font(Typography.cardDistance)
-                            .foregroundStyle(theme.accent)
-                        Text("\(Int(bearing.rounded()))°")
-                            .font(Typography.label)
-                            .foregroundStyle(theme.textMuted)
-                    }
+                if let bearing = bearingToSpot {
+                    compassBlock(bearing)
                 }
             }
         }
         .padding(.horizontal, 18)
+    }
+
+    private var metresToSpot: Double? {
+        location.coordinate.map { BearingMath.distance(from: $0, to: spot.coordinate) }
+    }
+
+    private var bearingToSpot: Double? {
+        location.coordinate.map { BearingMath.initialBearing(from: $0, to: spot.coordinate) }
+    }
+
+    @ViewBuilder
+    private var distanceBlock: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let metres = metresToSpot {
+                let readout = DistanceFormatting.readout(
+                    metres: metres,
+                    preference: settings.unitPreference
+                )
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(readout.value)
+                        .font(Typography.readout)
+                        .monospacedDigit()
+                    Text(readout.unit).font(Typography.readoutUnit)
+                }
+                .foregroundStyle(theme.text)
+
+                if let walk = DistanceFormatting.walkingTime(metres: metres) {
+                    Text(walk)
+                        .font(Typography.caption)
+                        .foregroundStyle(theme.textMuted)
+                }
+            } else {
+                Text("No location fix")
+                    .font(Typography.cardTitle)
+                    .foregroundStyle(theme.textMuted)
+            }
+        }
+    }
+
+    private func compassBlock(_ bearing: Double) -> some View {
+        VStack(spacing: 0) {
+            Text(BearingMath.compassPoint(forBearing: bearing))
+                .font(Typography.cardDistance)
+                .foregroundStyle(theme.accent)
+            Text("\(Int(bearing.rounded()))°")
+                .font(Typography.label)
+                .foregroundStyle(theme.textMuted)
+        }
     }
 
     // MARK: - Facts
@@ -175,62 +197,66 @@ struct SpotDetailView: View {
     private var facts: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "Where it is")
-
             GlassCard(padding: 0) {
                 VStack(spacing: 0) {
-                    Map(initialPosition: .region(MKCoordinateRegion(
-                        center: CLLocationCoordinate2D(
-                            latitude: spot.latitude,
-                            longitude: spot.longitude
-                        ),
-                        latitudinalMeters: 600,
-                        longitudinalMeters: 600
-                    )), interactionModes: []) {
-                        Marker(spot.displayName, coordinate: CLLocationCoordinate2D(
-                            latitude: spot.latitude,
-                            longitude: spot.longitude
-                        ))
-                        .tint(theme.accent)
-                    }
-                    .mapStyle(.standard(pointsOfInterest: .excludingAll))
-                    .frame(height: 160)
-                    .allowsHitTesting(false)
-
-                    VStack(spacing: 0) {
-                        FactRow(
-                            symbol: "mappin.and.ellipse",
-                            label: "Coordinates",
-                            value: String(format: "%.5f, %.5f", spot.latitude, spot.longitude)
-                        )
-                        if let altitude = spot.altitude {
-                            FactRow(
-                                symbol: "mountain.2.fill",
-                                label: "Elevation",
-                                value: DistanceFormatting.string(
-                                    metres: altitude,
-                                    preference: settings.unitPreference
-                                )
-                            )
-                        }
-                        if let accuracy = spot.horizontalAccuracy {
-                            FactRow(
-                                symbol: "scope",
-                                label: "Fix accuracy",
-                                value: "±\(Int(accuracy)) m"
-                            )
-                        }
-                        if let sun = SolarTimes.events(for: Date(), at: spot.coordinate) {
-                            FactRow(
-                                symbol: "sun.horizon.fill",
-                                label: "Best light",
-                                value: SolarTimes.describeGoldenHour(sun)
-                            )
-                        }
-                    }
-                    .padding(.vertical, 4)
+                    mapInset
+                    factRows.padding(.vertical, 4)
                 }
             }
-            .padding(.horizontal, 18)
+        }
+        .padding(.horizontal, 18)
+    }
+
+    private var mapInset: some View {
+        Map(initialPosition: .region(region), interactionModes: []) {
+            Marker(spot.displayName, coordinate: coordinate)
+                .tint(theme.accent)
+        }
+        .mapStyle(.standard(pointsOfInterest: .excludingAll))
+        .frame(height: 160)
+        .allowsHitTesting(false)
+    }
+
+    private var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: spot.latitude, longitude: spot.longitude)
+    }
+
+    private var region: MKCoordinateRegion {
+        MKCoordinateRegion(
+            center: coordinate,
+            latitudinalMeters: 600,
+            longitudinalMeters: 600
+        )
+    }
+
+    @ViewBuilder
+    private var factRows: some View {
+        VStack(spacing: 0) {
+            FactRow(
+                symbol: "mappin.and.ellipse",
+                label: "Coordinates",
+                value: String(format: "%.5f, %.5f", spot.latitude, spot.longitude)
+            )
+            if let altitude = spot.altitude {
+                FactRow(
+                    symbol: "mountain.2.fill",
+                    label: "Elevation",
+                    value: DistanceFormatting.string(
+                        metres: altitude,
+                        preference: settings.unitPreference
+                    )
+                )
+            }
+            if let accuracy = spot.horizontalAccuracy {
+                FactRow(symbol: "scope", label: "Fix accuracy", value: "±\(Int(accuracy)) m")
+            }
+            if let sun = SolarTimes.events(for: Date(), at: spot.coordinate) {
+                FactRow(
+                    symbol: "sun.horizon.fill",
+                    label: "Best light",
+                    value: SolarTimes.describeGoldenHour(sun)
+                )
+            }
         }
     }
 
@@ -243,34 +269,39 @@ struct SpotDetailView: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
                     ForEach(Self.glyphs, id: \.self) { glyph in
-                        Button {
-                            store.update(spot, glyph: spot.glyph == glyph ? nil : glyph)
-                            FeedbackService.shared.lightTap()
-                        } label: {
-                            Text(glyph)
-                                .font(.system(size: 22))
-                                .frame(width: 46, height: 46)
-                                .background {
-                                    Circle().fill(
-                                        spot.glyph == glyph
-                                            ? AnyShapeStyle(theme.accent.opacity(0.28))
-                                            : AnyShapeStyle(.ultraThinMaterial)
-                                    )
-                                }
-                                .overlay {
-                                    Circle().strokeBorder(
-                                        spot.glyph == glyph ? theme.accent : .white.opacity(0.12),
-                                        lineWidth: 1
-                                    )
-                                }
-                        }
-                        .buttonStyle(PressableStyle())
+                        glyphButton(glyph)
                     }
                 }
                 .padding(.horizontal, 18)
             }
             .scrollIndicators(.hidden)
         }
+    }
+
+    private func glyphButton(_ glyph: String) -> some View {
+        let isSelected = spot.glyph == glyph
+        return Button {
+            store.update(spot, glyph: isSelected ? nil : glyph)
+            FeedbackService.shared.lightTap()
+        } label: {
+            Text(glyph)
+                .font(.system(size: 22))
+                .frame(width: 46, height: 46)
+                .background {
+                    Circle().fill(
+                        isSelected
+                            ? AnyShapeStyle(theme.accent.opacity(0.28))
+                            : AnyShapeStyle(.ultraThinMaterial)
+                    )
+                }
+                .overlay {
+                    Circle().strokeBorder(
+                        isSelected ? theme.accent : .white.opacity(0.12),
+                        lineWidth: 1
+                    )
+                }
+        }
+        .buttonStyle(PressableStyle())
     }
 
     // MARK: - Trip

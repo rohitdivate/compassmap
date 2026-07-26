@@ -172,106 +172,128 @@ struct CaptureFlowView: View {
     /// Shows whether the fix is good enough to be worth saving. Taking the photo first and
     /// discovering the coordinate was 200 m out later is the one failure this app cannot recover
     /// from, so it is surfaced before the shutter, not after.
+    @ViewBuilder
     private var locationBadge: some View {
         Group {
             if let accuracy = location.currentLocation?.horizontalAccuracy, accuracy >= 0 {
-                let isGood = accuracy <= 25
-                HStack(spacing: 6) {
-                    Image(systemName: isGood ? "location.fill" : "location.slash.fill")
-                        .font(.system(size: 11, weight: .bold))
-                    Text(isGood ? "Good fix · ±\(Int(accuracy)) m" : "Weak fix · ±\(Int(accuracy)) m")
-                        .font(Typography.label)
-                }
-                .foregroundStyle(isGood ? theme.deepest : .white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background {
-                    Capsule().fill(isGood
-                        ? AnyShapeStyle(theme.accent)
-                        : AnyShapeStyle(.black.opacity(0.55)))
-                }
+                fixBadge(accuracy: accuracy)
             } else if location.isAuthorized {
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.mini).tint(.white)
-                    Text("Finding you").font(Typography.label)
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background { Capsule().fill(.black.opacity(0.55)) }
+                searchingBadge
             } else {
-                Button {
-                    location.requestWhenInUseAuthorization()
-                } label: {
-                    Text("Turn on location to save a spot")
-                        .font(Typography.label)
-                        .foregroundStyle(theme.deepest)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background { Capsule().fill(theme.accent) }
-                }
-                .buttonStyle(PressableStyle())
+                permissionBadge
             }
         }
         .padding(.bottom, 18)
     }
 
+    private func fixBadge(accuracy: Double) -> some View {
+        let isGood = accuracy <= 25
+        let text = isGood ? "Good fix" : "Weak fix"
+        return HStack(spacing: 6) {
+            Image(systemName: isGood ? "location.fill" : "location.slash.fill")
+                .font(.system(size: 11, weight: .bold))
+            Text("\(text) · ±\(Int(accuracy)) m").font(Typography.label)
+        }
+        .foregroundStyle(isGood ? theme.deepest : .white)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background { badgeShape(filled: isGood) }
+    }
+
+    private var searchingBadge: some View {
+        HStack(spacing: 6) {
+            ProgressView().controlSize(.mini).tint(.white)
+            Text("Finding you").font(Typography.label)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background { badgeShape(filled: false) }
+    }
+
+    private var permissionBadge: some View {
+        Button {
+            location.requestWhenInUseAuthorization()
+        } label: {
+            Text("Turn on location to save a spot")
+                .font(Typography.label)
+                .foregroundStyle(theme.deepest)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background { badgeShape(filled: true) }
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    private func badgeShape(filled: Bool) -> some View {
+        Capsule().fill(
+            filled ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.black.opacity(0.55))
+        )
+    }
+
     private var shutterRow: some View {
         HStack {
-            Button {
-                isImporting = true
-            } label: {
-                VStack(spacing: 4) {
-                    Image(systemName: "photo.on.rectangle.angled")
-                        .font(.system(size: 19, weight: .semibold))
-                    Text("Library").font(.system(size: 10, weight: .semibold))
-                }
-                .foregroundStyle(.white)
-                .frame(width: 62, height: 56)
-            }
-            .buttonStyle(PressableStyle())
-
+            libraryButton
             Spacer()
-
-            Button {
-                camera.capture(
-                    location: location.currentLocation,
-                    heading: location.headingDegrees(preferTrueNorth: settings.usesTrueNorth)
-                )
-                FeedbackService.shared.lightTap()
-            } label: {
-                ZStack {
-                    Circle()
-                        .strokeBorder(.white.opacity(0.9), lineWidth: 4)
-                        .frame(width: 78, height: 78)
-                    Circle()
-                        .fill(theme.accent)
-                        .frame(width: 62, height: 62)
-                        .shadow(color: theme.glow.opacity(0.6), radius: 14)
-                    if camera.isCapturing {
-                        ProgressView().tint(theme.deepest)
-                    }
-                }
-            }
-            .buttonStyle(PressableStyle(scale: 0.9))
-            .disabled(camera.state != .running || camera.isCapturing)
-            .accessibilityLabel("Take photo")
-
+            shutterButton
             Spacer()
-
-            // Balances the shutter, and gives the eye something on the right.
-            VStack(spacing: 4) {
-                Image(systemName: "location.north.line.fill")
-                    .font(.system(size: 17, weight: .semibold))
-                    .rotationEffect(.degrees(-(location.headingDegrees(
-                        preferTrueNorth: settings.usesTrueNorth
-                    ) ?? 0)))
-                Text(headingLabel).font(.system(size: 10, weight: .semibold))
-            }
-            .foregroundStyle(.white.opacity(0.85))
-            .frame(width: 62, height: 56)
-            .accessibilityHidden(true)
+            headingIndicator
         }
+    }
+
+    private var libraryButton: some View {
+        Button {
+            isImporting = true
+        } label: {
+            VStack(spacing: 4) {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .font(.system(size: 19, weight: .semibold))
+                Text("Library").font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundStyle(.white)
+            .frame(width: 62, height: 56)
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    private var shutterButton: some View {
+        Button {
+            camera.capture(
+                location: location.currentLocation,
+                heading: location.headingDegrees(preferTrueNorth: settings.usesTrueNorth)
+            )
+            FeedbackService.shared.lightTap()
+        } label: {
+            ZStack {
+                Circle()
+                    .strokeBorder(.white.opacity(0.9), lineWidth: 4)
+                    .frame(width: 78, height: 78)
+                Circle()
+                    .fill(theme.accent)
+                    .frame(width: 62, height: 62)
+                    .shadow(color: theme.glow.opacity(0.6), radius: 14)
+                if camera.isCapturing {
+                    ProgressView().tint(theme.deepest)
+                }
+            }
+        }
+        .buttonStyle(PressableStyle(scale: 0.9))
+        .disabled(camera.state != .running || camera.isCapturing)
+        .accessibilityLabel("Take photo")
+    }
+
+    /// Balances the shutter, and shows which way you were facing when you pressed it.
+    private var headingIndicator: some View {
+        let heading = location.headingDegrees(preferTrueNorth: settings.usesTrueNorth) ?? 0
+        return VStack(spacing: 4) {
+            Image(systemName: "location.north.line.fill")
+                .font(.system(size: 17, weight: .semibold))
+                .rotationEffect(.degrees(-heading))
+            Text(headingLabel).font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundStyle(.white.opacity(0.85))
+        .frame(width: 62, height: 56)
+        .accessibilityHidden(true)
     }
 
     private var headingLabel: String {
@@ -394,120 +416,163 @@ private struct ReviewView: View {
 
     private static let glyphs = ["📍", "🌊", "🏝️", "🌴", "🍹", "🛺", "⛩️", "🐘", "☕️", "🌅"]
 
+    // Split into small typed pieces on purpose: as one expression this screen was more than
+    // the Swift type-checker would accept.
     var body: some View {
         ZStack {
             ThemedBackground(theme: theme)
 
             ScrollView {
                 VStack(spacing: 18) {
-                    PhotoView(data: pending.photoData, maxDimension: 1_200)
-                        .frame(height: 300)
-                        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-                        .overlay(alignment: .topLeading) {
-                            PillLabel(
-                                text: pending.locationFromPhoto ? "Location from photo" : "Location from here",
-                                symbol: pending.locationFromPhoto ? "photo" : "location.fill",
-                                prominent: true
-                            )
-                            .padding(14)
-                        }
-                        .padding(.horizontal, 18)
-
-                    GlassCard {
-                        VStack(alignment: .leading, spacing: 14) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Call it something").eyebrowStyle(color: theme.accent)
-                                TextField("The waterfall with the rope swing", text: Binding(
-                                    get: { pending.name },
-                                    set: { var copy = pending; copy.name = $0; onChange(copy) }
-                                ))
-                                .font(Typography.body)
-                                .foregroundStyle(theme.text)
-                                .focused($isNameFocused)
-                                .submitLabel(.done)
-                            }
-
-                            Divider().overlay(theme.textMuted.opacity(0.2))
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Mark").eyebrowStyle(color: theme.accent)
-                                ScrollView(.horizontal) {
-                                    HStack(spacing: 8) {
-                                        ForEach(Self.glyphs, id: \.self) { glyph in
-                                            Button {
-                                                var copy = pending
-                                                copy.glyph = pending.glyph == glyph ? nil : glyph
-                                                onChange(copy)
-                                            } label: {
-                                                Text(glyph)
-                                                    .font(.system(size: 20))
-                                                    .frame(width: 42, height: 42)
-                                                    .background {
-                                                        Circle().fill(pending.glyph == glyph
-                                                            ? AnyShapeStyle(theme.accent.opacity(0.3))
-                                                            : AnyShapeStyle(.ultraThinMaterial))
-                                                    }
-                                            }
-                                            .buttonStyle(PressableStyle())
-                                        }
-                                    }
-                                }
-                                .scrollIndicators(.hidden)
-                            }
-
-                            if !trips.isEmpty {
-                                Divider().overlay(theme.textMuted.opacity(0.2))
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Trip").eyebrowStyle(color: theme.accent)
-                                    ScrollView(.horizontal) {
-                                        HStack(spacing: 8) {
-                                            ChipButton(title: "None", isSelected: pending.tripID == nil) {
-                                                var copy = pending
-                                                copy.tripID = nil
-                                                onChange(copy)
-                                            }
-                                            ForEach(trips) { trip in
-                                                ChipButton(
-                                                    title: trip.displayName,
-                                                    symbol: "suitcase.fill",
-                                                    isSelected: pending.tripID == trip.id
-                                                ) {
-                                                    var copy = pending
-                                                    copy.tripID = trip.id
-                                                    onChange(copy)
-                                                }
-                                            }
-                                        }
-                                    }
-                                    .scrollIndicators(.hidden)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 18)
-
+                    photo
+                    detailsCard
                     coordinateSummary
-
-                    VStack(spacing: 10) {
-                        if pending.coordinate != nil {
-                            PrimaryButton(title: "Save this spot", symbol: "checkmark") {
-                                onSave(pending)
-                            }
-                        } else {
-                            Text("Tradewind can't save a spot without a location.")
-                                .font(Typography.caption)
-                                .foregroundStyle(theme.accentSoft)
-                                .multilineTextAlignment(.center)
-                        }
-                        SecondaryButton(title: "Retake", symbol: "arrow.counterclockwise", action: onCancel)
-                    }
-                    .padding(.horizontal, 18)
+                    buttons
                 }
                 .padding(.vertical, 20)
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
         }
+    }
+
+    private var photo: some View {
+        PhotoView(data: pending.photoData, maxDimension: 1_200)
+            .frame(height: 300)
+            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+            .overlay(alignment: .topLeading) { provenancePill.padding(14) }
+            .padding(.horizontal, 18)
+    }
+
+    /// Says plainly where the coordinate came from. Someone importing an old photo needs to know
+    /// whether Tradewind is using the photo's location or the one they are standing in.
+    private var provenancePill: some View {
+        PillLabel(
+            text: pending.locationFromPhoto ? "Location from photo" : "Location from here",
+            symbol: pending.locationFromPhoto ? "photo" : "location.fill",
+            prominent: true
+        )
+    }
+
+    private var detailsCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 14) {
+                nameField
+                Divider().overlay(theme.textMuted.opacity(0.2))
+                glyphPicker
+                if !trips.isEmpty {
+                    Divider().overlay(theme.textMuted.opacity(0.2))
+                    tripPicker
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+    }
+
+    private var nameField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Call it something").eyebrowStyle(color: theme.accent)
+            TextField("The waterfall with the rope swing", text: nameBinding)
+                .font(Typography.body)
+                .foregroundStyle(theme.text)
+                .focused($isNameFocused)
+                .submitLabel(.done)
+        }
+    }
+
+    private var nameBinding: Binding<String> {
+        Binding(
+            get: { pending.name },
+            set: { newValue in
+                var copy = pending
+                copy.name = newValue
+                onChange(copy)
+            }
+        )
+    }
+
+    private var glyphPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Mark").eyebrowStyle(color: theme.accent)
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(Self.glyphs, id: \.self) { glyph in
+                        glyphButton(glyph)
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+        }
+    }
+
+    private func glyphButton(_ glyph: String) -> some View {
+        let isSelected = pending.glyph == glyph
+        return Button {
+            var copy = pending
+            copy.glyph = isSelected ? nil : glyph
+            onChange(copy)
+        } label: {
+            Text(glyph)
+                .font(.system(size: 20))
+                .frame(width: 42, height: 42)
+                .background { glyphBackground(isSelected: isSelected) }
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    private func glyphBackground(isSelected: Bool) -> some View {
+        Circle().fill(
+            isSelected
+                ? AnyShapeStyle(theme.accent.opacity(0.3))
+                : AnyShapeStyle(.ultraThinMaterial)
+        )
+    }
+
+    private var tripPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Trip").eyebrowStyle(color: theme.accent)
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ChipButton(title: "None", isSelected: pending.tripID == nil) {
+                        assign(tripID: nil)
+                    }
+                    ForEach(trips) { trip in
+                        ChipButton(
+                            title: trip.displayName,
+                            symbol: "suitcase.fill",
+                            isSelected: pending.tripID == trip.id
+                        ) {
+                            assign(tripID: trip.id)
+                        }
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+        }
+    }
+
+    private func assign(tripID: UUID?) {
+        var copy = pending
+        copy.tripID = tripID
+        onChange(copy)
+    }
+
+    @ViewBuilder
+    private var buttons: some View {
+        VStack(spacing: 10) {
+            if pending.coordinate != nil {
+                PrimaryButton(title: "Save this spot", symbol: "checkmark") {
+                    onSave(pending)
+                }
+            } else {
+                Text("Tradewind can't save a spot without a location.")
+                    .font(Typography.caption)
+                    .foregroundStyle(theme.accentSoft)
+                    .multilineTextAlignment(.center)
+            }
+            SecondaryButton(title: "Retake", symbol: "arrow.counterclockwise", action: onCancel)
+        }
+        .padding(.horizontal, 18)
     }
 
     private var coordinateSummary: some View {

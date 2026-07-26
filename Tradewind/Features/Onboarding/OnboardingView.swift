@@ -267,63 +267,50 @@ private struct WidgetIllustration: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            // Small widget
-            VStack(alignment: .leading, spacing: 6) {
-                MiniArrow(theme: theme, angle: 28, size: 30)
-                Spacer(minLength: 0)
-                Text("240")
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundStyle(theme.text)
-                Text("m to Waterfall")
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(theme.textMuted)
-            }
-            .padding(12)
-            .frame(width: 108, height: 108, alignment: .topLeading)
-            .background {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(theme.deepest)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(theme.cardTint.opacity(0.6))
-                    }
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(.white.opacity(0.12), lineWidth: 1)
-            }
-
-            // Medium widget
-            VStack(spacing: 8) {
-                ForEach(Array(WidgetIllustration.rows.enumerated()), id: \.offset) { index, row in
-                    HStack(spacing: 8) {
-                        MiniArrow(theme: theme, angle: Double(index) * 74 - 40, size: 16)
-                        Text(row.0)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(theme.text)
-                        Spacer(minLength: 0)
-                        Text(row.1)
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
-                            .foregroundStyle(theme.accent)
-                    }
-                }
-            }
-            .padding(12)
-            .frame(width: 150, height: 108)
-            .background {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(theme.deepest)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(theme.cardTint.opacity(0.6))
-                    }
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(.white.opacity(0.12), lineWidth: 1)
-            }
+            smallWidget
+            mediumWidget
         }
         .shadow(color: .black.opacity(0.35), radius: 18, y: 10)
+    }
+
+    private var smallWidget: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            MiniArrow(theme: theme, angle: 28, size: 30)
+            Spacer(minLength: 0)
+            Text("240")
+                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .foregroundStyle(theme.text)
+            Text("m to Waterfall")
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(theme.textMuted)
+        }
+        .padding(12)
+        .frame(width: 108, height: 108, alignment: .topLeading)
+        .modifier(FakeWidgetChrome())
+    }
+
+    private var mediumWidget: some View {
+        VStack(spacing: 8) {
+            ForEach(Array(Self.rows.enumerated()), id: \.offset) { index, entry in
+                row(name: entry.0, distance: entry.1, index: index)
+            }
+        }
+        .padding(12)
+        .frame(width: 150, height: 108)
+        .modifier(FakeWidgetChrome())
+    }
+
+    private func row(name: String, distance: String, index: Int) -> some View {
+        HStack(spacing: 8) {
+            MiniArrow(theme: theme, angle: Double(index) * 74 - 40, size: 16)
+            Text(name)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(theme.text)
+            Spacer(minLength: 0)
+            Text(distance)
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(theme.accent)
+        }
     }
 
     static let rows: [(String, String)] = [
@@ -331,4 +318,27 @@ private struct WidgetIllustration: View {
         ("Beach shack", "1.4 km"),
         ("Tea room", "3.8 km"),
     ]
+}
+
+/// The rounded, tinted plate that makes the mock widgets read as widgets.
+private struct FakeWidgetChrome: ViewModifier {
+    @Environment(\.theme) private var theme
+
+    func body(content: Content) -> some View {
+        content
+            .background { plate }
+            .overlay {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+            }
+    }
+
+    private var plate: some View {
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .fill(theme.deepest)
+            .overlay {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(theme.cardTint.opacity(0.6))
+            }
+    }
 }

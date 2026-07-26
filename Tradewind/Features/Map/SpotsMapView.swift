@@ -34,18 +34,20 @@ struct SpotsMapView: View {
         ZStack(alignment: .top) {
             map
             header
-            if let selected {
-                VStack {
-                    Spacer()
-                    SelectedSpotBar(
-                        ranked: selected,
-                        unitPreference: settings.unitPreference,
-                        onOpen: { router.openSpot(id: selected.spot.id) }
-                    )
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 4)
-                }
-            }
+            if let selected { selectionBar(selected) }
+        }
+    }
+
+    private func selectionBar(_ selected: RankedSpot) -> some View {
+        VStack {
+            Spacer()
+            SelectedSpotBar(
+                ranked: selected,
+                unitPreference: settings.unitPreference,
+                onOpen: { router.openSpot(id: selected.spot.id) }
+            )
+            .padding(.horizontal, 18)
+            .padding(.bottom, 4)
         }
     }
 
@@ -54,46 +56,9 @@ struct SpotsMapView: View {
     private var map: some View {
         Map(position: $camera, selection: $selectedSpotID) {
             UserAnnotation()
-
-            if showsRangeRings, let origin = location.coordinate {
-                let centre = CLLocationCoordinate2D(
-                    latitude: origin.latitude,
-                    longitude: origin.longitude
-                )
-                ForEach([100.0, 500.0, 1_000.0], id: \.self) { radius in
-                    MapCircle(center: centre, radius: radius)
-                        .foregroundStyle(.clear)
-                        .stroke(theme.accent.opacity(0.35), lineWidth: 1)
-                }
-            }
-
-            // A great-circle line rather than a straight one on the projection: over short
-            // distances they agree, and over long ones only the great circle is the truth.
-            if let origin = location.coordinate, let selected {
-                MapPolyline(coordinates: Self.arcPoints(from: origin, to: selected.spot.coordinate))
-                    .stroke(
-                        theme.accent.opacity(0.85),
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 8])
-                    )
-            }
-
-            ForEach(ranked) { item in
-                Annotation(
-                    item.spot.displayName,
-                    coordinate: CLLocationCoordinate2D(
-                        latitude: item.spot.latitude,
-                        longitude: item.spot.longitude
-                    ),
-                    anchor: .bottom
-                ) {
-                    SpotMapPin(
-                        spot: item.spot,
-                        isSelected: item.id == selectedSpotID,
-                        isPinned: item.spot.isPinned
-                    )
-                }
-                .tag(item.id)
-            }
+            rangeRings
+            routeLine
+            pins
         }
         .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
         .mapControls {
@@ -109,6 +74,55 @@ struct SpotsMapView: View {
         .ignoresSafeArea(edges: .top)
     }
 
+    @MapContentBuilder
+    private var rangeRings: some MapContent {
+        if showsRangeRings, let origin = location.coordinate {
+            let centre = CLLocationCoordinate2D(
+                latitude: origin.latitude,
+                longitude: origin.longitude
+            )
+            ForEach([100.0, 500.0, 1_000.0], id: \.self) { radius in
+                MapCircle(center: centre, radius: radius)
+                    .foregroundStyle(.clear)
+                    .stroke(theme.accent.opacity(0.35), lineWidth: 1)
+            }
+        }
+    }
+
+    /// A great-circle line rather than a straight one on the projection: over short distances they
+    /// agree, and over long ones only the great circle is the truth.
+    @MapContentBuilder
+    private var routeLine: some MapContent {
+        if let origin = location.coordinate, let selected {
+            MapPolyline(coordinates: Self.arcPoints(from: origin, to: selected.spot.coordinate))
+                .stroke(
+                    theme.accent.opacity(0.85),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 8])
+                )
+        }
+    }
+
+    @MapContentBuilder
+    private var pins: some MapContent {
+        ForEach(ranked) { item in
+            Annotation(
+                item.spot.displayName,
+                coordinate: CLLocationCoordinate2D(
+                    latitude: item.spot.latitude,
+                    longitude: item.spot.longitude
+                ),
+                anchor: .bottom
+            ) {
+                SpotMapPin(
+                    spot: item.spot,
+                    isSelected: item.id == selectedSpotID,
+                    isPinned: item.spot.isPinned
+                )
+            }
+            .tag(item.id)
+        }
+    }
+
     private var header: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
@@ -118,58 +132,70 @@ struct SpotsMapView: View {
                     .foregroundStyle(theme.text)
             }
             Spacer()
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) { showsRangeRings.toggle() }
-            } label: {
-                Image(systemName: showsRangeRings ? "dot.circle.and.hand.point.up.left.fill" : "dot.circle")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(showsRangeRings ? theme.deepest : theme.text)
-                    .frame(width: 40, height: 40)
-                    .background {
-                        Circle().fill(showsRangeRings
-                            ? AnyShapeStyle(theme.accent)
-                            : AnyShapeStyle(.ultraThinMaterial))
-                    }
-            }
-            .buttonStyle(PressableStyle())
-            .accessibilityLabel(showsRangeRings ? "Hide range rings" : "Show range rings")
-
-            Button {
-                if let origin = location.coordinate {
-                    withAnimation(.easeInOut(duration: 0.4)) {
-                        camera = .region(MKCoordinateRegion(
-                            center: CLLocationCoordinate2D(
-                                latitude: origin.latitude,
-                                longitude: origin.longitude
-                            ),
-                            latitudinalMeters: 1_600,
-                            longitudinalMeters: 1_600
-                        ))
-                    }
-                } else {
-                    location.requestOneShotLocation()
-                }
-            } label: {
-                Image(systemName: "scope")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(theme.text)
-                    .frame(width: 40, height: 40)
-                    .background { Circle().fill(.ultraThinMaterial) }
-            }
-            .buttonStyle(PressableStyle())
-            .accessibilityLabel("Centre on me")
+            ringsButton
+            recentreButton
         }
         .padding(.horizontal, 18)
         .padding(.top, 6)
-        .background {
-            LinearGradient(
-                colors: [theme.deepest.opacity(0.85), .clear],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 160)
-            .offset(y: -30)
-            .allowsHitTesting(false)
+        .background { headerScrim }
+    }
+
+    private var ringsButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { showsRangeRings.toggle() }
+        } label: {
+            Image(systemName: showsRangeRings ? "dot.circle.and.hand.point.up.left.fill" : "dot.circle")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(showsRangeRings ? theme.deepest : theme.text)
+                .frame(width: 40, height: 40)
+                .background { circleFill(active: showsRangeRings) }
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(showsRangeRings ? "Hide range rings" : "Show range rings")
+    }
+
+    private var recentreButton: some View {
+        Button(action: recentre) {
+            Image(systemName: "scope")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(theme.text)
+                .frame(width: 40, height: 40)
+                .background { circleFill(active: false) }
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel("Centre on me")
+    }
+
+    private func circleFill(active: Bool) -> some View {
+        Circle().fill(active ? AnyShapeStyle(theme.accent) : AnyShapeStyle(.ultraThinMaterial))
+    }
+
+    /// Keeps the title legible over whatever geography happens to be underneath it.
+    private var headerScrim: some View {
+        LinearGradient(
+            colors: [theme.deepest.opacity(0.85), .clear],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(height: 160)
+        .offset(y: -30)
+        .allowsHitTesting(false)
+    }
+
+    private func recentre() {
+        guard let origin = location.coordinate else {
+            location.requestOneShotLocation()
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.4)) {
+            camera = .region(MKCoordinateRegion(
+                center: CLLocationCoordinate2D(
+                    latitude: origin.latitude,
+                    longitude: origin.longitude
+                ),
+                latitudinalMeters: 1_600,
+                longitudinalMeters: 1_600
+            ))
         }
     }
 
