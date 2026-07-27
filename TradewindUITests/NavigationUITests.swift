@@ -316,17 +316,26 @@ extension NavigationUITests {
     private func deleteFromDetail(_ card: XCUIElement) {
         card.tap()
         let title = app.buttons["spot-title-button"]
-        XCTAssertTrue(title.waitForExistence(timeout: 5), "The arrow screen did not open")
+        // Hittable, not merely existing: the arrow screen inserts with a spring, and a tap
+        // synthesized against the mid-animation frame dies with "failed to scroll to visible".
+        XCTAssertTrue(waitForHittable(title), "The arrow screen did not open")
         title.tap()
         let deleteButton = app.buttons["detail-delete"]
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 5), "No detail sheet")
-        for _ in 0..<6 where !(deleteButton.exists && deleteButton.isHittable) {
+        for _ in 0..<6 where !deleteButton.isHittable {
             app.swipeUp()
         }
+        XCTAssertTrue(waitForHittable(deleteButton), "Delete button never became tappable")
         deleteButton.tap()
         let confirm = app.buttons["Delete"]
-        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "No delete confirmation")
+        XCTAssertTrue(waitForHittable(confirm), "No delete confirmation")
         confirm.tap()
+    }
+
+    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+        let predicate = NSPredicate(format: "exists == true AND hittable == true")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
     /// Wave 2: save a spot, then find it by search — and prove a bogus query says so rather than
