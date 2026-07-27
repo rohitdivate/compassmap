@@ -228,7 +228,11 @@ struct NearbyView: View {
     private func startScan() {
         phase = .scanning(seen: 0)
         Task { @MainActor in
-            let access = await PhotoService.resolveLibraryAccess()
+            // The seam skips authorization too — the system Photos dialog would otherwise sit
+            // over the whole test run, and the canned scan needs no library anyway.
+            let access: LibraryAccess = AppSettings.isUITesting
+                ? .granted
+                : await PhotoService.resolveLibraryAccess()
             guard access != .denied else {
                 phase = .denied
                 return
