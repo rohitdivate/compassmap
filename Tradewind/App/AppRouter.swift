@@ -13,6 +13,9 @@ final class AppRouter {
         case spots
         case map
         case trips
+        /// Suggestions mined from the photo library, nearest first — outside pinned and trips,
+        /// as commissioned: places you have already been that are not spots yet.
+        case nearby
 
         var id: String { rawValue }
 
@@ -21,6 +24,7 @@ final class AppRouter {
             case .spots: return "Spots"
             case .map: return "Map"
             case .trips: return "Trips"
+            case .nearby: return "Nearby"
             }
         }
 
@@ -29,6 +33,7 @@ final class AppRouter {
             case .spots: return "photo.stack"
             case .map: return "map"
             case .trips: return "suitcase.fill"
+            case .nearby: return "sparkles"
             }
         }
     }

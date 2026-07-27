@@ -222,6 +222,8 @@ struct RootView: View {
             SpotsMapView()
         case .trips:
             TripsView(hero: hero)
+        case .nearby:
+            NearbyView()
         }
     }
 
