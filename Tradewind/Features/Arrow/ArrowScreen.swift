@@ -29,6 +29,8 @@ struct ArrowScreen: View {
     /// estimate instead — the compass distance is a straight line and streets are not.
     @State private var walkingRoute: WalkingRouteService.Answer?
     @State private var lastRouteRequest: RoutePolicy.Request?
+    /// Set by the detail sheet's delete confirmation; honoured once the sheet has closed.
+    @State private var deleteWhenDetailCloses = false
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
@@ -57,7 +59,16 @@ struct ArrowScreen: View {
             .background(Color.black.opacity(0.001))
             .onAppear(perform: begin)
             .onDisappear(perform: finish)
-            .sheet(isPresented: $isShowingDetail) { detailSheet }
+            // The delete waits for the sheet to finish closing. Deleting mid-dismissal removes
+            // this screen — the sheet's presenter — while the presentation is still animating,
+            // and SwiftUI leaves a phantom presentation that blocks the whole surface.
+            .sheet(isPresented: $isShowingDetail, onDismiss: performPendingDelete) { detailSheet }
+    }
+
+    private func performPendingDelete() {
+        guard deleteWhenDetailCloses, let spot = destination.spot else { return }
+        deleteWhenDetailCloses = false
+        store.delete(spot)
     }
 
     private var layers: some View {
@@ -85,7 +96,7 @@ struct ArrowScreen: View {
     @ViewBuilder
     private var detailSheet: some View {
         if let spot = destination.spot {
-            SpotDetailView(spot: spot)
+            SpotDetailView(spot: spot, onDeleteConfirmed: { deleteWhenDetailCloses = true })
                 .environment(settings)
                 .environment(\.theme, theme)
         }

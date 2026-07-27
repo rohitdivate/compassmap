@@ -1,0 +1,69 @@
+import SwiftData
+import SwiftUI
+
+/// The undo toast, in its own view so its observation of `UndoCenter` cannot be lost in a
+/// bigger body's evaluation. Sits at the top of `RootView`'s ZStack, above the arrow overlay —
+/// a deletion from the detail sheet collapses the arrow underneath, and the undo must survive
+/// that collapse.
+struct UndoToastHost: View {
+
+    @Environment(\.theme) private var theme
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var undo = UndoCenter.shared
+
+    private var store: SpotStore { SpotStore(context: modelContext) }
+
+    var body: some View {
+        VStack {
+            Spacer()
+            if let candidate = undo.candidate {
+                toast(for: candidate)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: undo.candidate)
+        // Keyed by the candidate so deleting a second spot restarts the five seconds.
+        .task(id: undo.candidate) {
+            guard undo.candidate != nil else { return }
+            try? await Task.sleep(nanoseconds: UInt64(TrashPolicy.undoWindow * 1_000_000_000))
+            undo.clear()
+        }
+        .allowsHitTesting(undo.candidate != nil)
+    }
+
+    /// Delete needs no dialog because this is the net: five seconds of Undo, then Recently
+    /// Deleted in Settings for thirty days after that.
+    private func toast(for candidate: UndoCenter.Candidate) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "trash")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(theme.textMuted)
+            Text(TrashPolicy.undoMessage(spotName: candidate.name))
+                .font(theme.captionFont)
+                .foregroundStyle(theme.text)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            Button("Undo") {
+                if let spot = store.anySpot(id: candidate.spotID) {
+                    store.restore(spot)
+                    FeedbackService.shared.lightTap()
+                }
+                undo.clear()
+            }
+            .font(theme.sans(13, weight: .bold))
+            .foregroundStyle(theme.accent)
+            .accessibilityIdentifier("undo-delete")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background {
+            Capsule().fill(theme.surfaceRaised)
+                .overlay { Capsule().strokeBorder(theme.hairline, lineWidth: 1) }
+                .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 96)
+        .accessibilityIdentifier("undo-toast")
+    }
+}

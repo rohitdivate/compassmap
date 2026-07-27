@@ -14,6 +14,10 @@ struct SpotDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     let spot: Spot
+    /// When set, the delete confirmation defers to the presenter instead of deleting here —
+    /// a sheet must not delete the very spot whose arrow screen is presenting it while the
+    /// dismissal is still animating.
+    var onDeleteConfirmed: (() -> Void)?
 
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
     @State private var location = LocationService.shared
@@ -38,7 +42,11 @@ struct SpotDetailView: View {
             }
             .alert("Delete this spot?", isPresented: $isConfirmingDelete) {
                 Button("Delete", role: .destructive) {
-                    store.delete(spot)
+                    if let onDeleteConfirmed {
+                        onDeleteConfirmed()
+                    } else {
+                        store.delete(spot)
+                    }
                     dismiss()
                 }
                 Button("Keep it", role: .cancel) {}

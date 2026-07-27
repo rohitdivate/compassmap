@@ -63,6 +63,7 @@
 		9B0C5277346B9394AA123DEA /* AppRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C172965368D30FF21C48BE0C /* AppRouter.swift */; };
 		B23AB94CE1A99674619B58DB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127FF2ED17335A850D36EA5C /* RootView.swift */; };
 		8B0DCC9391F53CD9D7534764 /* TradewindApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C5C8FBF5162236684DD8F8 /* TradewindApp.swift */; };
+		741319258D41E6B3092142C3 /* UndoToastHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97FF90DE699466768C2D64AC /* UndoToastHost.swift */; };
 		997C31D1712763E3B15C5597 /* ArrowScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */; };
 		17E089FC51064AF6DF42CE77 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4BDF8889B8BE769FFCDE6F /* CameraController.swift */; };
 		673EB8B50043B1C47F96DCE4 /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3893AC3DDF94190614DD2398 /* CameraPreview.swift */; };
@@ -307,6 +308,7 @@
 		C172965368D30FF21C48BE0C /* AppRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRouter.swift; sourceTree = "<group>"; };
 		127FF2ED17335A850D36EA5C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		B3C5C8FBF5162236684DD8F8 /* TradewindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradewindApp.swift; sourceTree = "<group>"; };
+		97FF90DE699466768C2D64AC /* UndoToastHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoToastHost.swift; sourceTree = "<group>"; };
 		29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowScreen.swift; sourceTree = "<group>"; };
 		1D4BDF8889B8BE769FFCDE6F /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		3893AC3DDF94190614DD2398 /* CameraPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreview.swift; sourceTree = "<group>"; };
@@ -529,6 +531,7 @@
 				C172965368D30FF21C48BE0C /* AppRouter.swift */,
 				127FF2ED17335A850D36EA5C /* RootView.swift */,
 				B3C5C8FBF5162236684DD8F8 /* TradewindApp.swift */,
+				97FF90DE699466768C2D64AC /* UndoToastHost.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -991,6 +994,7 @@
 				9B0C5277346B9394AA123DEA /* AppRouter.swift in Sources */,
 				B23AB94CE1A99674619B58DB /* RootView.swift in Sources */,
 				8B0DCC9391F53CD9D7534764 /* TradewindApp.swift in Sources */,
+				741319258D41E6B3092142C3 /* UndoToastHost.swift in Sources */,
 				997C31D1712763E3B15C5597 /* ArrowScreen.swift in Sources */,
 				17E089FC51064AF6DF42CE77 /* CameraController.swift in Sources */,
 				673EB8B50043B1C47F96DCE4 /* CameraPreview.swift in Sources */,
