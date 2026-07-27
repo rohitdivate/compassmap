@@ -24,15 +24,16 @@ struct MeterReminderTests {
         #expect(fire.timeIntervalSince(now) == 1_800)
     }
 
-    @Test("Labels stay chip-sized", arguments: [
-        (TimeInterval(15 * 60), "15 min"),
-        (TimeInterval(30 * 60), "30 min"),
-        (TimeInterval(60 * 60), "1 h"),
-        (TimeInterval(2 * 60 * 60), "2 h"),
-        (TimeInterval(90 * 60), "1 h 30 min"),
-    ])
-    func labels(duration: TimeInterval, expected: String) {
-        #expect(MeterReminder.label(for: duration) == expected)
+    // Plain assertions rather than `arguments:` — the tuple-array literal inside the @Test macro
+    // expansion was more than the type-checker would take, the same budget that keeps splitting
+    // view bodies in this project.
+    @Test("Labels stay chip-sized")
+    func labels() {
+        #expect(MeterReminder.label(for: 15 * 60) == "15 min")
+        #expect(MeterReminder.label(for: 30 * 60) == "30 min")
+        #expect(MeterReminder.label(for: 60 * 60) == "1 h")
+        #expect(MeterReminder.label(for: 2 * 60 * 60) == "2 h")
+        #expect(MeterReminder.label(for: 90 * 60) == "1 h 30 min")
     }
 
     @Test("A past fire date is stale, not active")
