@@ -60,6 +60,7 @@ struct SpotDetailView: View {
                     noteField
                     kindSection
                     reminderSection
+                    arrivalSection
                     actions
                 }
                 .padding(.bottom, 40)
@@ -73,6 +74,7 @@ struct SpotDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
                         .foregroundStyle(theme.accent)
+                        .accessibilityIdentifier("detail-done")
                 }
             }
         }
@@ -80,6 +82,9 @@ struct SpotDetailView: View {
         .onAppear {
             draftName = spot.name
             draftNote = spot.note ?? ""
+            // Names written by the old geocoding rule preferred the nearest business; looking at
+            // a spot quietly upgrades it to the street-or-district form.
+            store.refreshPlaceName(for: spot)
         }
     }
 
@@ -234,6 +239,11 @@ struct SpotDetailView: View {
     @ViewBuilder
     private var factRows: some View {
         VStack(spacing: 0) {
+            if let area = spot.placeName, !area.isEmpty {
+                // The line a person would say — "Baker Street, London" — above the raw numbers,
+                // which stay for anyone who actually wants them.
+                FactRow(symbol: "map.fill", label: "Area", value: area)
+            }
             FactRow(
                 symbol: "mappin.and.ellipse",
                 label: "Coordinates",
@@ -426,6 +436,65 @@ struct SpotDetailView: View {
             }
         }
         .padding(.horizontal, 18)
+    }
+
+    // MARK: - Arrival alert
+
+    /// A geofence around this spot: come within 200 m and a notification names it. The honest
+    /// caveat lives right under the toggle — without Always location access, iOS only delivers
+    /// entry events while the app is open, which for an arrival alert is nearly useless.
+    private var arrivalSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(eyebrow: "When you come within 200 m", title: "Arrival alert")
+            Surface(padding: 14) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Toggle(isOn: alertsBinding) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "location.circle.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(theme.accent)
+                            Text("Alert me when I'm near")
+                                .font(theme.cardTitleFont)
+                                .foregroundStyle(theme.text)
+                        }
+                    }
+                    .tint(theme.accent)
+                    .accessibilityIdentifier("arrival-toggle")
+
+                    if spot.alertsEnabled && location.authorizationStatus != .authorizedAlways {
+                        arrivalCaveat
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+    }
+
+    private var alertsBinding: Binding<Bool> {
+        Binding(
+            get: { spot.alertsEnabled },
+            set: { enabled in
+                store.setAlertsEnabled(spot, enabled)
+                FeedbackService.shared.lightTap()
+            }
+        )
+    }
+
+    @ViewBuilder
+    private var arrivalCaveat: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Only fires while the app is open unless location access is set to Always.")
+                .font(theme.captionFont)
+                .foregroundStyle(theme.textMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            if location.authorizationStatus == .authorizedWhenInUse {
+                Button("Allow Always access") {
+                    location.requestAlwaysAuthorization()
+                }
+                .font(theme.sans(13, weight: .medium))
+                .foregroundStyle(theme.accent)
+            }
+        }
     }
 
     // MARK: - Actions

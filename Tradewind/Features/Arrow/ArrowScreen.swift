@@ -22,6 +22,9 @@ struct ArrowScreen: View {
     @State private var celebrationStartedAt: Date?
     @State private var isShowingDetail = false
     @State private var hasAnnouncedArrival = false
+    /// Area name for a guest destination — a coordinate from a shared link has no stored
+    /// `placeName`, so it is resolved here and shown instead of raw degrees.
+    @State private var guestArea: String?
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
@@ -152,7 +155,26 @@ struct ArrowScreen: View {
         .padding(.top, 6)
     }
 
+    /// For a saved spot the title is a way into the details — a bigger, more obvious target than
+    /// the overflow menu, and one XCUITest can actually drive: SwiftUI's `Menu` never reports its
+    /// animations finished, so every interaction behind it stalls out the idle wait on CI.
+    @ViewBuilder
     private var titleBlock: some View {
+        if destination.spot != nil {
+            Button {
+                isShowingDetail = true
+            } label: {
+                titleContent
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityIdentifier("spot-title-button")
+            .accessibilityHint("Shows this spot's details")
+        } else {
+            titleContent
+        }
+    }
+
+    private var titleContent: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(engine.turnHint()).eyebrowStyle(theme: theme)
             Text(destination.name)
@@ -160,7 +182,8 @@ struct ArrowScreen: View {
                 .tracking(theme.displayTracking)
                 .foregroundStyle(.white)
                 .lineLimit(2)
-            if let subtitle = destination.subtitle {
+                .multilineTextAlignment(.leading)
+            if let subtitle = displaySubtitle {
                 Text(subtitle)
                     .font(theme.captionFont)
                     .foregroundStyle(.white.opacity(0.72))
@@ -184,6 +207,7 @@ struct ArrowScreen: View {
             } label: {
                 Label("Spot details", systemImage: "info.circle")
             }
+            .accessibilityIdentifier("spot-details-item")
             if let url = spot.deepLinkURL {
                 ShareLink(item: url) {
                     Label("Share this spot", systemImage: "square.and.arrow.up")
@@ -195,6 +219,7 @@ struct ArrowScreen: View {
         } label: {
             circularGlyph("ellipsis")
         }
+        .accessibilityIdentifier("spot-more-button")
         .accessibilityLabel("More options")
     }
 
@@ -272,7 +297,11 @@ struct ArrowScreen: View {
             .animation(.snappy(duration: 0.25), value: distance.value)
         } else {
             VStack(spacing: 6) {
-                ProgressView().tint(theme.accent)
+                // The spinner is the other animation that never ends: a simulator has no fix, so
+                // under the test seam it would keep the app from ever idling for XCUITest.
+                if !AppSettings.isUITesting {
+                    ProgressView().tint(theme.accent)
+                }
                 Text(location.isAuthorized ? "Finding you" : "Location is off")
                     .font(theme.captionFont)
                     .foregroundStyle(.white.opacity(0.72))
@@ -407,6 +436,13 @@ struct ArrowScreen: View {
 
     // MARK: - Behaviour
 
+    /// The guest area once resolved, otherwise whatever the destination already knows. Saved
+    /// spots carry their own `placeName`; only shared coordinates need the live lookup.
+    private var displaySubtitle: String? {
+        if destination.spot == nil, let guestArea { return guestArea }
+        return destination.subtitle
+    }
+
     private func begin() {
         engine.target = destination.coordinate
         engine.targetAltitude = destination.altitude
@@ -414,6 +450,16 @@ struct ArrowScreen: View {
         FeedbackService.shared.startPulsing()
         if engine.hasArrived {
             hasAnnouncedArrival = true
+        }
+        resolveGuestArea()
+    }
+
+    /// A shared coordinate arrives nameless; naming its street or district beats showing degrees.
+    private func resolveGuestArea() {
+        guard destination.spot == nil, guestArea == nil else { return }
+        let coordinate = destination.coordinate
+        Task { @MainActor in
+            guestArea = await GeocodeService.shared.placeName(for: coordinate)
         }
     }
 

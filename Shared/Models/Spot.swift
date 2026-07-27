@@ -52,6 +52,10 @@ final class Spot {
     /// enforces that.
     var isPinned: Bool = false
 
+    /// Whether to notify on coming within range of this spot. Off by default: a geofence per
+    /// spot would burn the 20-region budget on places nobody is walking back to.
+    var alertsEnabled: Bool = false
+
     /// Full-size JPEG. External storage keeps the database small and lets CloudKit move the
     /// bytes as an asset rather than inline.
     @Attribute(.externalStorage) var photoData: Data?
@@ -142,6 +146,20 @@ extension Spot {
             tripName: trip?.name,
             glyph: glyph,
             kindRaw: kindRaw
+        )
+    }
+
+    /// What `GeofencePlan` needs to know to decide whether this spot deserves one of the
+    /// twenty regions iOS will monitor.
+    var geofenceCandidate: GeofencePlan.Candidate {
+        GeofencePlan.Candidate(
+            id: id,
+            coordinate: coordinate,
+            isPinned: isPinned,
+            alertsEnabled: alertsEnabled,
+            capturedAt: capturedAt,
+            name: displayName,
+            note: note
         )
     }
 

@@ -184,6 +184,11 @@ struct RootView: View {
         let store = self.store
         store.adoptPinFromSnapshot()
         store.refreshSnapshot()
+        // Geofences drift while the app is closed — spots deleted from a widget flow, the person
+        // now on the other side of town — so every activation recomputes the armed set. Names for
+        // spots that never got one trickle in a few at a time, inside the geocoder's rate limit.
+        store.rearmGeofences()
+        store.resolveMissingPlaceNames()
 
         switch PendingAction.take() {
         case .openSpot(let id):
