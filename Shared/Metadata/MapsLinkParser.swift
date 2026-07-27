@@ -18,7 +18,7 @@ enum MapsLinkParser {
     }
 
     /// Why a link produced nothing, so the app can say something useful instead of "failed".
-    enum Failure: Equatable, Sendable {
+    enum Failure: Error, Equatable, Sendable {
         /// Not a maps link at all.
         case unrecognised
         /// A Google short link. These carry no coordinate; the redirect has to be followed first.
