@@ -259,7 +259,9 @@ extension NavigationUITests {
         nameField.tap()
         nameField.typeText("Trash Cove")
         app.buttons["save-here-confirm"].tap()
-        let card = app.staticTexts["Trash Cove"]
+        // firstMatch: after a restore the name can briefly match twice (the card's title and its
+        // combined accessibility element) and an ambiguous tap throws.
+        let card = app.staticTexts["Trash Cove"].firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 8))
 
         // Delete through the detail screen — deterministic buttons the whole way, unlike
