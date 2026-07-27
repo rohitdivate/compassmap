@@ -57,13 +57,14 @@ struct DistanceFormattingTests {
         #expect(DistanceFormatting.readout(metres: .infinity, preference: .metric).value == "—")
     }
 
-    @Test("Walking time reads like a person talking")
+    @Test("Walking time detours the straight line and admits it is an estimate")
     func walkingTime() {
         // Too close to be worth a number.
         #expect(DistanceFormatting.walkingTime(metres: 10) == nil)
-        #expect(DistanceFormatting.walkingTime(metres: 400) == "5 min walk")
-        #expect(DistanceFormatting.walkingTime(metres: 4_000) == "49 min walk")
-        #expect(DistanceFormatting.walkingTime(metres: 8_000) == "1 h 38 min walk")
+        // 400 m as the crow flies is ~540 m of street — 7 minutes, not the old optimistic 5.
+        #expect(DistanceFormatting.walkingTime(metres: 400) == "~7 min walk")
+        #expect(DistanceFormatting.walkingTime(metres: 4_000) == "~1 h 6 min walk")
+        #expect(DistanceFormatting.walkingTime(metres: 8_000) == "~2 h 12 min walk")
         // Beyond half a day on foot, "walk" is no longer advice.
         #expect(DistanceFormatting.walkingTime(metres: 300_000) == nil)
     }

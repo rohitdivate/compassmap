@@ -88,16 +88,22 @@ enum DistanceFormatting {
         return readout.value + readout.unit
     }
 
-    /// Walking time, phrased the way a person would say it.
+    /// Walking time from a straight-line distance, phrased as the estimate it is.
+    ///
+    /// The input is crow-flies and streets are not, so the detour factor is applied and the label
+    /// carries a tilde. Surfaces that can afford a routing request (the arrow screen, the detail
+    /// screen) replace this with the real answer from `WalkingRouteService`; this is for the
+    /// gallery, widgets and Siri, where a network call per row is not on.
     static func walkingTime(metres: Double, locale: Locale = .current) -> String? {
-        guard let seconds = BearingMath.walkingDuration(forDistance: metres) else { return nil }
+        let detoured = RoutePolicy.estimatedWalkMetres(crowMetres: metres)
+        guard let seconds = BearingMath.walkingDuration(forDistance: detoured) else { return nil }
         let minutes = Int((seconds / 60).rounded())
         if minutes < 1 { return "under a minute" }
-        if minutes < 60 { return "\(minutes) min walk" }
+        if minutes < 60 { return "~\(minutes) min walk" }
         let hours = minutes / 60
         let remainder = minutes % 60
         if hours > 12 { return nil }  // past the point where "walk" is useful advice
-        return remainder == 0 ? "\(hours) h walk" : "\(hours) h \(remainder) min walk"
+        return remainder == 0 ? "~\(hours) h walk" : "~\(hours) h \(remainder) min walk"
     }
 
     /// Signed elevation difference, e.g. "48 m above you".

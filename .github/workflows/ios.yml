@@ -123,6 +123,27 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
 
+      # ScreenshotTests photographs every screen over seeded demo data on every run. Exporting the
+      # attachments makes them a browsable artifact — the only way anyone developing this without
+      # a Mac ever sees the app, and the review material for design passes.
+      - name: Export screenshots
+        if: always()
+        run: |
+          if [ -d TestResults.xcresult ]; then
+            xcrun xcresulttool export attachments \
+              --path TestResults.xcresult \
+              --output-path Screenshots || true
+          fi
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Screenshots
+          path: Screenshots
+          retention-days: 7
+          if-no-files-found: ignore
+
       # The result bundle carries a screenshot of the screen at the moment each UI test failed. That
       # is the only way anyone developing this without a Mac can see what the app actually looked
       # like, so it is worth keeping even though it is only useful on red.

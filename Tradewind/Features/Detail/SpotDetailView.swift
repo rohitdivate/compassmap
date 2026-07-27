@@ -22,6 +22,8 @@ struct SpotDetailView: View {
     @State private var isEditingName = false
     @State private var isConfirmingDelete = false
     @State private var shareImage: ShareablePostcard?
+    /// The real walking route to this spot, fetched once on appear.
+    @State private var walkingRoute: WalkingRouteService.Answer?
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
@@ -85,6 +87,7 @@ struct SpotDetailView: View {
             // Names written by the old geocoding rule preferred the nearest business; looking at
             // a spot quietly upgrades it to the street-or-district form.
             store.refreshPlaceName(for: spot)
+            fetchWalkingRoute()
         }
     }
 
@@ -175,16 +178,44 @@ struct SpotDetailView: View {
                 }
                 .foregroundStyle(theme.text)
 
-                if let walk = DistanceFormatting.walkingTime(metres: metres) {
-                    Text(walk)
-                        .font(theme.captionFont)
-                        .foregroundStyle(theme.textMuted)
-                }
+                walkingLine(crowMetres: metres)
             } else {
                 Text("No location fix")
                     .font(theme.cardTitleFont)
                     .foregroundStyle(theme.textMuted)
             }
+        }
+    }
+
+    /// The routed walk when Apple's router has answered, the detour-factored estimate before —
+    /// never the raw crow-flies time, which reads shorter than any street can deliver.
+    @ViewBuilder
+    private func walkingLine(crowMetres: Double) -> some View {
+        switch RoutePolicy.readout(
+            routeMetres: walkingRoute?.distanceMetres,
+            routeSeconds: walkingRoute?.expectedSeconds,
+            crowMetres: crowMetres
+        ) {
+        case .routed(let minutes, let metres):
+            Text("\(minutes) min walk · \(DistanceFormatting.string(metres: metres, preference: settings.unitPreference)) on foot")
+                .font(theme.captionFont)
+                .foregroundStyle(theme.textMuted)
+        case .estimated(let minutes):
+            Text("~\(minutes) min walk")
+                .font(theme.captionFont)
+                .foregroundStyle(theme.textMuted)
+        case .none:
+            EmptyView()
+        }
+    }
+
+    private func fetchWalkingRoute() {
+        guard !AppSettings.isUITesting else { return }
+        guard let origin = location.coordinate, let crow = metresToSpot,
+              crow >= RoutePolicy.minimumUsefulCrowMetres else { return }
+        let destination = spot.coordinate
+        Task { @MainActor in
+            walkingRoute = await WalkingRouteService.shared.walkingRoute(from: origin, to: destination)
         }
     }
 
