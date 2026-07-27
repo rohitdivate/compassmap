@@ -26,8 +26,6 @@ struct TripsView: View {
 
     var body: some View {
         content
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("trips-screen")
             .alert("Name this trip", isPresented: $isNaming) {
                 TextField("Sri Lanka, March", text: $draftName)
                 Button("Create", action: createTrip)
@@ -130,6 +128,7 @@ struct TripsView: View {
                 Text("Trips")
                     .font(theme.displayTitleFont)
                     .foregroundStyle(theme.text)
+                    .accessibilityIdentifier("trips-screen")
             }
             Spacer()
             // Settings used to exist only in the Spots masthead, which meant it did not exist at all

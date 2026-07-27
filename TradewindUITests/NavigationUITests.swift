@@ -49,6 +49,16 @@ final class NavigationUITests: XCTestCase {
 
     private var settingsButton: XCUIElement { app.buttons["settings-button"] }
 
+    /// Queries across every element type rather than guessing one.
+    ///
+    /// `otherElements[id]` failed for the gallery and the map on the first CI run: SwiftUI does not
+    /// promise which element type an identified container becomes, and a bare identifier on a
+    /// container may not create a queryable element at all. Screen identifiers are now anchored to
+    /// concrete views, and this looks for them without caring what type they ended up as.
+    private func screen(_ identifier: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
     // MARK: - The app starts at all
 
     /// Guards the launch crash. The app used to die in `init()` before any view existed, and the
@@ -56,7 +66,7 @@ final class NavigationUITests: XCTestCase {
     /// so it needs an assertion on something real appearing.
     func testAppLaunchesAndReachesTheGallery() throws {
         XCTAssertTrue(
-            app.otherElements["gallery-screen"].waitForExistence(timeout: 10),
+            screen("gallery-screen").waitForExistence(timeout: 10),
             "The app did not reach the spots gallery. If the store failed to open, the startup report "
                 + "screen is showing instead — check the test's captured screenshot."
         )
@@ -87,7 +97,7 @@ final class NavigationUITests: XCTestCase {
             settingsButton.tap()
 
             XCTAssertTrue(
-                app.otherElements["settings-screen"].waitForExistence(timeout: 5),
+                screen("settings-screen").waitForExistence(timeout: 5),
                 "Tapping Settings on the \(tab) tab did not present it. Competing presentation "
                     + "modifiers on one host is the known cause."
             )
@@ -104,13 +114,13 @@ final class NavigationUITests: XCTestCase {
 
     func testTabsSwitchTheScreen() throws {
         tabBarButton("Map").tap()
-        XCTAssertTrue(app.otherElements["map-screen"].waitForExistence(timeout: 5))
+        XCTAssertTrue(screen("map-screen").waitForExistence(timeout: 5), "Map did not appear")
 
         tabBarButton("Trips").tap()
-        XCTAssertTrue(app.otherElements["trips-screen"].waitForExistence(timeout: 5))
+        XCTAssertTrue(screen("trips-screen").waitForExistence(timeout: 5), "Trips did not appear")
 
         tabBarButton("Spots").tap()
-        XCTAssertTrue(app.otherElements["gallery-screen"].waitForExistence(timeout: 5))
+        XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 5), "Spots did not appear")
     }
 
     /// The capture flow is presented as a full-screen cover from a different host than Settings, which
@@ -121,7 +131,7 @@ final class NavigationUITests: XCTestCase {
         shutter.tap()
 
         XCTAssertTrue(
-            app.otherElements["capture-screen"].waitForExistence(timeout: 5),
+            screen("capture-screen").waitForExistence(timeout: 5),
             "The capture cover did not present — check it has not started competing with Settings again."
         )
     }

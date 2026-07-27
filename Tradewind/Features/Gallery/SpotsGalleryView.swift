@@ -47,8 +47,7 @@ struct SpotsGalleryView: View {
         }
         .scrollIndicators(.hidden)
         .ignoresSafeArea(edges: .top)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("gallery-screen")
+
         .refreshable {
             location.requestOneShotLocation()
             store.refreshSnapshot()
@@ -141,6 +140,7 @@ struct SpotsGalleryView: View {
                             .font(theme.displayTitleFont)
                             .tracking(theme.displayTracking)
                             .foregroundStyle(theme.onHero)
+                            .accessibilityIdentifier("gallery-screen")
                     }
                     Spacer()
                     CircularButton(symbol: "slider.horizontal.3", onHero: true) {

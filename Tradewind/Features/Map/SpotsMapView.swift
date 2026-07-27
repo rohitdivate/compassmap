@@ -36,8 +36,6 @@ struct SpotsMapView: View {
             header
             if let selected { selectionBar(selected) }
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("map-screen")
     }
 
     private func selectionBar(_ selected: RankedSpot) -> some View {
@@ -132,6 +130,7 @@ struct SpotsMapView: View {
                 Text("The map")
                     .font(theme.titleFont)
                     .foregroundStyle(theme.text)
+                    .accessibilityIdentifier("map-screen")
             }
             Spacer()
             CircularButton(symbol: "slider.horizontal.3") {
