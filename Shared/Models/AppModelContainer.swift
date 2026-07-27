@@ -43,6 +43,7 @@ enum AppModelContainer {
     static func make(cloudSyncEnabled: Bool) -> Outcome {
         // Resolved once: it touches the filesystem, and the answer cannot change mid-launch.
         let hasAppGroup = AppGroup.containerURL != nil
+        print("[Tradewind] app group \(AppGroup.identifier) resolved: \(hasAppGroup)")
         var report = StartupReport(
             appGroupIdentifier: AppGroup.identifier,
             appGroupResolved: hasAppGroup,
@@ -54,6 +55,11 @@ enum AppModelContainer {
             cloudSyncEnabled: cloudSyncEnabled
         )
         for attempt in attempts {
+            // Announced *before* the attempt, not after. If a configuration traps rather than
+            // throwing — the whole reason this file was rewritten — then a line logged afterwards
+            // is a line that never appears, and the console shows nothing at all. This way the last
+            // thing printed names whatever took the process down.
+            print("[Tradewind] opening store: trying \(attempt.rawValue)")
             do {
                 let container = try open(attempt)
                 report.record(attempt.rawValue)
