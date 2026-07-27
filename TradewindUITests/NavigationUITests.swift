@@ -303,6 +303,39 @@ extension NavigationUITests {
         )
     }
 
+    /// Wave 6: plan a place you are not standing at — search an address, pick a suggestion, and
+    /// the spot saves with the place's own name. The suggestion is canned under the test seam,
+    /// so this proves the flow's plumbing without depending on Apple's live search.
+    func testPlanAPlaceByAddressSearch() throws {
+        app.buttons["save-here-button"].tap()
+        let elsewhere = app.buttons["where-elsewhere"]
+        XCTAssertTrue(elsewhere.waitForExistence(timeout: 5), "No 'Somewhere else' choice")
+        elsewhere.tap()
+
+        let field = app.textFields["address-search-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "No address search field")
+        field.tap()
+        field.typeText("palace")
+
+        let result = app.buttons["address-result-0"]
+        XCTAssertTrue(result.waitForExistence(timeout: 5), "No canned suggestion appeared")
+        result.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["planned-place-name"].waitForExistence(timeout: 5),
+            "Picking a suggestion did not resolve into a planned place"
+        )
+
+        let confirm = app.buttons["save-here-confirm"]
+        XCTAssertTrue(confirm.isEnabled, "Save stayed disabled after choosing a place")
+        confirm.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["Test Palace"].firstMatch.waitForExistence(timeout: 8),
+            "The planned spot did not appear in the gallery"
+        )
+    }
+
     /// Saves a photo-less spot through the save-here flow and returns its gallery card.
     private func saveSpot(named name: String) -> XCUIElement {
         app.buttons["save-here-button"].tap()

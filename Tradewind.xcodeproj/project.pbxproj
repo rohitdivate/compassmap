@@ -26,6 +26,7 @@
 		C860F55CA01E27C42980DDAD /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
 		28AB8E6391651A4EC01C067E /* MapsLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */; };
 		7D12B38EA3C0BDA230FF8ECA /* PlaceNameFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */; };
+		FAC82E66F8990BE5CD771284 /* PlannedPlace.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4DF21469FD7C6CC394BBDC3 /* PlannedPlace.swift */; };
 		8AB9231CF1D452197D7A52A5 /* AppModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */; };
 		2CA28E752005159223BB0D77 /* DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB15B7B19D7CA2ADE21733 /* DemoData.swift */; };
 		FA937D3E56A9017FBF08CA83 /* Spot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F6EC23B5ED8212D4AF9110 /* Spot.swift */; };
@@ -41,6 +42,7 @@
 		8B186F07918386F164F39F8C /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */; };
 		36FA936D6C06363036E78C33 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A3D8BCDBC98AF520738780 /* LocationService.swift */; };
 		79E9A35EC62EC76F0BAEC086 /* PhotoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923B02339B7B16EAE20164E /* PhotoService.swift */; };
+		F00270BF790D053C25B670D3 /* PlaceSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26629F5F7D7200868721CD5D /* PlaceSearchService.swift */; };
 		E7C1C15EDA3ACECF077F9D9F /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F99D1D36B9AB6FF1DE9A5DC /* ReminderService.swift */; };
 		98A03B648288823C5F906925 /* SpotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797F7DFA5C92376EC9F8433F /* SpotStore.swift */; };
 		E30884C442A1C48AF8251AFC /* UndoCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D3E13BFA1C83BCD33B4F9D /* UndoCenter.swift */; };
@@ -119,6 +121,7 @@
 		8D360309FC12C10DCF31357C /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
 		EBBBE5F1E3BAC3D05E77029A /* MapsLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */; };
 		FB11CA9F3EBC230C3B02127A /* PlaceNameFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */; };
+		D03AFBC329D9575984B4D309 /* PlannedPlace.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4DF21469FD7C6CC394BBDC3 /* PlannedPlace.swift */; };
 		778EB0809F2C5CE88713F07E /* AppModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */; };
 		02B04092711ED0D6885655F5 /* DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB15B7B19D7CA2ADE21733 /* DemoData.swift */; };
 		6D94F1AC8FB3A71A51A3A3EC /* Spot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F6EC23B5ED8212D4AF9110 /* Spot.swift */; };
@@ -134,6 +137,7 @@
 		7DE9A36F0AD6E5E9AF217761 /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */; };
 		61F83801C75D762CA15739C4 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A3D8BCDBC98AF520738780 /* LocationService.swift */; };
 		E521FD2E95289EAF0BC83BCC /* PhotoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923B02339B7B16EAE20164E /* PhotoService.swift */; };
+		0CFE5CC667ABF74A29D721F5 /* PlaceSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26629F5F7D7200868721CD5D /* PlaceSearchService.swift */; };
 		58EBC8F738E74F63DBF4344A /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F99D1D36B9AB6FF1DE9A5DC /* ReminderService.swift */; };
 		A34B21FB1C3A70C8BE4021F4 /* SpotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797F7DFA5C92376EC9F8433F /* SpotStore.swift */; };
 		0ECE01CE09D8D7F60A06FBE4 /* UndoCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D3E13BFA1C83BCD33B4F9D /* UndoCenter.swift */; };
@@ -185,6 +189,7 @@
 		1E5B4AFA4559336B9B05C8FA /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
 		8827569F793B0BAD2BB09310 /* MapsLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */; };
 		DD7F02C1BDDE6A89ECBAA3A9 /* PlaceNameFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */; };
+		98A1C3F4E1137350826FD97C /* PlannedPlace.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4DF21469FD7C6CC394BBDC3 /* PlannedPlace.swift */; };
 		DD4774E37BBE553470C48CB5 /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		13109515F2A891109F680B42 /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
@@ -212,6 +217,7 @@
 		D86169E5CA694C1A78258CD5 /* MeterReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */; };
 		9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */; };
 		31AF459C365B004AF6966B2D /* PlaceNameFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7892EF4E5477622F815BD2C7 /* PlaceNameFormatterTests.swift */; };
+		BFF4BE79F07CEAF68038FB63 /* PlannedPlaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56AA5FA46A81A92B8FB2D2A6 /* PlannedPlaceTests.swift */; };
 		C4FFEFF939D189091166B7A0 /* RoutePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E671DAB00FDDAF24C62CD1 /* RoutePolicyTests.swift */; };
 		5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */; };
 		CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */; };
@@ -271,6 +277,7 @@
 		12B5B258633A3B91B026EA57 /* LibraryAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAccess.swift; sourceTree = "<group>"; };
 		DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapsLinkParser.swift; sourceTree = "<group>"; };
 		88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceNameFormatter.swift; sourceTree = "<group>"; };
+		E4DF21469FD7C6CC394BBDC3 /* PlannedPlace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedPlace.swift; sourceTree = "<group>"; };
 		5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelContainer.swift; sourceTree = "<group>"; };
 		0BCB15B7B19D7CA2ADE21733 /* DemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoData.swift; sourceTree = "<group>"; };
 		48F6EC23B5ED8212D4AF9110 /* Spot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spot.swift; sourceTree = "<group>"; };
@@ -286,6 +293,7 @@
 		CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
 		69A3D8BCDBC98AF520738780 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		F923B02339B7B16EAE20164E /* PhotoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoService.swift; sourceTree = "<group>"; };
+		26629F5F7D7200868721CD5D /* PlaceSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceSearchService.swift; sourceTree = "<group>"; };
 		9F99D1D36B9AB6FF1DE9A5DC /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
 		797F7DFA5C92376EC9F8433F /* SpotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotStore.swift; sourceTree = "<group>"; };
 		E0D3E13BFA1C83BCD33B4F9D /* UndoCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoCenter.swift; sourceTree = "<group>"; };
@@ -358,6 +366,7 @@
 		A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeterReminderTests.swift; sourceTree = "<group>"; };
 		E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlanTests.swift; sourceTree = "<group>"; };
 		7892EF4E5477622F815BD2C7 /* PlaceNameFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceNameFormatterTests.swift; sourceTree = "<group>"; };
+		56AA5FA46A81A92B8FB2D2A6 /* PlannedPlaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedPlaceTests.swift; sourceTree = "<group>"; };
 		26E671DAB00FDDAF24C62CD1 /* RoutePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePolicyTests.swift; sourceTree = "<group>"; };
 		9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshotTests.swift; sourceTree = "<group>"; };
 		5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTimesTests.swift; sourceTree = "<group>"; };
@@ -452,6 +461,7 @@
 				12B5B258633A3B91B026EA57 /* LibraryAccess.swift */,
 				DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */,
 				88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */,
+				E4DF21469FD7C6CC394BBDC3 /* PlannedPlace.swift */,
 			);
 			path = Metadata;
 			sourceTree = "<group>";
@@ -481,6 +491,7 @@
 				CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */,
 				69A3D8BCDBC98AF520738780 /* LocationService.swift */,
 				F923B02339B7B16EAE20164E /* PhotoService.swift */,
+				26629F5F7D7200868721CD5D /* PlaceSearchService.swift */,
 				9F99D1D36B9AB6FF1DE9A5DC /* ReminderService.swift */,
 				797F7DFA5C92376EC9F8433F /* SpotStore.swift */,
 				E0D3E13BFA1C83BCD33B4F9D /* UndoCenter.swift */,
@@ -692,6 +703,7 @@
 				A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */,
 				E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */,
 				7892EF4E5477622F815BD2C7 /* PlaceNameFormatterTests.swift */,
+				56AA5FA46A81A92B8FB2D2A6 /* PlannedPlaceTests.swift */,
 				26E671DAB00FDDAF24C62CD1 /* RoutePolicyTests.swift */,
 				9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */,
 				5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */,
@@ -957,6 +969,7 @@
 				C860F55CA01E27C42980DDAD /* LibraryAccess.swift in Sources */,
 				28AB8E6391651A4EC01C067E /* MapsLinkParser.swift in Sources */,
 				7D12B38EA3C0BDA230FF8ECA /* PlaceNameFormatter.swift in Sources */,
+				FAC82E66F8990BE5CD771284 /* PlannedPlace.swift in Sources */,
 				8AB9231CF1D452197D7A52A5 /* AppModelContainer.swift in Sources */,
 				2CA28E752005159223BB0D77 /* DemoData.swift in Sources */,
 				FA937D3E56A9017FBF08CA83 /* Spot.swift in Sources */,
@@ -972,6 +985,7 @@
 				8B186F07918386F164F39F8C /* LiveActivityService.swift in Sources */,
 				36FA936D6C06363036E78C33 /* LocationService.swift in Sources */,
 				79E9A35EC62EC76F0BAEC086 /* PhotoService.swift in Sources */,
+				F00270BF790D053C25B670D3 /* PlaceSearchService.swift in Sources */,
 				E7C1C15EDA3ACECF077F9D9F /* ReminderService.swift in Sources */,
 				98A03B648288823C5F906925 /* SpotStore.swift in Sources */,
 				E30884C442A1C48AF8251AFC /* UndoCenter.swift in Sources */,
@@ -1038,6 +1052,7 @@
 				8D360309FC12C10DCF31357C /* LibraryAccess.swift in Sources */,
 				EBBBE5F1E3BAC3D05E77029A /* MapsLinkParser.swift in Sources */,
 				FB11CA9F3EBC230C3B02127A /* PlaceNameFormatter.swift in Sources */,
+				D03AFBC329D9575984B4D309 /* PlannedPlace.swift in Sources */,
 				778EB0809F2C5CE88713F07E /* AppModelContainer.swift in Sources */,
 				02B04092711ED0D6885655F5 /* DemoData.swift in Sources */,
 				6D94F1AC8FB3A71A51A3A3EC /* Spot.swift in Sources */,
@@ -1053,6 +1068,7 @@
 				7DE9A36F0AD6E5E9AF217761 /* LiveActivityService.swift in Sources */,
 				61F83801C75D762CA15739C4 /* LocationService.swift in Sources */,
 				E521FD2E95289EAF0BC83BCC /* PhotoService.swift in Sources */,
+				0CFE5CC667ABF74A29D721F5 /* PlaceSearchService.swift in Sources */,
 				58EBC8F738E74F63DBF4344A /* ReminderService.swift in Sources */,
 				A34B21FB1C3A70C8BE4021F4 /* SpotStore.swift in Sources */,
 				0ECE01CE09D8D7F60A06FBE4 /* UndoCenter.swift in Sources */,
@@ -1093,6 +1109,7 @@
 				1E5B4AFA4559336B9B05C8FA /* LibraryAccess.swift in Sources */,
 				8827569F793B0BAD2BB09310 /* MapsLinkParser.swift in Sources */,
 				DD7F02C1BDDE6A89ECBAA3A9 /* PlaceNameFormatter.swift in Sources */,
+				98A1C3F4E1137350826FD97C /* PlannedPlace.swift in Sources */,
 				DD4774E37BBE553470C48CB5 /* ActivityPushPolicy.swift in Sources */,
 				EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */,
 				13109515F2A891109F680B42 /* BuildInfo.swift in Sources */,
@@ -1120,6 +1137,7 @@
 				D86169E5CA694C1A78258CD5 /* MeterReminderTests.swift in Sources */,
 				9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */,
 				31AF459C365B004AF6966B2D /* PlaceNameFormatterTests.swift in Sources */,
+				BFF4BE79F07CEAF68038FB63 /* PlannedPlaceTests.swift in Sources */,
 				C4FFEFF939D189091166B7A0 /* RoutePolicyTests.swift in Sources */,
 				5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */,
 				CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */,
