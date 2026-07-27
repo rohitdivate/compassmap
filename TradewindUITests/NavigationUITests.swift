@@ -169,4 +169,38 @@ extension NavigationUITests {
             "The saved spot did not appear in the gallery"
         )
     }
+
+    /// Wave 2: save a spot, then find it by search — and prove a bogus query says so rather than
+    /// showing an empty page. The store is in-memory under -ui-testing, so the only spot present
+    /// is the one this test just made; both assertions are unambiguous.
+    func testSearchFindsSpotsAndSaysWhenNothingMatches() throws {
+        // Arrange: one spot, via the same flow the save-here test proves.
+        app.buttons["save-here-button"].tap()
+        XCTAssertTrue(app.buttons["kind-food"].waitForExistence(timeout: 5))
+        app.buttons["kind-food"].tap()
+        let nameField = app.textFields["save-here-name"]
+        nameField.tap()
+        nameField.typeText("Searchable Cove")
+        app.buttons["save-here-confirm"].tap()
+        XCTAssertTrue(app.staticTexts["Searchable Cove"].waitForExistence(timeout: 8))
+
+        // Search finds it, case-insensitively.
+        app.buttons["search-button"].tap()
+        let field = app.textFields["search-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "The search field did not appear")
+        field.tap()
+        field.typeText("cove")
+        XCTAssertTrue(
+            app.staticTexts["Searchable Cove"].waitForExistence(timeout: 5),
+            "Search did not find the spot by a lowercase fragment of its name"
+        )
+
+        // A query matching nothing explains itself instead of silently blanking the gallery.
+        field.tap()
+        field.typeText("zzzz")
+        XCTAssertTrue(
+            screen("no-matches").waitForExistence(timeout: 5),
+            "No no-matches state for a query that matches nothing"
+        )
+    }
 }
