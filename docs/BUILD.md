@@ -65,6 +65,27 @@ python3 Tools/setup_signing.py --prefix com.rohitdivate --paid
 
 `--reset` restores the `com.tradewind` placeholders, which is what the repository is committed with.
 
+### Updating: use `--update`, not `git pull`
+
+Every file this script rewrites is **tracked**, so once it has run your working tree is dirty and
+`git pull` refuses. That failure is quiet in practice: the pull does not happen, the next build
+produces the *previous* commit's app, and that is indistinguishable from a change that did not work.
+
+```bash
+python3 Tools/setup_signing.py --update
+```
+
+That discards the files the script owns — all of them regenerable — fast-forwards, re-applies your
+prefix, team and free/paid choice, and prints the commit you landed on. It refuses if anything else in
+the tree is modified, rather than throwing away work it does not own.
+
+**First time only**, if your checkout predates `--update` (it will not recognise the flag):
+
+```bash
+git stash && git pull --ff-only && python3 Tools/setup_signing.py --prefix com.rohitdivate --free
+git stash drop      # the stash holds only regenerated files
+```
+
 ### What that script touches
 
 So you can check it rather than trust it: the three bundle IDs in
