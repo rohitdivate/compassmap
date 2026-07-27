@@ -219,23 +219,33 @@ struct SettingsView: View {
                 Text(mode.summary)
                     .font(theme.captionFont)
                     .foregroundStyle(theme.text)
-                // Why, not just what — "widgets unavailable" reads as something you did wrong
-                // otherwise, and on a free Apple ID it is nothing of the sort.
-                if let explanation = mode.explanation {
-                    Text(explanation)
-                        .font(theme.labelFont)
-                        .foregroundStyle(theme.textMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                // Only worth saying when reopening could actually change the answer. Without an App
-                // Group it cannot, and promising otherwise sends someone to relaunch for nothing.
-                if settings.cloudSyncEnabled, mode != .syncing, mode.respondsToCloudToggle {
-                    Text("Changing this takes effect next time Tradewind opens.")
-                        .font(theme.labelFont)
-                        .foregroundStyle(theme.textMuted)
-                }
+                explanation(for: mode)
+                reopenHint(for: mode)
             }
             Spacer(minLength: 0)
+        }
+    }
+
+    /// Why, not just what — "widgets unavailable" reads as something you did wrong otherwise, and on
+    /// a free Apple ID it is nothing of the sort.
+    @ViewBuilder
+    private func explanation(for mode: PersistenceMode) -> some View {
+        if let explanation = mode.explanation {
+            Text(explanation)
+                .font(theme.labelFont)
+                .foregroundStyle(theme.textMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// Only worth saying when reopening could actually change the answer. Without an App Group it
+    /// cannot, and promising otherwise sends someone to relaunch for nothing.
+    @ViewBuilder
+    private func reopenHint(for mode: PersistenceMode) -> some View {
+        if settings.cloudSyncEnabled, mode != .syncing, mode.respondsToCloudToggle {
+            Text("Changing this takes effect next time Tradewind opens.")
+                .font(theme.labelFont)
+                .foregroundStyle(theme.textMuted)
         }
     }
 
