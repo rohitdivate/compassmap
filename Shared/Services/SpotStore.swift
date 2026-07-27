@@ -36,6 +36,7 @@ final class SpotStore {
         thumbnailData: Data?,
         glyph: String? = nil,
         note: String? = nil,
+        kind: PlaceKind = .place,
         trip: Trip? = nil
     ) -> Spot {
         let spot = Spot(
@@ -49,6 +50,7 @@ final class SpotStore {
             note: note,
             glyph: glyph,
             photoData: photoData,
+            kind: kind,
             trip: trip
         )
 

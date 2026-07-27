@@ -11,6 +11,8 @@ struct SharedSpot: Codable, Identifiable, Hashable, Sendable {
     var thumbnailFilename: String?
     var tripName: String?
     var glyph: String?
+    /// `PlaceKind.rawValue`. Optional so a snapshot written by an earlier build still decodes.
+    var kindRaw: String?
 
     init(
         id: UUID,
@@ -21,7 +23,8 @@ struct SharedSpot: Codable, Identifiable, Hashable, Sendable {
         capturedAt: Date,
         thumbnailFilename: String? = nil,
         tripName: String? = nil,
-        glyph: String? = nil
+        glyph: String? = nil,
+        kindRaw: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -32,6 +35,7 @@ struct SharedSpot: Codable, Identifiable, Hashable, Sendable {
         self.thumbnailFilename = thumbnailFilename
         self.tripName = tripName
         self.glyph = glyph
+        self.kindRaw = kindRaw
     }
 
     /// Where the widget can load this spot's thumbnail from, if one was written.
