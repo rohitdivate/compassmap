@@ -14,6 +14,10 @@ struct SpotDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     let spot: Spot
+    /// When set, the delete confirmation defers to the presenter instead of deleting here —
+    /// a sheet must not delete the very spot whose arrow screen is presenting it while the
+    /// dismissal is still animating.
+    var onDeleteConfirmed: (() -> Void)?
 
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
     @State private var location = LocationService.shared
@@ -22,6 +26,8 @@ struct SpotDetailView: View {
     @State private var isEditingName = false
     @State private var isConfirmingDelete = false
     @State private var shareImage: ShareablePostcard?
+    /// The real walking route to this spot, fetched once on appear.
+    @State private var walkingRoute: WalkingRouteService.Answer?
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
@@ -36,12 +42,16 @@ struct SpotDetailView: View {
             }
             .alert("Delete this spot?", isPresented: $isConfirmingDelete) {
                 Button("Delete", role: .destructive) {
-                    store.delete(spot)
+                    if let onDeleteConfirmed {
+                        onDeleteConfirmed()
+                    } else {
+                        store.delete(spot)
+                    }
                     dismiss()
                 }
                 Button("Keep it", role: .cancel) {}
             } message: {
-                Text("The photo goes with it. This cannot be undone.")
+                Text("It moves to Recently Deleted, in Settings, for \(TrashPolicy.retentionDays) days — then it's gone for good.")
             }
             .sheet(item: $shareImage) { postcard in
                 ShareSheet(items: shareItems(for: postcard))
@@ -85,6 +95,7 @@ struct SpotDetailView: View {
             // Names written by the old geocoding rule preferred the nearest business; looking at
             // a spot quietly upgrades it to the street-or-district form.
             store.refreshPlaceName(for: spot)
+            fetchWalkingRoute()
         }
     }
 
@@ -99,8 +110,13 @@ struct SpotDetailView: View {
 
     private var photo: some View {
         ZStack(alignment: .bottomLeading) {
-            PhotoView(data: spot.photoData, maxDimension: 1_600, glyph: spot.glyph)
-                .frame(height: 340)
+            PhotoView(
+                data: spot.photoData,
+                maxDimension: 1_600,
+                glyph: spot.glyph,
+                fallbackSymbol: spot.placeKind.symbol
+            )
+            .frame(height: 340)
                 .overlay {
                     LinearGradient(
                         colors: [.clear, .black.opacity(0.15), .black.opacity(0.8)],
@@ -175,16 +191,44 @@ struct SpotDetailView: View {
                 }
                 .foregroundStyle(theme.text)
 
-                if let walk = DistanceFormatting.walkingTime(metres: metres) {
-                    Text(walk)
-                        .font(theme.captionFont)
-                        .foregroundStyle(theme.textMuted)
-                }
+                walkingLine(crowMetres: metres)
             } else {
                 Text("No location fix")
                     .font(theme.cardTitleFont)
                     .foregroundStyle(theme.textMuted)
             }
+        }
+    }
+
+    /// The routed walk when Apple's router has answered, the detour-factored estimate before —
+    /// never the raw crow-flies time, which reads shorter than any street can deliver.
+    @ViewBuilder
+    private func walkingLine(crowMetres: Double) -> some View {
+        switch RoutePolicy.readout(
+            routeMetres: walkingRoute?.distanceMetres,
+            routeSeconds: walkingRoute?.expectedSeconds,
+            crowMetres: crowMetres
+        ) {
+        case .routed(let minutes, let metres):
+            Text("\(minutes) min walk · \(DistanceFormatting.string(metres: metres, preference: settings.unitPreference)) on foot")
+                .font(theme.captionFont)
+                .foregroundStyle(theme.textMuted)
+        case .estimated(let minutes):
+            Text("~\(minutes) min walk")
+                .font(theme.captionFont)
+                .foregroundStyle(theme.textMuted)
+        case .none:
+            EmptyView()
+        }
+    }
+
+    private func fetchWalkingRoute() {
+        guard !AppSettings.isUITesting else { return }
+        guard let origin = location.coordinate, let crow = metresToSpot,
+              crow >= RoutePolicy.minimumUsefulCrowMetres else { return }
+        let destination = spot.coordinate
+        Task { @MainActor in
+            walkingRoute = await WalkingRouteService.shared.walkingRoute(from: origin, to: destination)
         }
     }
 
@@ -516,6 +560,7 @@ struct SpotDetailView: View {
             SecondaryButton(title: "Delete spot", symbol: "trash") {
                 isConfirmingDelete = true
             }
+            .accessibilityIdentifier("detail-delete")
         }
         .padding(.horizontal, 18)
         .padding(.top, 6)

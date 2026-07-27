@@ -16,7 +16,11 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
 
-    @Query(sort: \Spot.capturedAt, order: .reverse) private var spots: [Spot]
+    @Query(
+        filter: #Predicate<Spot> { $0.deletedAt == nil },
+        sort: \Spot.capturedAt,
+        order: .reverse
+    ) private var spots: [Spot]
 
     @State private var engine = CompassEngine()
     @State private var location = LocationService.shared
@@ -98,6 +102,11 @@ struct RootView: View {
             if let destination {
                 arrowScreen(for: destination)
             }
+
+            // Above everything, including the arrow: a deletion from the detail sheet closes the
+            // arrow underneath it, and the undo must survive that collapse.
+            UndoToastHost()
+                .zIndex(30)
         }
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: router.activeSpotID)
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: router.guestDestination)
@@ -189,6 +198,8 @@ struct RootView: View {
         // spots that never got one trickle in a few at a time, inside the geocoder's rate limit.
         store.rearmGeofences()
         store.resolveMissingPlaceNames()
+        store.purgeExpired()
+        BackupService.shared.autoSnapshotIfDue(store: store)
 
         switch PendingAction.take() {
         case .openSpot(let id):

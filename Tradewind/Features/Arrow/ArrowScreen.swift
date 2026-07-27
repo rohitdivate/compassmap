@@ -25,6 +25,12 @@ struct ArrowScreen: View {
     /// Area name for a guest destination — a coordinate from a shared link has no stored
     /// `placeName`, so it is resolved here and shown instead of raw degrees.
     @State private var guestArea: String?
+    /// The real walking route, when Apple's router has answered. Nil shows the detour-factored
+    /// estimate instead — the compass distance is a straight line and streets are not.
+    @State private var walkingRoute: WalkingRouteService.Answer?
+    @State private var lastRouteRequest: RoutePolicy.Request?
+    /// Set by the detail sheet's delete confirmation; honoured once the sheet has closed.
+    @State private var deleteWhenDetailCloses = false
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
@@ -40,6 +46,7 @@ struct ArrowScreen: View {
             }
             .onChange(of: engine.distanceMetres) { _, _ in
                 pushLiveActivityUpdate()
+                refreshWalkingRoute()
             }
             .onChange(of: engine.hasArrived) { _, arrived in
                 handleArrival(arrived)
@@ -52,7 +59,16 @@ struct ArrowScreen: View {
             .background(Color.black.opacity(0.001))
             .onAppear(perform: begin)
             .onDisappear(perform: finish)
-            .sheet(isPresented: $isShowingDetail) { detailSheet }
+            // The delete waits for the sheet to finish closing. Deleting mid-dismissal removes
+            // this screen — the sheet's presenter — while the presentation is still animating,
+            // and SwiftUI leaves a phantom presentation that blocks the whole surface.
+            .sheet(isPresented: $isShowingDetail, onDismiss: performPendingDelete) { detailSheet }
+    }
+
+    private func performPendingDelete() {
+        guard deleteWhenDetailCloses, let spot = destination.spot else { return }
+        deleteWhenDetailCloses = false
+        store.delete(spot)
     }
 
     private var layers: some View {
@@ -80,7 +96,7 @@ struct ArrowScreen: View {
     @ViewBuilder
     private var detailSheet: some View {
         if let spot = destination.spot {
-            SpotDetailView(spot: spot)
+            SpotDetailView(spot: spot, onDeleteConfirmed: { deleteWhenDetailCloses = true })
                 .environment(settings)
                 .environment(\.theme, theme)
         }
@@ -313,9 +329,7 @@ struct ArrowScreen: View {
     @ViewBuilder
     private var pills: some View {
         HStack(spacing: 8) {
-            if let walk = engine.walkingTimeText() {
-                PillLabel(text: walk, symbol: "figure.walk")
-            }
+            walkingPill
             if let elevation = engine.elevationText() {
                 PillLabel(text: elevation, symbol: "mountain.2.fill")
             }
@@ -328,6 +342,46 @@ struct ArrowScreen: View {
     private func bearingLabel(_ bearing: Double) -> String {
         let point = BearingMath.compassPoint(forBearing: bearing)
         return "\(point) \(Int(bearing.rounded()))°"
+    }
+
+    /// A routed walk states itself as fact; the estimate admits the tilde.
+    @ViewBuilder
+    private var walkingPill: some View {
+        switch RoutePolicy.readout(
+            routeMetres: walkingRoute?.distanceMetres,
+            routeSeconds: walkingRoute?.expectedSeconds,
+            crowMetres: engine.distanceMetres
+        ) {
+        case .routed(let minutes, let metres):
+            PillLabel(
+                text: "\(minutes) min · \(DistanceFormatting.string(metres: metres, preference: settings.unitPreference)) on foot",
+                symbol: "figure.walk"
+            )
+        case .estimated(let minutes):
+            PillLabel(text: "~\(minutes) min walk", symbol: "figure.walk")
+        case .none:
+            EmptyView()
+        }
+    }
+
+    /// Asks the router when `RoutePolicy` says the last answer no longer covers where we are.
+    private func refreshWalkingRoute() {
+        guard !AppSettings.isUITesting else { return }
+        guard let origin = location.coordinate, let crow = engine.distanceMetres else { return }
+        let destination = destination.coordinate
+        guard RoutePolicy.shouldRequest(
+            previous: lastRouteRequest,
+            origin: origin,
+            destination: destination,
+            crowMetres: crow,
+            now: Date()
+        ) else { return }
+        lastRouteRequest = RoutePolicy.Request(origin: origin, destination: destination, at: Date())
+        Task { @MainActor in
+            if let answer = await WalkingRouteService.shared.walkingRoute(from: origin, to: destination) {
+                walkingRoute = answer
+            }
+        }
     }
 
     /// The one line of small print, when there is something honest to say about the reading.
@@ -373,6 +427,8 @@ struct ArrowScreen: View {
             .font(theme.captionFont)
             .foregroundStyle(colour)
             .multilineTextAlignment(.center)
+            // Wraps rather than truncates: "showing the direction fro…" helps nobody.
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Big numbers get a smaller face so "1,240" does not run off the edge.
@@ -452,6 +508,7 @@ struct ArrowScreen: View {
             hasAnnouncedArrival = true
         }
         resolveGuestArea()
+        refreshWalkingRoute()
     }
 
     /// A shared coordinate arrives nameless; naming its street or district beats showing degrees.

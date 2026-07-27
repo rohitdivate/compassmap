@@ -10,7 +10,7 @@ struct TripsView: View {
     @Environment(\.modelContext) private var modelContext
 
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
-    @Query private var spots: [Spot]
+    @Query(filter: #Predicate<Spot> { $0.deletedAt == nil }) private var spots: [Spot]
 
     @State private var location = LocationService.shared
     @State private var isNaming = false
@@ -209,14 +209,17 @@ private struct TripCard: View {
     private var caption: some View {
         VStack(alignment: .leading, spacing: 6) {
             pills
+            // The scrim under this caption resolves to the trip theme's canvas, so the text
+            // takes that theme's text colour — white was invisible on Spritz's cream whenever
+            // the trip had no cover photo.
             Text(trip.displayName)
                 .font(theme.titleFont)
-                .foregroundStyle(.white)
+                .foregroundStyle(tripTheme.text)
                 .lineLimit(1)
             if let subtitle = trip.subtitle, !subtitle.isEmpty {
                 Text(subtitle)
                     .font(theme.captionFont)
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundStyle(tripTheme.text.opacity(0.75))
             }
         }
     }

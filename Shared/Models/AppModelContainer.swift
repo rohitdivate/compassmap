@@ -54,6 +54,11 @@ enum AppModelContainer {
                 for: schema,
                 configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
             ) {
+                // The screenshot suite photographs a populated app; every other UI test wants
+                // an empty one. Same seam, one extra argument.
+                if DemoData.isRequested {
+                    DemoData.seed(into: container)
+                }
                 report.record("memoryOnly (ui-testing)")
                 return .opened(Result(container: container, mode: .memoryOnly, report: report))
             }

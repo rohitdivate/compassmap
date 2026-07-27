@@ -19,6 +19,7 @@ struct SettingsView: View {
                     measurements
                     compassSection
                     feedbackSection
+                    DataSection()
                     syncSection
                     widgetHelp
                     about

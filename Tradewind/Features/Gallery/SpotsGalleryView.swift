@@ -10,7 +10,11 @@ struct SpotsGalleryView: View {
     @Environment(\.theme) private var theme
     @Environment(\.modelContext) private var modelContext
 
-    @Query(sort: \Spot.capturedAt, order: .reverse) private var spots: [Spot]
+    @Query(
+        filter: #Predicate<Spot> { $0.deletedAt == nil },
+        sort: \Spot.capturedAt,
+        order: .reverse
+    ) private var spots: [Spot]
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
 
     @State private var location = LocationService.shared
@@ -98,6 +102,7 @@ struct SpotsGalleryView: View {
                 hero: hero,
                 onOpen: { open(featured.spot) }
             )
+            .contextMenu { spotMenu(for: featured.spot) }
             .padding(.horizontal, 18)
         }
         if ranked.count > 1 { grid }
@@ -374,6 +379,8 @@ struct SpotsGalleryView: View {
             }
         }
         Button(role: .destructive) {
+            // The undo toast is a root-level overlay fed by UndoCenter from inside the store —
+            // this action only deletes.
             store.delete(spot)
         } label: {
             Label("Delete", systemImage: "trash")
