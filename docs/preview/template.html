@@ -617,6 +617,41 @@
   .lockscreen .t-label { color: #fff; }
   .lockscreen .num { color: #fff; }
 
+  /* The Live Activity is not an accessory widget: it gets a solid mood-tinted ground rather than
+     the system's translucent vibrancy. This is the surface that used to be cream in Spritz. */
+  .live-activity {
+    border-radius: 18px;
+    padding: 14px;
+    background: var(--activity-tint);
+    border: var(--activity-border);
+    color: #fff;
+  }
+  .live-activity .t-label { color: #fff; }
+  .live-activity .num { color: #fff; }
+
+  /* Bearing dial: a ring, a north tick, and the arrow — so the angle means something. */
+  .dial {
+    position: relative;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    flex: none;
+    display: grid;
+    place-items: center;
+  }
+  .dial .north {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--f-body);
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
   .ring {
     width: 54px;
     height: 54px;
@@ -927,6 +962,7 @@
       heroGradient: ["#FF8C42", "#FF6B8B", "#B06AB3"],
       arrow: ["#D8456B", "#FF6B8B", "#FFB08C"],
       celebration: ["#FF6B8B", "#FF8C42", "#B8E62E", "#1FA3B8"],
+      activityTint: "#0A2730",
       elevation: "shadow",
       radii: { control: "999px", card: "20px", row: "16px", avatar: "14px" },
       fonts: { display: "Instrument Serif", body: "DM Sans", mono: "DM Mono" },
@@ -975,6 +1011,7 @@
       heroGradient: null,
       arrow: ["#7E8F3C", "#9CBB3E", "#C6F24E"],
       celebration: ["#C6F24E", "#9CBB3E", "#4ADE80", "#F2F4F7"],
+      activityTint: "#131519",
       elevation: "hairline",
       radii: { control: "10px", card: "16px", row: "14px", avatar: "9px" },
       fonts: { display: "Space Grotesk", body: "Space Grotesk", mono: "JetBrains Mono" },
@@ -1668,24 +1705,31 @@
                 </div>
               </div>
             </div>
-            <div class="lockscreen">
+            <div class="live-activity">
               <div style="display:flex;gap:14px;align-items:center">
-                <div style="width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
-                     background:color-mix(in srgb,var(--accent) 16%,transparent);
-                     border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)">${arrow(30, 34)}</div>
-                <div style="flex:1">
+                <div class="dial"><span class="north">N</span>${arrow(28, 34)}</div>
+                <div style="flex:1;min-width:0">
                   <p class="t-eyebrow" style="margin:0 0 3px;color:var(--accent)">Heading to</p>
                   <div class="t-card" style="color:#fff">Ravana Falls</div>
+                  <div class="t-label" style="color:rgba(255,255,255,.6)">Ella, Sri Lanka</div>
                 </div>
                 <div style="text-align:right">
-                  <div style="display:flex;align-items:baseline;gap:2px">
+                  <div style="display:flex;align-items:baseline;gap:2px;justify-content:flex-end">
                     <span class="num" style="font-size:26px">240</span>
-                    <span class="num" style="font-size:13px;opacity:.7">m</span>
+                    <span class="num" style="font-size:13px;color:rgba(255,255,255,.6)">m</span>
                   </div>
                   <div class="t-label" style="color:var(--accent)">NE</div>
                 </div>
               </div>
-              <div class="progress" style="margin-top:12px"><i style="width:76%"></i></div>
+              <div style="height:5px;border-radius:99px;background:rgba(255,255,255,.18);
+                   margin-top:12px;overflow:hidden">
+                <i style="display:block;height:100%;width:64%;border-radius:99px;
+                     background:var(--accent)"></i>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px">
+                <span class="t-label" style="color:rgba(255,255,255,.62)">3 min walk</span>
+                <span class="num" style="font-size:10px;color:var(--accent)">2:56</span>
+              </div>
             </div>
             </div>
 
@@ -1854,6 +1898,10 @@
     // Elevation is the structural difference: a soft shadow, or a hairline and no shadow at all.
     const hairline = m.elevation === "hairline";
     const quiet = hairline ? m.surfaceRaised : "rgba(43,27,34,.07)";
+    set("--activity-tint", m.activityTint);
+    // Nomad separates with a hairline and nothing else; on the Lock Screen its own surface is close
+    // enough to the wallpaper that an edge is what makes the card a card.
+    set("--activity-border", hairline ? "1px solid rgba(255,255,255,.14)" : "0 solid transparent");
     set("--card-shadow", hairline ? "none" : "0 1px 3px rgba(43,27,34,.12)");
     set("--card-border", hairline ? `1px solid ${m.hairline}` : "0 solid transparent");
     set("--bar-shadow", hairline ? "none" : "0 6px 18px rgba(43,27,34,.16)");

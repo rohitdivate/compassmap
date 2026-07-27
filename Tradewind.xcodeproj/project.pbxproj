@@ -21,6 +21,7 @@
 		2F299BF4AD75871EE194E35A /* DistanceFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21859BC563A2335055087A2A /* DistanceFormatting.swift */; };
 		600F968AE78FF26C098F1BAD /* SolarTimes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DC110DA28F22776CC3C17F /* SolarTimes.swift */; };
 		AEBCB0B45C82BAE1855D002D /* GPSMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */; };
+		C860F55CA01E27C42980DDAD /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
 		8AB9231CF1D452197D7A52A5 /* AppModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */; };
 		FA937D3E56A9017FBF08CA83 /* Spot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F6EC23B5ED8212D4AF9110 /* Spot.swift */; };
 		ACC70B44AD8DF549DC23B199 /* Trip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681735495DF5481567AA0F94 /* Trip.swift */; };
@@ -34,10 +35,14 @@
 		36FA936D6C06363036E78C33 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A3D8BCDBC98AF520738780 /* LocationService.swift */; };
 		79E9A35EC62EC76F0BAEC086 /* PhotoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923B02339B7B16EAE20164E /* PhotoService.swift */; };
 		98A03B648288823C5F906925 /* SpotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797F7DFA5C92376EC9F8433F /* SpotStore.swift */; };
+		1596C55B8965DC107BA34141 /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
+		5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		AEF17A23956928DE882ED870 /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
 		C14E7EF100A2606CC9EB12D7 /* SharedSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */; };
+		1A8FB0CF949D7D1AA07E02F0 /* StartupReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA90304C5487CFB05F45986 /* StartupReport.swift */; };
+		3204BFF7A53BEA027E513BCD /* WidgetDataState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C924A4B01F33B8221F6F1A7 /* WidgetDataState.swift */; };
 		9B0C5277346B9394AA123DEA /* AppRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C172965368D30FF21C48BE0C /* AppRouter.swift */; };
 		B23AB94CE1A99674619B58DB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127FF2ED17335A850D36EA5C /* RootView.swift */; };
 		8B0DCC9391F53CD9D7534764 /* TradewindApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C5C8FBF5162236684DD8F8 /* TradewindApp.swift */; };
@@ -54,6 +59,7 @@
 		50FDD2DF8990E60350CA51D8 /* PhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB55D7A10E434A3CECB17477 /* PhotoView.swift */; };
 		4E6FE465ACE4CB67735FE829 /* PostcardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D62CF5C390B282A698CE9 /* PostcardView.swift */; };
 		5ED41640D5DEE7016B23EEE3 /* SpotRanking.swift in Sources */ = {isa = PBXBuildFile; fileRef = C49C155B03BCAE867DAA1C1B /* SpotRanking.swift */; };
+		313A5A7D179E9633D5185C89 /* StartupFailureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E4C5EEE357CD6F98DA56AD /* StartupFailureView.swift */; };
 		6FC7773FD48D4EC5B0A066B5 /* TripsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57139ABD337D0B6545719EFF /* TripsView.swift */; };
 		255C3F7C0C895838B884D86A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 98A84084E4E4B4CEBD6BDFDA /* Assets.xcassets */; };
 		0E38DC20D0C8F449873E66BB /* DMMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FB5CF52E6FC5921457C8BC35 /* DMMono-Medium.ttf */; };
@@ -88,6 +94,7 @@
 		71CE6D6A58E50CE1A80B7C7B /* DistanceFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21859BC563A2335055087A2A /* DistanceFormatting.swift */; };
 		818A50B26C1039CE6D0C0E09 /* SolarTimes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DC110DA28F22776CC3C17F /* SolarTimes.swift */; };
 		8177A18667781B456F8E27D2 /* GPSMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */; };
+		8D360309FC12C10DCF31357C /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
 		778EB0809F2C5CE88713F07E /* AppModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */; };
 		6D94F1AC8FB3A71A51A3A3EC /* Spot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F6EC23B5ED8212D4AF9110 /* Spot.swift */; };
 		68A39D27CE82EADFB8241CBB /* Trip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681735495DF5481567AA0F94 /* Trip.swift */; };
@@ -101,10 +108,14 @@
 		61F83801C75D762CA15739C4 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A3D8BCDBC98AF520738780 /* LocationService.swift */; };
 		E521FD2E95289EAF0BC83BCC /* PhotoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923B02339B7B16EAE20164E /* PhotoService.swift */; };
 		A34B21FB1C3A70C8BE4021F4 /* SpotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797F7DFA5C92376EC9F8433F /* SpotStore.swift */; };
+		43E6586B69FDA319FAE191AC /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
+		D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		C1A85BF6D29E0E2E8D1DB0AA /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
 		FA337C2513D3E42FB45E07F3 /* SharedSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */; };
+		AFFB929D16B9D329C14A3355 /* StartupReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA90304C5487CFB05F45986 /* StartupReport.swift */; };
+		186D7972DDA84FA7F368B88F /* WidgetDataState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C924A4B01F33B8221F6F1A7 /* WidgetDataState.swift */; };
 		DA52B76166101FCCA2912C40 /* HeadingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125CE65EDDF92126FF28520B /* HeadingLiveActivity.swift */; };
 		76024F7BB4BA517BAB209E71 /* NearestSpotsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F88A74DF2A4F4714F376064 /* NearestSpotsWidget.swift */; };
 		3AE7587AF62D300668054BAA /* SpotCompassWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5018EF8FEAFADD83CAFF7F /* SpotCompassWidget.swift */; };
@@ -132,13 +143,21 @@
 		6FA017D9921357D3AB2751EF /* DistanceFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21859BC563A2335055087A2A /* DistanceFormatting.swift */; };
 		DC2A9A01F38CDF823F9B5F73 /* SolarTimes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DC110DA28F22776CC3C17F /* SolarTimes.swift */; };
 		690FE776F9A03E323CE4A73B /* GPSMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */; };
+		1E5B4AFA4559336B9B05C8FA /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
+		DD4774E37BBE553470C48CB5 /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
+		205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		864284B0766E066F2F7DAC7A /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
 		24DF2F34A6A9CDC844B2CC6C /* SharedSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */; };
+		405B744D8C1874CC39E866C3 /* StartupReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA90304C5487CFB05F45986 /* StartupReport.swift */; };
+		687440073706D9D1DFC5E255 /* WidgetDataState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C924A4B01F33B8221F6F1A7 /* WidgetDataState.swift */; };
+		A8C59349DB0F0F033B269E2D /* ActivityPushPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27514C430B9CC6F894B26C4E /* ActivityPushPolicyTests.swift */; };
 		743DA49B0898AD146EF71370 /* BearingMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */; };
 		BCE705FECEDC38EF7F1B7C5E /* DistanceFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */; };
 		B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */; };
+		762D5EC6D231B9F53DCD84FF /* LibraryAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */; };
+		9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */; };
 		5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */; };
 		CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */; };
 	/* End PBXBuildFile section */
@@ -182,6 +201,7 @@
 		21859BC563A2335055087A2A /* DistanceFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceFormatting.swift; sourceTree = "<group>"; };
 		A0DC110DA28F22776CC3C17F /* SolarTimes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTimes.swift; sourceTree = "<group>"; };
 		1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSMetadata.swift; sourceTree = "<group>"; };
+		12B5B258633A3B91B026EA57 /* LibraryAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAccess.swift; sourceTree = "<group>"; };
 		5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelContainer.swift; sourceTree = "<group>"; };
 		48F6EC23B5ED8212D4AF9110 /* Spot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spot.swift; sourceTree = "<group>"; };
 		681735495DF5481567AA0F94 /* Trip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trip.swift; sourceTree = "<group>"; };
@@ -195,10 +215,14 @@
 		69A3D8BCDBC98AF520738780 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		F923B02339B7B16EAE20164E /* PhotoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoService.swift; sourceTree = "<group>"; };
 		797F7DFA5C92376EC9F8433F /* SpotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotStore.swift; sourceTree = "<group>"; };
+		CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityPushPolicy.swift; sourceTree = "<group>"; };
 		C07064A66E87DD3F7B94CB72 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAction.swift; sourceTree = "<group>"; };
+		6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlan.swift; sourceTree = "<group>"; };
 		CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshot.swift; sourceTree = "<group>"; };
 		2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshotStore.swift; sourceTree = "<group>"; };
+		9DA90304C5487CFB05F45986 /* StartupReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupReport.swift; sourceTree = "<group>"; };
+		9C924A4B01F33B8221F6F1A7 /* WidgetDataState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataState.swift; sourceTree = "<group>"; };
 		C172965368D30FF21C48BE0C /* AppRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRouter.swift; sourceTree = "<group>"; };
 		127FF2ED17335A850D36EA5C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		B3C5C8FBF5162236684DD8F8 /* TradewindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradewindApp.swift; sourceTree = "<group>"; };
@@ -215,6 +239,7 @@
 		EB55D7A10E434A3CECB17477 /* PhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoView.swift; sourceTree = "<group>"; };
 		F34D62CF5C390B282A698CE9 /* PostcardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostcardView.swift; sourceTree = "<group>"; };
 		C49C155B03BCAE867DAA1C1B /* SpotRanking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotRanking.swift; sourceTree = "<group>"; };
+		D8E4C5EEE357CD6F98DA56AD /* StartupFailureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupFailureView.swift; sourceTree = "<group>"; };
 		57139ABD337D0B6545719EFF /* TripsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripsView.swift; sourceTree = "<group>"; };
 		7D55C9E563392C7C775D84C1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		98A84084E4E4B4CEBD6BDFDA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -236,9 +261,12 @@
 		B5C7B86207EB56D379BEC709 /* SpaceGrotesk-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = text; path = "SpaceGrotesk-Medium.ttf"; sourceTree = "<group>"; };
 		7AFA0D312286A8597AF5DD15 /* SpaceGrotesk-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = text; path = "SpaceGrotesk-Regular.ttf"; sourceTree = "<group>"; };
 		8A24B8B4BAD990906AD7FC57 /* Tradewind.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tradewind.entitlements; sourceTree = "<group>"; };
+		27514C430B9CC6F894B26C4E /* ActivityPushPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityPushPolicyTests.swift; sourceTree = "<group>"; };
 		6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BearingMathTests.swift; sourceTree = "<group>"; };
 		1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceFormattingTests.swift; sourceTree = "<group>"; };
 		1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSMetadataTests.swift; sourceTree = "<group>"; };
+		120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAccessTests.swift; sourceTree = "<group>"; };
+		E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlanTests.swift; sourceTree = "<group>"; };
 		9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshotTests.swift; sourceTree = "<group>"; };
 		5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTimesTests.swift; sourceTree = "<group>"; };
 		125CE65EDDF92126FF28520B /* HeadingLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingLiveActivity.swift; sourceTree = "<group>"; };
@@ -316,6 +344,7 @@
 			isa = PBXGroup;
 			children = (
 				1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */,
+				12B5B258633A3B91B026EA57 /* LibraryAccess.swift */,
 			);
 			path = Metadata;
 			sourceTree = "<group>";
@@ -350,10 +379,14 @@
 		53839AC729C28CA0E2DD503F /* Snapshot */ = {
 			isa = PBXGroup;
 			children = (
+				CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */,
 				C07064A66E87DD3F7B94CB72 /* AppGroup.swift */,
 				B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */,
+				6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */,
 				CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */,
 				2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */,
+				9DA90304C5487CFB05F45986 /* StartupReport.swift */,
+				9C924A4B01F33B8221F6F1A7 /* WidgetDataState.swift */,
 			);
 			path = Snapshot;
 			sourceTree = "<group>";
@@ -447,6 +480,7 @@
 				EB55D7A10E434A3CECB17477 /* PhotoView.swift */,
 				F34D62CF5C390B282A698CE9 /* PostcardView.swift */,
 				C49C155B03BCAE867DAA1C1B /* SpotRanking.swift */,
+				D8E4C5EEE357CD6F98DA56AD /* StartupFailureView.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -523,9 +557,12 @@
 		F5E03DA4C6AA025D77291CB0 /* TradewindTests */ = {
 			isa = PBXGroup;
 			children = (
+				27514C430B9CC6F894B26C4E /* ActivityPushPolicyTests.swift */,
 				6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */,
 				1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */,
 				1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */,
+				120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */,
+				E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */,
 				9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */,
 				5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */,
 			);
@@ -744,6 +781,7 @@
 				2F299BF4AD75871EE194E35A /* DistanceFormatting.swift in Sources */,
 				600F968AE78FF26C098F1BAD /* SolarTimes.swift in Sources */,
 				AEBCB0B45C82BAE1855D002D /* GPSMetadata.swift in Sources */,
+				C860F55CA01E27C42980DDAD /* LibraryAccess.swift in Sources */,
 				8AB9231CF1D452197D7A52A5 /* AppModelContainer.swift in Sources */,
 				FA937D3E56A9017FBF08CA83 /* Spot.swift in Sources */,
 				ACC70B44AD8DF549DC23B199 /* Trip.swift in Sources */,
@@ -757,10 +795,14 @@
 				36FA936D6C06363036E78C33 /* LocationService.swift in Sources */,
 				79E9A35EC62EC76F0BAEC086 /* PhotoService.swift in Sources */,
 				98A03B648288823C5F906925 /* SpotStore.swift in Sources */,
+				1596C55B8965DC107BA34141 /* ActivityPushPolicy.swift in Sources */,
 				DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */,
 				F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */,
+				5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */,
 				AEF17A23956928DE882ED870 /* SharedSnapshot.swift in Sources */,
 				C14E7EF100A2606CC9EB12D7 /* SharedSnapshotStore.swift in Sources */,
+				1A8FB0CF949D7D1AA07E02F0 /* StartupReport.swift in Sources */,
+				3204BFF7A53BEA027E513BCD /* WidgetDataState.swift in Sources */,
 				9B0C5277346B9394AA123DEA /* AppRouter.swift in Sources */,
 				B23AB94CE1A99674619B58DB /* RootView.swift in Sources */,
 				8B0DCC9391F53CD9D7534764 /* TradewindApp.swift in Sources */,
@@ -777,6 +819,7 @@
 				50FDD2DF8990E60350CA51D8 /* PhotoView.swift in Sources */,
 				4E6FE465ACE4CB67735FE829 /* PostcardView.swift in Sources */,
 				5ED41640D5DEE7016B23EEE3 /* SpotRanking.swift in Sources */,
+				313A5A7D179E9633D5185C89 /* StartupFailureView.swift in Sources */,
 				6FC7773FD48D4EC5B0A066B5 /* TripsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -799,6 +842,7 @@
 				71CE6D6A58E50CE1A80B7C7B /* DistanceFormatting.swift in Sources */,
 				818A50B26C1039CE6D0C0E09 /* SolarTimes.swift in Sources */,
 				8177A18667781B456F8E27D2 /* GPSMetadata.swift in Sources */,
+				8D360309FC12C10DCF31357C /* LibraryAccess.swift in Sources */,
 				778EB0809F2C5CE88713F07E /* AppModelContainer.swift in Sources */,
 				6D94F1AC8FB3A71A51A3A3EC /* Spot.swift in Sources */,
 				68A39D27CE82EADFB8241CBB /* Trip.swift in Sources */,
@@ -812,10 +856,14 @@
 				61F83801C75D762CA15739C4 /* LocationService.swift in Sources */,
 				E521FD2E95289EAF0BC83BCC /* PhotoService.swift in Sources */,
 				A34B21FB1C3A70C8BE4021F4 /* SpotStore.swift in Sources */,
+				43E6586B69FDA319FAE191AC /* ActivityPushPolicy.swift in Sources */,
 				607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */,
 				FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */,
+				D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */,
 				C1A85BF6D29E0E2E8D1DB0AA /* SharedSnapshot.swift in Sources */,
 				FA337C2513D3E42FB45E07F3 /* SharedSnapshotStore.swift in Sources */,
+				AFFB929D16B9D329C14A3355 /* StartupReport.swift in Sources */,
+				186D7972DDA84FA7F368B88F /* WidgetDataState.swift in Sources */,
 				DA52B76166101FCCA2912C40 /* HeadingLiveActivity.swift in Sources */,
 				76024F7BB4BA517BAB209E71 /* NearestSpotsWidget.swift in Sources */,
 				3AE7587AF62D300668054BAA /* SpotCompassWidget.swift in Sources */,
@@ -832,13 +880,21 @@
 				6FA017D9921357D3AB2751EF /* DistanceFormatting.swift in Sources */,
 				DC2A9A01F38CDF823F9B5F73 /* SolarTimes.swift in Sources */,
 				690FE776F9A03E323CE4A73B /* GPSMetadata.swift in Sources */,
+				1E5B4AFA4559336B9B05C8FA /* LibraryAccess.swift in Sources */,
+				DD4774E37BBE553470C48CB5 /* ActivityPushPolicy.swift in Sources */,
 				EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */,
 				79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */,
+				205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */,
 				864284B0766E066F2F7DAC7A /* SharedSnapshot.swift in Sources */,
 				24DF2F34A6A9CDC844B2CC6C /* SharedSnapshotStore.swift in Sources */,
+				405B744D8C1874CC39E866C3 /* StartupReport.swift in Sources */,
+				687440073706D9D1DFC5E255 /* WidgetDataState.swift in Sources */,
+				A8C59349DB0F0F033B269E2D /* ActivityPushPolicyTests.swift in Sources */,
 				743DA49B0898AD146EF71370 /* BearingMathTests.swift in Sources */,
 				BCE705FECEDC38EF7F1B7C5E /* DistanceFormattingTests.swift in Sources */,
 				B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */,
+				762D5EC6D231B9F53DCD84FF /* LibraryAccessTests.swift in Sources */,
+				9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */,
 				5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */,
 				CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */,
 			);

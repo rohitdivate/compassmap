@@ -45,13 +45,14 @@ iPhone for anything involving the compass or camera.
 ```bash
 git clone https://github.com/rohitdivate/compassmap.git
 cd compassmap
-python3 Tools/setup_signing.py --prefix com.yourname --team ABCDE12345
+python3 Tools/setup_signing.py --prefix com.rohitdivate --free   # your own name in the prefix
 open Tradewind.xcodeproj
 ```
 
 That rewrites the placeholder bundle identifiers to yours and regenerates the project, so the only
-step left in Xcode is pressing Run. On a **free** Apple ID add `--free`: the app runs for seven days
-at a time and the widgets stay empty, because a Personal Team cannot provision an App Group.
+step left in Xcode is pressing Run. Drop `--free` if you have a paid Apple Developer membership; keep
+it if you do not, because a free Apple ID gets a Personal Team, which cannot provision the App Group
+the widgets read through — the app runs fully, for seven days at a time, with the widgets empty.
 **[`docs/BUILD.md`](docs/BUILD.md)** has the full table and a device checklist.
 
 ## How it is put together
@@ -84,9 +85,12 @@ test bundle compiles them directly, so there is no host app and no signing in th
 rotation makes the arrow jitter; averaging them makes it spin the long way past north. The filter
 steps along the shortest arc and hands SwiftUI an unwrapped angle that keeps increasing.
 
-**Persistence degrades in steps.** A CloudKit container refuses to open without its entitlement —
-which is the normal state of a fresh clone — so the store falls back App Group → local → in-memory,
-and Settings reports which one it actually got rather than which one you asked for.
+**Persistence degrades in steps, and the two failure modes are not alike.** A missing iCloud
+entitlement makes SwiftData *throw*, so the store falls back App Group → local → in-memory and
+Settings reports which rung it actually got. A missing **App Group** entitlement does not throw —
+SwiftData resolves the group path eagerly and traps — so that one is ruled out by probing
+`AppGroup.containerURL` before any configuration naming it is constructed. Catching what cannot be
+caught is what crashed the first device build.
 
 There is more on the visual side, including what the widgets deliberately do *not* pretend to do, in
 **[`docs/DESIGN.md`](docs/DESIGN.md)**.

@@ -1,36 +1,21 @@
 import Foundation
 import SwiftData
 
-/// How the store ended up being opened. Surfaced in Settings so the person can see whether
-/// sync is actually running rather than having to trust a toggle.
-enum PersistenceMode: String, Sendable {
-    /// Shared container plus CloudKit — spots follow you between devices.
-    case syncing
-    /// Shared container, no CloudKit. Widgets work, sync does not.
-    case sharedLocal
-    /// Private container. Widgets will show nothing; only happens without the App Group.
-    case appLocal
-    /// Nothing on disk. The last resort, so the app opens instead of crashing.
-    case memoryOnly
-
-    var summary: String {
-        switch self {
-        case .syncing: return "Syncing with iCloud"
-        case .sharedLocal: return "On this iPhone only"
-        case .appLocal: return "On this iPhone (widgets unavailable)"
-        case .memoryOnly: return "Temporary — nothing is being saved"
-        }
-    }
-
-    var isHealthy: Bool { self == .syncing || self == .sharedLocal }
-}
-
 /// Opens the SwiftData store, degrading rather than crashing.
 ///
-/// A CloudKit-backed container refuses to open when the iCloud entitlement is missing or the
-/// container identifier does not exist — which is the normal state of a fresh clone before
-/// signing is set up. Rather than trap on `try!`, each configuration is attempted in turn and
-/// the app reports what it got.
+/// Two different failure modes, and they need different handling — conflating them cost a launch
+/// crash on the first real device build:
+///
+/// * **A missing iCloud entitlement or container** makes `ModelContainer(for:)` *throw*, so `try?`
+///   handles it and the next rung down is attempted.
+/// * **A missing App Group entitlement does not throw.** SwiftData resolves the group container
+///   path eagerly and calls `fatalError` ("Unable to find App Group Container in Entitlements"),
+///   which no amount of `try?` can catch. So any configuration naming a group container must be
+///   ruled out *before* it is constructed, not caught afterwards.
+///
+/// `PersistencePlan` decides which rungs are safe from a probe of the App Group; this type only
+/// walks the list it is given. The probe itself, `AppGroup.containerURL`, returns nil rather than
+/// trapping, which makes it the one safe way to ask the question.
 enum AppModelContainer {
 
     static let schema = Schema([Spot.self, Trip.self])
@@ -38,24 +23,75 @@ enum AppModelContainer {
     struct Result {
         let container: ModelContainer
         let mode: PersistenceMode
+        let report: StartupReport
     }
 
-    static func make(cloudSyncEnabled: Bool) -> Result {
-        if cloudSyncEnabled, let container = try? cloudKitContainer() {
-            return Result(container: container, mode: .syncing)
+    enum Outcome {
+        case opened(Result)
+        /// Nothing opened, not even in memory. The app shows the report rather than dying, because
+        /// a white screen tells whoever is holding the phone nothing at all.
+        case failed(StartupReport)
+
+        var report: StartupReport {
+            switch self {
+            case .opened(let result): return result.report
+            case .failed(let report): return report
+            }
         }
-        if let container = try? sharedLocalContainer() {
-            return Result(container: container, mode: .sharedLocal)
+    }
+
+    static func make(cloudSyncEnabled: Bool) -> Outcome {
+        // Resolved once: it touches the filesystem, and the answer cannot change mid-launch.
+        let hasAppGroup = AppGroup.containerURL != nil
+        print("[Tradewind] app group \(AppGroup.identifier) resolved: \(hasAppGroup)")
+        var report = StartupReport(
+            appGroupIdentifier: AppGroup.identifier,
+            appGroupResolved: hasAppGroup,
+            cloudSyncRequested: cloudSyncEnabled
+        )
+
+        let attempts = PersistencePlan.attempts(
+            hasAppGroup: hasAppGroup,
+            cloudSyncEnabled: cloudSyncEnabled
+        )
+        for attempt in attempts {
+            // Announced *before* the attempt, not after. If a configuration traps rather than
+            // throwing — the whole reason this file was rewritten — then a line logged afterwards
+            // is a line that never appears, and the console shows nothing at all. This way the last
+            // thing printed names whatever took the process down.
+            print("[Tradewind] opening store: trying \(attempt.rawValue)")
+            do {
+                let container = try open(attempt)
+                report.record(attempt.rawValue)
+                return .opened(Result(container: container, mode: attempt.mode, report: report))
+            } catch {
+                report.record(attempt.rawValue, failure: String(describing: error))
+            }
         }
-        if let container = try? appLocalContainer() {
-            return Result(container: container, mode: .appLocal)
+
+        // In-memory is not in the plan because it is not a place to keep someone's spots; it is
+        // what stops a broken disk from being a broken app.
+        do {
+            let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            let container = try ModelContainer(for: schema, configurations: [configuration])
+            report.record("memoryOnly")
+            return .opened(Result(container: container, mode: .memoryOnly, report: report))
+        } catch {
+            report.record("memoryOnly", failure: String(describing: error))
         }
-        // If even an in-memory store cannot be built the process is unusable, and a trap here
-        // is more honest than an empty screen.
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        // swiftlint:disable:next force_try
-        let container = try! ModelContainer(for: schema, configurations: [configuration])
-        return Result(container: container, mode: .memoryOnly)
+
+        // Every rung failed. There used to be a `try!` here, which turned this into a crash with no
+        // explanation — the same class of mistake as catching a fatalError. Report it instead.
+        return .failed(report)
+    }
+
+    /// Attempts one configuration. Safe to call only for attempts `PersistencePlan` allowed.
+    private static func open(_ attempt: PersistenceAttempt) throws -> ModelContainer {
+        switch attempt {
+        case .cloudKit: return try cloudKitContainer()
+        case .sharedLocal: return try sharedLocalContainer()
+        case .appLocal: return try appLocalContainer()
+        }
     }
 
     /// An empty in-memory container for SwiftUI previews.

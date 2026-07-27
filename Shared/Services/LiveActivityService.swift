@@ -13,11 +13,7 @@ final class LiveActivityService {
     static let shared = LiveActivityService()
 
     @ObservationIgnored private var activity: Activity<HeadingActivityAttributes>?
-    @ObservationIgnored private var lastPushedAt: Date?
-    @ObservationIgnored private var lastPushedDistance: Double?
-
-    private let minimumInterval: TimeInterval = 8
-    private let minimumDistanceChange: Double = 20
+    @ObservationIgnored private var lastPush: ActivityPushPolicy.LastPush?
 
     private(set) var activeSpotID: UUID?
 
@@ -50,7 +46,10 @@ final class LiveActivityService {
             spotName: spotName,
             placeName: placeName,
             themeID: themeID,
-            unitPreferenceRaw: unitPreference.rawValue
+            unitPreferenceRaw: unitPreference.rawValue,
+            // Fixed for the life of the walk, so the progress bar can measure against where you
+            // actually set out from instead of a made-up kilometre.
+            startingDistanceMetres: distanceMetres
         )
         let state = HeadingActivityAttributes.ContentState(
             distanceMetres: distanceMetres,
@@ -64,8 +63,11 @@ final class LiveActivityService {
                 pushType: nil
             )
             activeSpotID = spotID
-            lastPushedAt = Date()
-            lastPushedDistance = distanceMetres
+            lastPush = ActivityPushPolicy.LastPush(
+                at: Date(),
+                distanceMetres: distanceMetres,
+                bearingDegrees: bearing
+            )
             return true
         } catch {
             print("[Tradewind] could not start Live Activity: \(error)")
@@ -76,15 +78,20 @@ final class LiveActivityService {
     func update(distanceMetres: Double, bearing: Double, isArrived: Bool) {
         guard let activity else { return }
 
-        let movedEnough = lastPushedDistance
-            .map { abs($0 - distanceMetres) >= minimumDistanceChange } ?? true
-        let waitedEnough = lastPushedAt
-            .map { Date().timeIntervalSince($0) >= minimumInterval } ?? true
-        // Arrival always goes through immediately; it is the one update that matters.
-        guard isArrived || (movedEnough && waitedEnough) else { return }
+        let now = Date()
+        guard ActivityPushPolicy.shouldPush(
+            distanceMetres: distanceMetres,
+            bearingDegrees: bearing,
+            isArrived: isArrived,
+            last: lastPush,
+            now: now
+        ) else { return }
 
-        lastPushedAt = Date()
-        lastPushedDistance = distanceMetres
+        lastPush = ActivityPushPolicy.LastPush(
+            at: now,
+            distanceMetres: distanceMetres,
+            bearingDegrees: bearing
+        )
 
         let state = HeadingActivityAttributes.ContentState(
             distanceMetres: distanceMetres,
@@ -109,6 +116,7 @@ final class LiveActivityService {
         )
         self.activity = nil
         activeSpotID = nil
+        lastPush = nil
         Task {
             await activity.end(
                 ActivityContent(state: state, staleDate: nil),
@@ -121,6 +129,7 @@ final class LiveActivityService {
         guard let activity else { return }
         self.activity = nil
         activeSpotID = nil
+        lastPush = nil
         Task { await activity.end(nil, dismissalPolicy: .immediate) }
     }
 }
