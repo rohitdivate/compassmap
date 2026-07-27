@@ -91,6 +91,28 @@ final class SpotStore {
         save()
     }
 
+    func update(_ spot: Spot, kind: PlaceKind) {
+        spot.placeKind = kind
+        save()
+        refreshSnapshot()
+    }
+
+    /// Records the fire date and schedules or cancels the notification in one move, so the stored
+    /// date and the pending notification cannot disagree.
+    func setReminder(_ spot: Spot, at fireDate: Date?) {
+        spot.reminderAt = fireDate
+        save()
+        if let fireDate {
+            ReminderService.shared.schedule(
+                spotID: spot.id,
+                spotName: spot.displayName,
+                at: fireDate
+            )
+        } else {
+            ReminderService.shared.cancel(spotID: spot.id)
+        }
+    }
+
     func update(_ spot: Spot, glyph: String?) {
         spot.glyph = glyph
         save()

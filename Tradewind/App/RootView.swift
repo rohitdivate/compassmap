@@ -88,6 +88,12 @@ struct RootView: View {
                 }
 
             bar
+                // Its own host, per the presentation-conflict lesson: nothing else presents here.
+                .sheet(isPresented: showingSaveHere) {
+                    SaveHereView()
+                        .environment(settings)
+                        .environment(\.theme, theme)
+                }
 
             if let destination {
                 arrowScreen(for: destination)
@@ -153,6 +159,10 @@ struct RootView: View {
 
     private var showingCapture: Binding<Bool> {
         Binding(get: { router.isShowingCapture }, set: { router.isShowingCapture = $0 })
+    }
+
+    private var showingSaveHere: Binding<Bool> {
+        Binding(get: { router.isShowingSaveHere }, set: { router.isShowingSaveHere = $0 })
     }
 
     private var showingSettings: Binding<Bool> {

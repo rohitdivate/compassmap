@@ -15,14 +15,31 @@ struct SpotsGalleryView: View {
 
     @State private var location = LocationService.shared
     @State private var selectedTripID: UUID?
+    @State private var selectedKind: PlaceKind?
 
     var hero: Namespace.ID
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
     private var filtered: [Spot] {
-        guard let selectedTripID else { return spots }
-        return spots.filter { $0.trip?.id == selectedTripID }
+        var result = spots
+        if let selectedTripID {
+            result = result.filter { $0.trip?.id == selectedTripID }
+        }
+        if let selectedKind {
+            result = result.filter { $0.placeKind == selectedKind }
+        }
+        return result
+    }
+
+    /// Kinds actually in use. The chips only appear once there are two to choose between —
+    /// a filter with one option is furniture.
+    private var kindsInUse: [PlaceKind] {
+        var seen: [PlaceKind] = []
+        for spot in spots where !seen.contains(spot.placeKind) {
+            seen.append(spot.placeKind)
+        }
+        return PlaceKind.pickable.filter(seen.contains)
     }
 
     private var ranked: [RankedSpot] {
@@ -57,6 +74,7 @@ struct SpotsGalleryView: View {
     @ViewBuilder
     private var content: some View {
         if !trips.isEmpty { tripFilter }
+        if kindsInUse.count > 1 { kindFilter }
         if let featured = SpotRanking.featured(in: ranked) {
             FeaturedSpotCard(
                 ranked: featured,
@@ -150,15 +168,39 @@ struct SpotsGalleryView: View {
                     .accessibilityLabel("Settings")
                 }
 
-                if !spots.isEmpty {
-                    statusPill.padding(.top, 14)
+                HStack(spacing: 8) {
+                    if !spots.isEmpty { statusPill }
+                    saveHereChip
                 }
+                .padding(.top, 14)
             }
             .padding(.horizontal, 18)
             .padding(.top, 58)
             .padding(.bottom, 22)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// One tap from anywhere on this screen to pin where you are standing — parking bay, hotel
+    /// door, tent. The photo flow is for places worth looking at; this is for places worth finding.
+    private var saveHereChip: some View {
+        Button {
+            router.isShowingSaveHere = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "mappin.and.ellipse")
+                    .font(.system(size: 11, weight: .bold))
+                Text("Save here")
+                    .font(theme.sans(theme.scale.caption, weight: .bold))
+            }
+            .padding(.horizontal, 13)
+            .padding(.vertical, 8)
+            .foregroundStyle(theme.onAccent)
+            .background { Capsule().fill(theme.accent) }
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityIdentifier("save-here-button")
+        .accessibilityLabel("Save this location")
     }
 
     /// "Nearest 240 m away" — the reference screen's "Currently in Honolulu" chip, doing the job
@@ -203,6 +245,26 @@ struct SpotsGalleryView: View {
                     ) {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             selectedTripID = selectedTripID == trip.id ? nil : trip.id
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 18)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private var kindFilter: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                ForEach(kindsInUse) { candidate in
+                    ChipButton(
+                        title: candidate.pluralLabel,
+                        symbol: candidate.symbol,
+                        isSelected: selectedKind == candidate
+                    ) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            selectedKind = selectedKind == candidate ? nil : candidate
                         }
                     }
                 }
@@ -276,7 +338,7 @@ private struct FeaturedSpotCard: View {
     }
 
     private var photo: some View {
-        PhotoView(data: ranked.spot.photoData, maxDimension: 1_400, glyph: ranked.spot.glyph)
+        PhotoView(data: ranked.spot.photoData, maxDimension: 1_400, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
             .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
             .frame(height: 300)
             .overlay {
@@ -391,7 +453,7 @@ private struct SpotGridCard: View {
 
     private var photo: some View {
         ZStack(alignment: .topTrailing) {
-            PhotoView(data: ranked.spot.photoData, maxDimension: 700, glyph: ranked.spot.glyph)
+            PhotoView(data: ranked.spot.photoData, maxDimension: 700, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
                 .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
                 .frame(height: 132)
 

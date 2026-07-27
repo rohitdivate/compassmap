@@ -138,6 +138,10 @@ struct SpotsMapView: View {
             }
             .accessibilityIdentifier("settings-button")
             .accessibilityLabel("Settings")
+            CircularButton(symbol: "mappin.and.ellipse", isActive: true) {
+                router.isShowingSaveHere = true
+            }
+            .accessibilityLabel("Save this location")
             ringsButton
             recentreButton
         }
@@ -236,7 +240,7 @@ private struct SpotMapPin: View {
                     .frame(width: isSelected ? 56 : 44, height: isSelected ? 56 : 44)
                     .shadow(color: theme.glow.opacity(0.6), radius: isSelected ? 12 : 5)
 
-                PhotoView(data: spot.photoData, maxDimension: 200, glyph: spot.glyph)
+                PhotoView(data: spot.photoData, maxDimension: 200, glyph: spot.glyph, fallbackSymbol: spot.placeKind.symbol)
                     .frame(width: isSelected ? 50 : 38, height: isSelected ? 50 : 38)
                     .clipShape(Circle())
 
@@ -284,7 +288,7 @@ private struct SelectedSpotBar: View {
         Button(action: onOpen) {
             Surface(cornerRadius: 22, padding: 14) {
                 HStack(spacing: 14) {
-                    PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph)
+                    PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
                         .frame(width: 52, height: 52)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 

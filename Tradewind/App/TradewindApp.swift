@@ -29,6 +29,9 @@ struct TradewindApp: App {
         print("[Tradewind] \(BuildInfo.current.summary()) — \(BuildInfo.current.identifierLine ?? "no bundle id")")
         print(outcome.report.text)
 
+        // Notification taps (meter reminders) route into the app through PendingAction.
+        ReminderService.shared.activate()
+
         #if DEBUG
         // A font that fails to register substitutes the system face silently, so the app just
         // looks a bit wrong. Worth one line in the console on the first run of a fresh build.

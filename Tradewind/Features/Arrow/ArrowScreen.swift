@@ -320,10 +320,18 @@ struct ArrowScreen: View {
 
     /// Arrival is the one moment the screen can say something other than a measurement.
     private var arrivalNote: String {
-        guard let capturedAt = destination.spot?.capturedAt else {
+        // The note you left yourself outranks everything: "Level 3, aisle F" is the payload of a
+        // parking spot, and arrival is precisely when it is needed.
+        if let note = destination.spot?.note, !note.isEmpty {
+            return note
+        }
+        guard let spot = destination.spot else {
             return "Close enough to see it."
         }
-        let days = Calendar.current.dateComponents([.day], from: capturedAt, to: Date()).day ?? 0
+        if !spot.hasPhoto {
+            return "You're back. Saved \(spot.placeKind.label.lowercased()) — this is the place."
+        }
+        let days = Calendar.current.dateComponents([.day], from: spot.capturedAt, to: Date()).day ?? 0
         switch days {
         case ..<1: return "Close enough to see it. You photographed this today."
         case 1: return "Close enough to see it. You photographed this yesterday."
@@ -363,9 +371,11 @@ struct ArrowScreen: View {
     /// longer makes sense, so arrival replaces the bar rather than adding to it.
     private var arrivalActions: some View {
         VStack(spacing: 10) {
-            PrimaryButton(title: "Take another photo here", symbol: "camera.fill") {
-                if liveActivity.isRunning { liveActivity.end() }
-                router.isShowingCapture = true
+            if destination.spot?.hasPhoto ?? true {
+                PrimaryButton(title: "Take another photo here", symbol: "camera.fill") {
+                    if liveActivity.isRunning { liveActivity.end() }
+                    router.isShowingCapture = true
+                }
             }
             SecondaryButton(title: "Back to my spots", symbol: "chevron.left", onPhoto: true) {
                 onClose()

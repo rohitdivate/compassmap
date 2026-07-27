@@ -1,0 +1,127 @@
+name: TestFlight
+
+# Push-button delivery: merge to main (or run manually) and a build lands in TestFlight,
+# where the phone updates over the air. No Mac in the loop after one-time setup.
+#
+# DORMANT UNTIL CONFIGURED. This workflow needs an Apple Developer Program membership
+# ($99/yr — the same gate as widgets, Live Activity data and the share extension) and five
+# repository secrets. Until they exist, every run stops at the first step with a notice and
+# a green tick, so it costs nothing and fails nothing. Setup steps: docs/BUILD.md,
+# "TestFlight" section.
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   ASC_KEY_ID       App Store Connect API key ID
+#   ASC_ISSUER_ID    App Store Connect issuer ID
+#   ASC_KEY_P8       full contents of the downloaded .p8 key file
+#   APPLE_TEAM_ID    10-character team ID
+#   TRADEWIND_PREFIX reverse-DNS prefix, e.g. com.rohitdivate
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false   # never cancel an upload mid-flight; a half-uploaded build wastes a number
+
+jobs:
+  upload:
+    name: Archive and upload
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # The secrets context is not readable in a job-level `if`, so the gate is a step.
+      - name: Check configuration
+        id: gate
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TRADEWIND_PREFIX: ${{ secrets.TRADEWIND_PREFIX }}
+        run: |
+          missing=""
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID TRADEWIND_PREFIX; do
+            [ -z "${!name}" ] && missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::TestFlight lane is dormant — missing secrets:$missing. See docs/BUILD.md § TestFlight."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write the App Store Connect key
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p ~/private_keys
+          printf '%s' "$ASC_KEY_P8" > ~/private_keys/AuthKey_"$ASC_KEY_ID".p8
+
+      # The same tool a person runs locally, so CI and a laptop can never disagree about
+      # identifiers. --paid restores the App Group/iCloud entitlements a real team can carry.
+      - name: Apply identifiers and team
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          TRADEWIND_PREFIX: ${{ secrets.TRADEWIND_PREFIX }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: python3 Tools/setup_signing.py --prefix "$TRADEWIND_PREFIX" --team "$APPLE_TEAM_ID" --paid
+
+      # github.run_number as the build number: TestFlight rejects a re-used CFBundleVersion,
+      # and run numbers are monotonic for free.
+      - name: Archive
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          xcodebuild archive \
+            -project Tradewind.xcodeproj \
+            -scheme Tradewind \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Tradewind.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_"$ASC_KEY_ID".p8 \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+
+      # destination=upload makes xcodebuild deliver straight to App Store Connect — no
+      # altool, no transporter, no fastlane.
+      - name: Export and upload to TestFlight
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cat > build/export.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath build/Tradewind.xcarchive \
+            -exportOptionsPlist build/export.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_"$ASC_KEY_ID".p8 \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+      - name: Done
+        if: steps.gate.outputs.enabled == 'true'
+        run: echo "::notice::Uploaded build ${{ github.run_number }}. It appears in TestFlight after Apple's processing (usually 5–15 minutes)."

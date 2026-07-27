@@ -17,6 +17,7 @@ struct PendingSpot {
     var locationFromPhoto: Bool
     var name: String = ""
     var glyph: String?
+    var kind: PlaceKind = .place
     var tripID: UUID?
     var saveToLibrary: Bool = false
 }
@@ -439,6 +440,7 @@ struct CaptureFlowView: View {
             photoData: spot.photoData,
             thumbnailData: spot.thumbnailData,
             glyph: spot.glyph,
+            kind: spot.kind,
             trip: trip
         )
 
@@ -519,6 +521,8 @@ private struct ReviewView: View {
             VStack(alignment: .leading, spacing: 14) {
                 nameField
                 Divider().overlay(theme.textMuted.opacity(0.2))
+                kindPicker
+                Divider().overlay(theme.textMuted.opacity(0.2))
                 glyphPicker
                 if !trips.isEmpty {
                     Divider().overlay(theme.textMuted.opacity(0.2))
@@ -549,6 +553,28 @@ private struct ReviewView: View {
                 onChange(copy)
             }
         )
+    }
+
+    private var kindPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("What is it").eyebrowStyle(theme: theme)
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(PlaceKind.pickable) { candidate in
+                        ChipButton(
+                            title: candidate.label,
+                            symbol: candidate.symbol,
+                            isSelected: pending.kind == candidate
+                        ) {
+                            var copy = pending
+                            copy.kind = candidate
+                            onChange(copy)
+                        }
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+        }
     }
 
     private var glyphPicker: some View {
