@@ -289,8 +289,23 @@ extension NavigationUITests {
             app.buttons["undo-delete"].waitForExistence(timeout: 5),
             "No undo toast after deleting"
         )
-        app.buttons["undo-delete"].tap()
-        XCTAssertTrue(card.waitForExistence(timeout: 5), "Undo did not bring the spot back")
+        let undoButton = app.buttons["undo-delete"]
+        XCTAssertTrue(waitForHittable(undoButton))
+        undoButton.tap()
+        // First prove the tap landed: the action clears the toast. A toast still standing means
+        // the tap missed; a vanished toast with no card means the restore itself broke — two
+        // different bugs this assertion refuses to conflate.
+        XCTAssertTrue(
+            waitForAbsence(undoButton),
+            "The undo toast did not clear — the tap never reached the button"
+        )
+        XCTAssertTrue(card.waitForExistence(timeout: 8), "Undo did not bring the spot back")
+    }
+
+    private func waitForAbsence(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+        let predicate = NSPredicate(format: "exists == false")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
     /// Wave 4, second half: Recently Deleted holds the spot and restores it. Asserted against
