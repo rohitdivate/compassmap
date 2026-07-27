@@ -132,6 +132,11 @@ struct SpotsMapView: View {
                     .foregroundStyle(theme.text)
             }
             Spacer()
+            CircularButton(symbol: "slider.horizontal.3") {
+                router.isShowingSettings = true
+            }
+            .accessibilityIdentifier("settings-button")
+            .accessibilityLabel("Settings")
             ringsButton
             recentreButton
         }

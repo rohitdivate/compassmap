@@ -144,6 +144,7 @@ struct SpotsGalleryView: View {
                     CircularButton(symbol: "slider.horizontal.3", onHero: true) {
                         router.isShowingSettings = true
                     }
+                    .accessibilityIdentifier("settings-button")
                     .accessibilityLabel("Settings")
                 }
 

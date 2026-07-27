@@ -130,6 +130,13 @@ struct TripsView: View {
                     .foregroundStyle(theme.text)
             }
             Spacer()
+            // Settings used to exist only in the Spots masthead, which meant it did not exist at all
+            // on this screen or the map.
+            CircularButton(symbol: "slider.horizontal.3") {
+                router.isShowingSettings = true
+            }
+            .accessibilityIdentifier("settings-button")
+            .accessibilityLabel("Settings")
             Button {
                 isNaming = true
             } label: {
