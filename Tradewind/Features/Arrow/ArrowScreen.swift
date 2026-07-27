@@ -155,7 +155,26 @@ struct ArrowScreen: View {
         .padding(.top, 6)
     }
 
+    /// For a saved spot the title is a way into the details — a bigger, more obvious target than
+    /// the overflow menu, and one XCUITest can actually drive: SwiftUI's `Menu` never reports its
+    /// animations finished, so every interaction behind it stalls out the idle wait on CI.
+    @ViewBuilder
     private var titleBlock: some View {
+        if destination.spot != nil {
+            Button {
+                isShowingDetail = true
+            } label: {
+                titleContent
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityIdentifier("spot-title-button")
+            .accessibilityHint("Shows this spot's details")
+        } else {
+            titleContent
+        }
+    }
+
+    private var titleContent: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(engine.turnHint()).eyebrowStyle(theme: theme)
             Text(destination.name)
@@ -163,6 +182,7 @@ struct ArrowScreen: View {
                 .tracking(theme.displayTracking)
                 .foregroundStyle(.white)
                 .lineLimit(2)
+                .multilineTextAlignment(.leading)
             if let subtitle = displaySubtitle {
                 Text(subtitle)
                     .font(theme.captionFont)

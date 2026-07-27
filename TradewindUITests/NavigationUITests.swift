@@ -196,7 +196,7 @@ extension NavigationUITests {
 
         app.buttons["detail-done"].tap()
         XCTAssertTrue(
-            app.buttons["spot-more-button"].waitForExistence(timeout: 5),
+            app.buttons["spot-title-button"].waitForExistence(timeout: 5),
             "Dismissing the detail sheet did not return to the arrow screen"
         )
         openDetailFromArrow()
@@ -207,23 +207,17 @@ extension NavigationUITests {
         )
     }
 
+    /// Via the tappable title, deliberately not the overflow menu: SwiftUI's `Menu` never tells
+    /// XCUITest its animations finished, so every step behind an open menu stalled its 60 s idle
+    /// wait on CI — and the menu items reported invalid activation points on two separate runs.
     private func openDetailFromArrow() {
-        let more = app.buttons["spot-more-button"]
-        XCTAssertTrue(more.waitForExistence(timeout: 5), "No overflow menu on the arrow screen")
-        more.tap()
-        // Menu items usually surface by identifier, but SwiftUI has been known to expose only the
-        // label, so both are accepted.
-        let byIdentifier = app.buttons["spot-details-item"]
-        let item = byIdentifier.waitForExistence(timeout: 2) ? byIdentifier : app.buttons["Spot details"]
-        XCTAssertTrue(item.waitForExistence(timeout: 5), "The overflow menu did not open")
-        // SwiftUI menu items can report an invalid activation point ("no suggested hit points")
-        // even with a perfectly good frame — the first CI run failed on exactly that. Tapping the
-        // frame's centre coordinate bypasses the activation-point computation entirely.
-        if item.isHittable {
-            item.tap()
-        } else {
-            item.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        }
+        let title = app.buttons["spot-title-button"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "No tappable title on the arrow screen")
+        title.tap()
+        XCTAssertTrue(
+            app.buttons["detail-done"].waitForExistence(timeout: 5),
+            "Tapping the title did not present the detail sheet"
+        )
     }
 
     /// The arrival section sits low on the detail scroll view, below the photo and the facts.
