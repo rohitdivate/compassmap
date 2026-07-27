@@ -29,7 +29,14 @@ final class AppSettings {
         return defaults
     }
 
-    init(defaults: UserDefaults = AppSettings.isUITesting ? ephemeralDefaults() : AppGroup.defaults) {
+    /// Pass a suite to override; nil picks the right one for how the app was launched.
+    ///
+    /// The choice is made in the body rather than as a default argument: a default argument on an
+    /// internal initialiser cannot reference a private helper, so expressing it there would have made
+    /// `ephemeralDefaults` internal for no reason other than syntax.
+    init(defaults: UserDefaults? = nil) {
+        let defaults = defaults
+            ?? (Self.isUITesting ? Self.ephemeralDefaults() : AppGroup.defaults)
         self.defaults = defaults
         themeID = defaults.string(forKey: Key.theme) ?? ThemeCatalog.fallback.id
         unitPreference = UnitPreference(rawValue: defaults.string(forKey: Key.units) ?? "")
