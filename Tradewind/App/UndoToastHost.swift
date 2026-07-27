@@ -38,7 +38,7 @@ struct UndoToastHost: View {
     /// Delete needs no dialog because this is the net: five seconds of Undo, then Recently
     /// Deleted in Settings for thirty days after that.
     private func toast(for candidate: UndoCenter.Candidate) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             Image(systemName: "trash")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(theme.textMuted)
@@ -46,16 +46,23 @@ struct UndoToastHost: View {
                 .font(theme.captionFont)
                 .foregroundStyle(theme.text)
                 .lineLimit(1)
-            Spacer(minLength: 8)
-            Button("Undo") {
+            Spacer(minLength: 4)
+            Button {
                 if let spot = store.anySpot(id: candidate.spotID) {
                     store.restore(spot)
                     FeedbackService.shared.lightTap()
                 }
                 undo.clear()
+            } label: {
+                Text("Undo")
+                    .font(theme.sans(13, weight: .bold))
+                    .foregroundStyle(theme.accent)
+                    // A 33×17pt text is a miserable target for a thumb and for a synthesized
+                    // tap alike; the padded shape is the button.
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 12)
+                    .contentShape(Rectangle())
             }
-            .font(theme.sans(13, weight: .bold))
-            .foregroundStyle(theme.accent)
             .accessibilityIdentifier("undo-delete")
         }
         .padding(.horizontal, 16)

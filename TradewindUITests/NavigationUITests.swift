@@ -85,7 +85,7 @@ final class NavigationUITests: XCTestCase {
     /// and the only entry point living in the Spots masthead so it did not exist on the other tabs.
     /// This asserts the reachable-from-everywhere half directly.
     func testSettingsOpensFromEveryTab() throws {
-        for tab in ["Spots", "Map", "Trips"] {
+        for tab in ["Spots", "Map", "Trips", "Nearby"] {
             let button = tabBarButton(tab)
             XCTAssertTrue(button.waitForExistence(timeout: 5), "No \(tab) tab")
             button.tap()
@@ -119,8 +119,34 @@ final class NavigationUITests: XCTestCase {
         tabBarButton("Trips").tap()
         XCTAssertTrue(screen("trips-screen").waitForExistence(timeout: 5), "Trips did not appear")
 
+        tabBarButton("Nearby").tap()
+        XCTAssertTrue(screen("nearby-screen").waitForExistence(timeout: 5), "Nearby did not appear")
+
         tabBarButton("Spots").tap()
         XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 5), "Spots did not appear")
+    }
+
+    /// Wave 8: the Nearby tab scans the library (canned points under the seam), clusters them
+    /// into suggestions, and saving one lands it in the gallery as a real spot.
+    func testNearbySuggestsAndSavesACluster() throws {
+        tabBarButton("Nearby").tap()
+        XCTAssertTrue(screen("nearby-screen").waitForExistence(timeout: 5), "No Nearby tab")
+
+        let scan = app.buttons["scan-photos"]
+        XCTAssertTrue(waitForHittable(scan), "No priming card with a scan button")
+        scan.tap()
+
+        let save = app.buttons["save-suggestion"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 10), "The scan produced no suggestion cards")
+        XCTAssertTrue(waitForHittable(save))
+        save.tap()
+
+        // Saving marks the card and the spot exists for real.
+        tabBarButton("Spots").tap()
+        XCTAssertTrue(
+            app.staticTexts["Canned Corner, London"].firstMatch.waitForExistence(timeout: 8),
+            "The saved suggestion did not appear in the gallery"
+        )
     }
 
     /// The capture flow is presented as a full-screen cover from a different host than Settings, which
@@ -263,8 +289,23 @@ extension NavigationUITests {
             app.buttons["undo-delete"].waitForExistence(timeout: 5),
             "No undo toast after deleting"
         )
-        app.buttons["undo-delete"].tap()
-        XCTAssertTrue(card.waitForExistence(timeout: 5), "Undo did not bring the spot back")
+        let undoButton = app.buttons["undo-delete"]
+        XCTAssertTrue(waitForHittable(undoButton))
+        undoButton.tap()
+        // First prove the tap landed: the action clears the toast. A toast still standing means
+        // the tap missed; a vanished toast with no card means the restore itself broke — two
+        // different bugs this assertion refuses to conflate.
+        XCTAssertTrue(
+            waitForAbsence(undoButton),
+            "The undo toast did not clear — the tap never reached the button"
+        )
+        XCTAssertTrue(card.waitForExistence(timeout: 8), "Undo did not bring the spot back")
+    }
+
+    private func waitForAbsence(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+        let predicate = NSPredicate(format: "exists == false")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
     /// Wave 4, second half: Recently Deleted holds the spot and restores it. Asserted against
