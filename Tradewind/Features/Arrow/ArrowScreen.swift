@@ -416,6 +416,8 @@ struct ArrowScreen: View {
             .font(theme.captionFont)
             .foregroundStyle(colour)
             .multilineTextAlignment(.center)
+            // Wraps rather than truncates: "showing the direction fro…" helps nobody.
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Big numbers get a smaller face so "1,240" does not run off the edge.

@@ -22,7 +22,7 @@ enum DemoData {
         let trip = Trip(
             name: "Sri Lanka",
             subtitle: "Ten days, one tuk-tuk",
-            createdAt: Date(timeIntervalSince1970: 1_735_000_000)
+            createdAt: Date(timeIntervalSince1970: 1_766_000_000)
         )
         context.insert(trip)
 
@@ -31,7 +31,7 @@ enum DemoData {
                 name: "Harbour Hotel",
                 placeName: "South Bank, London",
                 latitude: 51.5033, longitude: -0.1195,
-                capturedAt: Date(timeIntervalSince1970: 1_753_400_000),
+                capturedAt: Date(timeIntervalSince1970: 1_785_100_000),
                 note: "Room 214, breakfast till 10",
                 isPinned: true,
                 kind: .stay
@@ -40,7 +40,7 @@ enum DemoData {
                 name: "Borough Market",
                 placeName: "Borough, London",
                 latitude: 51.5055, longitude: -0.0910,
-                capturedAt: Date(timeIntervalSince1970: 1_753_300_000),
+                capturedAt: Date(timeIntervalSince1970: 1_785_000_000),
                 note: "The cheese stall in the far corner",
                 glyph: "🍹",
                 kind: .food
@@ -49,7 +49,7 @@ enum DemoData {
                 name: "Primrose lookout",
                 placeName: "Primrose Hill, London",
                 latitude: 51.5387, longitude: -0.1607,
-                capturedAt: Date(timeIntervalSince1970: 1_753_200_000),
+                capturedAt: Date(timeIntervalSince1970: 1_784_900_000),
                 glyph: "🌅",
                 kind: .viewpoint
             ),
@@ -57,7 +57,7 @@ enum DemoData {
                 name: "Waterloo",
                 placeName: "Waterloo, London",
                 latitude: 51.5031, longitude: -0.1132,
-                capturedAt: Date(timeIntervalSince1970: 1_753_100_000),
+                capturedAt: Date(timeIntervalSince1970: 1_784_800_000),
                 note: "Exit 3, past the clock",
                 kind: .transit
             ),
@@ -65,7 +65,7 @@ enum DemoData {
                 name: "Ella hideout",
                 placeName: "Ella, Badulla District",
                 latitude: 6.8667, longitude: 81.0466,
-                capturedAt: Date(timeIntervalSince1970: 1_736_000_000),
+                capturedAt: Date(timeIntervalSince1970: 1_767_200_000),
                 glyph: "🐘",
                 kind: .place,
                 trip: trip
@@ -74,7 +74,7 @@ enum DemoData {
                 name: "Beach shack",
                 placeName: "Mirissa, Southern Province",
                 latitude: 5.9440, longitude: 80.4718,
-                capturedAt: Date(timeIntervalSince1970: 1_735_900_000),
+                capturedAt: Date(timeIntervalSince1970: 1_767_100_000),
                 note: "Kottu after sunset",
                 glyph: "🥥",
                 kind: .food,
