@@ -74,6 +74,32 @@ enum PhotoService {
         }
     }
 
+    /// The current access level without prompting, for deciding what to show.
+    static var libraryAccess: LibraryAccess {
+        access(from: PHPhotoLibrary.authorizationStatus(for: .readWrite))
+    }
+
+    /// Prompts if it has not been asked yet, and reports the outcome.
+    ///
+    /// This must be awaited *before* a picker is presented. Presenting the shared-library picker
+    /// first is what made the library look empty: it shows only authorized photos, and nothing had
+    /// been authorized.
+    static func resolveLibraryAccess() async -> LibraryAccess {
+        access(from: await requestLibraryReadAccess())
+    }
+
+    /// The one place Photos' vocabulary is translated into ours, so the decision that depends on it
+    /// can be tested without the Photos framework.
+    static func access(from status: PHAuthorizationStatus) -> LibraryAccess {
+        switch status {
+        case .authorized: return .granted
+        case .limited: return .limited
+        case .notDetermined: return .notDetermined
+        case .denied, .restricted: return .denied
+        @unknown default: return .denied
+        }
+    }
+
     // MARK: - Resizing
 
     /// Downsamples with ImageIO, which decodes at the target size instead of decoding the

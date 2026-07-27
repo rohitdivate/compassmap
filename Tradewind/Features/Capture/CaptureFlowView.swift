@@ -41,7 +41,8 @@ struct CaptureFlowView: View {
     @State private var pending: PendingSpot?
     @State private var pickerItem: PhotosPickerItem?
     @State private var isImporting = false
-    @State private var importProblem: String?
+    @State private var isImportingWithoutLibrary = false
+    @State private var importProblem: ImportProblem?
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
@@ -76,18 +77,26 @@ struct CaptureFlowView: View {
             camera.stop()
             handleCaptured(data)
         }
+        // Two pickers, because the argument lists differ and the choice is not cosmetic. The
+        // shared-library one shows only authorized photos; the other needs no permission but cannot
+        // give us an asset identifier. LibraryAccess decides which is presented.
         .photosPicker(
             isPresented: $isImporting,
             selection: $pickerItem,
             matching: .images,
             photoLibrary: .shared()
         )
+        .photosPicker(
+            isPresented: $isImportingWithoutLibrary,
+            selection: $pickerItem,
+            matching: .images
+        )
         .onChange(of: pickerItem) { _, item in
             guard let item else { return }
             Task { await handleImport(item) }
         }
         .alert(
-            "This photo has no location",
+            importProblem?.title ?? "",
             isPresented: Binding(
                 get: { importProblem != nil },
                 set: { if !$0 { importProblem = nil } }
@@ -95,8 +104,17 @@ struct CaptureFlowView: View {
         ) {
             Button("OK", role: .cancel) { importProblem = nil }
         } message: {
-            Text(importProblem ?? "")
+            Text(importProblem?.message ?? "")
         }
+    }
+
+    /// An import problem worth interrupting for. Carries its own title, because a single hardcoded
+    /// one ("This photo has no location") was being shown over unrelated messages such as "that
+    /// photo could not be read".
+    private struct ImportProblem: Identifiable {
+        let id = UUID()
+        let title: String
+        let message: String
     }
 
     // MARK: - Camera
@@ -243,7 +261,7 @@ struct CaptureFlowView: View {
 
     private var libraryButton: some View {
         Button {
-            isImporting = true
+            Task { await presentLibrary() }
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: "photo.on.rectangle.angled")
@@ -328,9 +346,32 @@ struct CaptureFlowView: View {
         )
     }
 
+    /// Asks for library access, then opens whichever picker will actually show photos.
+    ///
+    /// The order is the entire point. Presenting the shared-library picker first shows an empty grid
+    /// when access is still undetermined, and an empty grid means nothing can be picked, which means
+    /// the code that would have asked for access is never reached.
+    private func presentLibrary() async {
+        switch await PhotoService.resolveLibraryAccess().picker {
+        case .some(.sharedLibrary):
+            isImporting = true
+        case .some(.outOfProcess):
+            // Access was refused. The out-of-process picker still works and still shows everything,
+            // so importing is not blocked — only the asset-location fallback is.
+            isImportingWithoutLibrary = true
+        case .none:
+            // Only reachable if the prompt was dismissed without an answer. Asking again next tap is
+            // better than opening a picker that would be empty.
+            break
+        }
+    }
+
     private func handleImport(_ item: PhotosPickerItem) async {
         guard let raw = try? await item.loadTransferable(type: Data.self) else {
-            importProblem = "That photo could not be read."
+            importProblem = ImportProblem(
+                title: "That photo could not be read",
+                message: "Something went wrong loading it. Try another photo, or take a new one."
+            )
             pickerItem = nil
             return
         }
@@ -346,9 +387,10 @@ struct CaptureFlowView: View {
 
         let fallback = location.coordinate
         if photoLocation == nil {
-            importProblem = fallback == nil
-                ? "It has no location saved, and Tradewind doesn't know where you are either. Take a photo instead, or turn on location access."
-                : "It has no location saved, so Tradewind has used where you are standing now. You can pick a different photo if that's wrong."
+            importProblem = ImportProblem(
+                title: "This photo has no location",
+                message: noLocationMessage(hasFallback: fallback != nil)
+            )
         }
 
         pending = PendingSpot(
@@ -363,6 +405,22 @@ struct CaptureFlowView: View {
             saveToLibrary: false
         )
         pickerItem = nil
+    }
+
+    /// Why there is no coordinate, and what happened instead.
+    ///
+    /// Without library access there is no `PHAsset` to fall back to, so a photo whose GPS the picker
+    /// stripped has no second chance — worth saying, because that one is fixable in Settings whereas
+    /// a photo genuinely taken without location is not.
+    private func noLocationMessage(hasFallback: Bool) -> String {
+        if !PhotoService.libraryAccess.canReadAssetLocations {
+            return hasFallback
+                ? "Tradewind has used where you are standing now. Allowing photo access in Settings lets it read the real location from photos that have one."
+                : "Tradewind can't read the photo's location without photo access, and doesn't know where you are either. Allow both in Settings, or take a photo instead."
+        }
+        return hasFallback
+            ? "It has no location saved, so Tradewind has used where you are standing now. You can pick a different photo if that's wrong."
+            : "It has no location saved, and Tradewind doesn't know where you are either. Take a photo instead, or turn on location access."
     }
 
     private func save(_ spot: PendingSpot) {

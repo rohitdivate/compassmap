@@ -49,6 +49,12 @@ enum SpotEntryBuilder {
         let units = snapshot?.unitPreference ?? .automatic
 
         guard let snapshot, !snapshot.isEmpty else {
+            // Distinguish "nothing saved" from "cannot see what was saved" — the same App Group probe
+            // the app uses, giving the same answer on both sides.
+            let state = WidgetDataState.state(
+                hasAppGroup: AppGroup.containerURL != nil,
+                snapshotIsEmpty: true
+            )
             return SpotEntry(
                 date: date,
                 theme: theme,
@@ -58,7 +64,7 @@ enum SpotEntryBuilder {
                 metres: nil,
                 bearing: nil,
                 isStale: false,
-                placeholderMessage: "Save a spot in Tradewind to see it here."
+                placeholderMessage: state.message
             )
         }
 
