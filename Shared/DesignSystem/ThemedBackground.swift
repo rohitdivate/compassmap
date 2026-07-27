@@ -32,13 +32,15 @@ struct HeroPanel<Content: View>: View {
     var theme: Theme
     /// Rounded on three sides when it sits inside a screen; square when it is the top of one.
     var cornerRadius: CGFloat = 0
+    /// The sky outside — Spritz's wash follows it through the day.
+    var phase: TimeOfDay = .current
     @ViewBuilder var content: Content
 
     var body: some View {
         content
             .background {
                 ZStack {
-                    Rectangle().fill(theme.heroFill)
+                    Rectangle().fill(theme.heroFill(for: phase))
                     if theme.heroGradient != nil {
                         // A soft bloom in the top-left, as the reference screen has it.
                         RadialGradient(
@@ -117,29 +119,5 @@ struct SplitMix64 {
 /// This used to tint the whole backdrop as well. That is gone: both moods are explicit about how much
 /// decoration they permit, and a drifting colour wash over the canvas is not among it. The copy
 /// survives because it costs nothing and both moods want warm, short wording.
-enum TimeOfDay {
-    case dawn, day, goldenHour, dusk, night
-
-    static var current: TimeOfDay { at(Date()) }
-
-    static func at(_ date: Date, calendar: Calendar = .current) -> TimeOfDay {
-        let hour = calendar.component(.hour, from: date)
-        switch hour {
-        case 5..<8: return .dawn
-        case 8..<16: return .day
-        case 16..<19: return .goldenHour
-        case 19..<21: return .dusk
-        default: return .night
-        }
-    }
-
-    var greeting: String {
-        switch self {
-        case .dawn: return "Early start"
-        case .day: return "Somewhere to be"
-        case .goldenHour: return "Golden hour"
-        case .dusk: return "Last light"
-        case .night: return "After dark"
-        }
-    }
-}
+// TimeOfDay moved to Shared/Snapshot/LivingPalette.swift, where its boundaries are testable
+// and the sky-reactive palettes live beside it.

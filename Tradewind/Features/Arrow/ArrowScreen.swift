@@ -118,8 +118,10 @@ struct ArrowScreen: View {
     private var backdrop: some View {
         ZStack {
             // No photo (a spot saved from a shared link) still gets a hero: the mood's own gradient
-            // in Spritz, its deep surface in Nomad.
-            Rectangle().fill(theme.heroFill).ignoresSafeArea()
+            // in Spritz — following the sky outside — its deep surface in Nomad.
+            Rectangle()
+                .fill(theme.heroFill(for: TimeOfDay.current(at: location.coordinate)))
+                .ignoresSafeArea()
 
             if let photoData = destination.photoData {
                 blurredPhoto(photoData)

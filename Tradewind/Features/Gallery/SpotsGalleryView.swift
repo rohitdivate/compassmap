@@ -147,13 +147,25 @@ struct SpotsGalleryView: View {
     }
 
     private var emptyState: some View {
-        EmptyStateView(
-            symbol: "camera.viewfinder",
-            title: "Nowhere to go yet",
-            message: "Photograph somewhere worth coming back to. Tradewind remembers where you were standing and points you back.",
-            actionTitle: "Take the first photo",
-            action: { router.isShowingCapture = true }
-        )
+        VStack(spacing: 12) {
+            EmptyStateView(
+                symbol: "camera.viewfinder",
+                title: "Nowhere to go yet",
+                message: "Photograph somewhere worth coming back to. Tradewind remembers where you were standing and points you back.",
+                actionTitle: "Take the first photo",
+                action: { router.isShowingCapture = true }
+            )
+            // The other two doors in, taught where they are needed: an empty screen is the
+            // onboarding that arrives exactly on time.
+            Button {
+                router.isShowingSaveHere = true
+            } label: {
+                Text("No photo? Save this location, or search an address")
+                    .font(theme.sans(13, weight: .medium))
+                    .foregroundStyle(theme.accent)
+            }
+            .accessibilityIdentifier("empty-plan-place")
+        }
         .padding(.top, 40)
     }
 
@@ -164,12 +176,17 @@ struct SpotsGalleryView: View {
     /// Structured after the reference Home screen: a hero block carrying the eyebrow, the title in
     /// the display face, and a status pill, with the cream body starting underneath it. In Nomad the
     /// same block resolves to a flat raised surface, because that mood permits no gradient.
+    /// Solar-aware: the wash and the greeting both follow the actual sun at the actual place.
+    private var skyPhase: TimeOfDay {
+        TimeOfDay.current(at: location.coordinate)
+    }
+
     private var heroHeader: some View {
-        HeroPanel(theme: theme) {
+        HeroPanel(theme: theme, phase: skyPhase) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(TimeOfDay.current.greeting)
+                        Text(skyPhase.greeting)
                             .font(theme.eyebrowFont)
                             .textCase(.uppercase)
                             .tracking(theme.labelTracking(theme.scale.eyebrow))
