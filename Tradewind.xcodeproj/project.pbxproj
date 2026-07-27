@@ -43,6 +43,7 @@
 		79E9A35EC62EC76F0BAEC086 /* PhotoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923B02339B7B16EAE20164E /* PhotoService.swift */; };
 		E7C1C15EDA3ACECF077F9D9F /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F99D1D36B9AB6FF1DE9A5DC /* ReminderService.swift */; };
 		98A03B648288823C5F906925 /* SpotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797F7DFA5C92376EC9F8433F /* SpotStore.swift */; };
+		E30884C442A1C48AF8251AFC /* UndoCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D3E13BFA1C83BCD33B4F9D /* UndoCenter.swift */; };
 		1CD0504D6CA84A050AD28764 /* WalkingRouteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7ABB14AE8E98126CED4F62 /* WalkingRouteService.swift */; };
 		1596C55B8965DC107BA34141 /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
@@ -134,6 +135,7 @@
 		E521FD2E95289EAF0BC83BCC /* PhotoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923B02339B7B16EAE20164E /* PhotoService.swift */; };
 		58EBC8F738E74F63DBF4344A /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F99D1D36B9AB6FF1DE9A5DC /* ReminderService.swift */; };
 		A34B21FB1C3A70C8BE4021F4 /* SpotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797F7DFA5C92376EC9F8433F /* SpotStore.swift */; };
+		0ECE01CE09D8D7F60A06FBE4 /* UndoCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D3E13BFA1C83BCD33B4F9D /* UndoCenter.swift */; };
 		B6733F99367712EE13037EAC /* WalkingRouteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7ABB14AE8E98126CED4F62 /* WalkingRouteService.swift */; };
 		43E6586B69FDA319FAE191AC /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
@@ -285,6 +287,7 @@
 		F923B02339B7B16EAE20164E /* PhotoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoService.swift; sourceTree = "<group>"; };
 		9F99D1D36B9AB6FF1DE9A5DC /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
 		797F7DFA5C92376EC9F8433F /* SpotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotStore.swift; sourceTree = "<group>"; };
+		E0D3E13BFA1C83BCD33B4F9D /* UndoCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoCenter.swift; sourceTree = "<group>"; };
 		FC7ABB14AE8E98126CED4F62 /* WalkingRouteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingRouteService.swift; sourceTree = "<group>"; };
 		CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityPushPolicy.swift; sourceTree = "<group>"; };
 		C07064A66E87DD3F7B94CB72 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
@@ -478,6 +481,7 @@
 				F923B02339B7B16EAE20164E /* PhotoService.swift */,
 				9F99D1D36B9AB6FF1DE9A5DC /* ReminderService.swift */,
 				797F7DFA5C92376EC9F8433F /* SpotStore.swift */,
+				E0D3E13BFA1C83BCD33B4F9D /* UndoCenter.swift */,
 				FC7ABB14AE8E98126CED4F62 /* WalkingRouteService.swift */,
 			);
 			path = Services;
@@ -967,6 +971,7 @@
 				79E9A35EC62EC76F0BAEC086 /* PhotoService.swift in Sources */,
 				E7C1C15EDA3ACECF077F9D9F /* ReminderService.swift in Sources */,
 				98A03B648288823C5F906925 /* SpotStore.swift in Sources */,
+				E30884C442A1C48AF8251AFC /* UndoCenter.swift in Sources */,
 				1CD0504D6CA84A050AD28764 /* WalkingRouteService.swift in Sources */,
 				1596C55B8965DC107BA34141 /* ActivityPushPolicy.swift in Sources */,
 				DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */,
@@ -1046,6 +1051,7 @@
 				E521FD2E95289EAF0BC83BCC /* PhotoService.swift in Sources */,
 				58EBC8F738E74F63DBF4344A /* ReminderService.swift in Sources */,
 				A34B21FB1C3A70C8BE4021F4 /* SpotStore.swift in Sources */,
+				0ECE01CE09D8D7F60A06FBE4 /* UndoCenter.swift in Sources */,
 				B6733F99367712EE13037EAC /* WalkingRouteService.swift in Sources */,
 				43E6586B69FDA319FAE191AC /* ActivityPushPolicy.swift in Sources */,
 				607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */,

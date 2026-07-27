@@ -62,17 +62,20 @@ final class ScreenshotTests: XCTestCase {
 
         app.buttons["tab-Spots"].tap()
         XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 5))
-        app.buttons["save-here-button"].tap()
-        XCTAssertTrue(app.buttons["save-here-confirm"].waitForExistence(timeout: 5), "No save-here sheet")
-        snap("07-save-here")
-        app.swipeDown()
-
         XCTAssertTrue(app.buttons["settings-button"].waitForExistence(timeout: 5))
         app.buttons["settings-button"].tap()
         XCTAssertTrue(screen("settings-screen").waitForExistence(timeout: 5), "No settings")
-        snap("08-settings-themes")
+        snap("07-settings-themes")
         app.swipeUp()
-        snap("09-settings-data")
+        snap("08-settings-data")
+        app.buttons["settings-done"].tap()
+
+        // Last, so nothing has to dismiss it — a sheet's swipe-to-close is exactly the kind of
+        // gesture XCUITest half-lands.
+        XCTAssertTrue(app.buttons["save-here-button"].waitForExistence(timeout: 5))
+        app.buttons["save-here-button"].tap()
+        XCTAssertTrue(app.buttons["save-here-confirm"].waitForExistence(timeout: 5), "No save-here sheet")
+        snap("09-save-here")
     }
 
     // MARK: - Helpers

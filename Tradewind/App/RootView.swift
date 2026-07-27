@@ -24,6 +24,7 @@ struct RootView: View {
 
     @State private var engine = CompassEngine()
     @State private var location = LocationService.shared
+    @State private var undo = UndoCenter.shared
     @Namespace private var hero
 
     private var store: SpotStore { SpotStore(context: modelContext) }
@@ -102,9 +103,62 @@ struct RootView: View {
             if let destination {
                 arrowScreen(for: destination)
             }
+
+            // Above everything, including the arrow: a deletion from the detail sheet closes the
+            // arrow underneath it, and the undo must survive that collapse.
+            if let candidate = undo.candidate {
+                undoToast(for: candidate)
+                    .zIndex(30)
+            }
         }
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: router.activeSpotID)
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: router.guestDestination)
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: undo.candidate)
+        // Keyed by the candidate so deleting a second spot restarts the five seconds.
+        .task(id: undo.candidate) {
+            guard undo.candidate != nil else { return }
+            try? await Task.sleep(nanoseconds: UInt64(TrashPolicy.undoWindow * 1_000_000_000))
+            undo.clear()
+        }
+    }
+
+    /// Delete needs no dialog because this is the net: five seconds of Undo, then Recently
+    /// Deleted in Settings for thirty days after that.
+    private func undoToast(for candidate: UndoCenter.Candidate) -> some View {
+        VStack {
+            Spacer()
+            HStack(spacing: 12) {
+                Image(systemName: "trash")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(theme.textMuted)
+                Text(TrashPolicy.undoMessage(spotName: candidate.name))
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.text)
+                    .lineLimit(1)
+                Spacer(minLength: 8)
+                Button("Undo") {
+                    if let spot = store.anySpot(id: candidate.spotID) {
+                        store.restore(spot)
+                        FeedbackService.shared.lightTap()
+                    }
+                    undo.clear()
+                }
+                .font(theme.sans(13, weight: .bold))
+                .foregroundStyle(theme.accent)
+                .accessibilityIdentifier("undo-delete")
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background {
+                Capsule().fill(theme.surfaceRaised)
+                    .overlay { Capsule().strokeBorder(theme.hairline, lineWidth: 1) }
+                    .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 96)
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .accessibilityIdentifier("undo-toast")
     }
 
     private var bar: some View {

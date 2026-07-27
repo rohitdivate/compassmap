@@ -162,6 +162,7 @@ final class SpotStore {
     /// No confirmation dialog needed — the undo toast and the trash are the safety net, which is
     /// why this must faithfully cancel everything that could still fire for the spot.
     func delete(_ spot: Spot) {
+        let name = spot.displayName
         spot.deletedAt = Date()
         if spot.isPinned { spot.isPinned = false }
         save()
@@ -169,6 +170,9 @@ final class SpotStore {
         CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [spot.id.uuidString])
         ReminderService.shared.cancel(spotID: spot.id)
         if spot.alertsEnabled { rearmGeofences() }
+        // Announced from here so every deletion path gets the toast, not just the one that
+        // remembered to show it.
+        UndoCenter.shared.show(spotID: spot.id, name: name)
     }
 
     /// Brings a deleted spot back, exactly as it was — except the widget thumbnail, which the

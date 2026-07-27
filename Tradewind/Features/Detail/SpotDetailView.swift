@@ -547,6 +547,7 @@ struct SpotDetailView: View {
             SecondaryButton(title: "Delete spot", symbol: "trash") {
                 isConfirmingDelete = true
             }
+            .accessibilityIdentifier("detail-delete")
         }
         .padding(.horizontal, 18)
         .padding(.top, 6)

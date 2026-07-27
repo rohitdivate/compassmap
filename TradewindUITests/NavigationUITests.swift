@@ -257,8 +257,11 @@ extension NavigationUITests {
         let card = app.staticTexts["Trash Cove"]
         XCTAssertTrue(card.waitForExistence(timeout: 8))
 
-        // Delete from the context menu — no confirmation dialog, the toast is the safety net.
-        deleteFromContextMenu(card)
+        // Delete through the detail screen — deterministic buttons the whole way, unlike
+        // context-menu synthesis, which XCUITest fires unreliably. The context menu still
+        // exists for humans; the *behaviour* (soft delete + root toast) is identical from
+        // either path because both go through SpotStore.delete.
+        deleteFromDetail(card)
         XCTAssertTrue(
             app.buttons["undo-delete"].waitForExistence(timeout: 5),
             "No undo toast after deleting"
@@ -267,7 +270,7 @@ extension NavigationUITests {
         XCTAssertTrue(card.waitForExistence(timeout: 5), "Undo did not bring the spot back")
 
         // Delete again, and this time recover it through Recently Deleted in Settings.
-        deleteFromContextMenu(card)
+        deleteFromDetail(card)
         XCTAssertTrue(app.buttons["undo-delete"].waitForExistence(timeout: 5))
 
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
@@ -300,16 +303,23 @@ extension NavigationUITests {
         )
     }
 
-    /// Long-presses a gallery card and picks Delete from its context menu.
-    private func deleteFromContextMenu(_ card: XCUIElement) {
-        card.press(forDuration: 1.2)
-        let delete = app.buttons["Delete"]
-        XCTAssertTrue(delete.waitForExistence(timeout: 5), "The context menu did not open")
-        if delete.isHittable {
-            delete.tap()
-        } else {
-            delete.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    /// Deletes a spot via its detail screen: card → arrow → title → Delete spot → confirm.
+    /// Deleting the arrow's spot collapses the arrow underneath — landing back on the gallery
+    /// is part of what this exercises.
+    private func deleteFromDetail(_ card: XCUIElement) {
+        card.tap()
+        let title = app.buttons["spot-title-button"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "The arrow screen did not open")
+        title.tap()
+        let deleteButton = app.buttons["detail-delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5), "No detail sheet")
+        for _ in 0..<6 where !(deleteButton.exists && deleteButton.isHittable) {
+            app.swipeUp()
         }
+        deleteButton.tap()
+        let confirm = app.buttons["Delete"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "No delete confirmation")
+        confirm.tap()
     }
 
     /// Wave 2: save a spot, then find it by search — and prove a bogus query says so rather than
