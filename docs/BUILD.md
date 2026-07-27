@@ -65,6 +65,22 @@ python3 Tools/setup_signing.py --prefix com.rohitdivate --paid
 
 `--reset` restores the `com.tradewind` placeholders, which is what the repository is committed with.
 
+### If updating has gone sideways: fresh clone
+
+When you cannot tell what state a checkout is in — pulls failing, builds that look stale, commands
+rejecting flags — do not repair it. Clone fresh; it bypasses every failure mode at once:
+
+```bash
+cd ~/Desktop
+git clone https://github.com/rohitdivate/compassmap.git tradewind-fresh
+cd tradewind-fresh
+python3 Tools/setup_signing.py --prefix com.rohitdivate --free
+open Tradewind.xcodeproj
+```
+
+Delete the old folder. Verify currency in the app: **Settings → About shows the build time and
+bundle identifier** — if the identifier reads `com.tradewind.app`, the signing script did not run.
+
 ### Updating: use `--update`, not `git pull`
 
 Every file this script rewrites is **tracked**, so once it has run your working tree is dirty and
@@ -85,6 +101,36 @@ the tree is modified, rather than throwing away work it does not own.
 git stash && git pull --ff-only && python3 Tools/setup_signing.py --prefix com.rohitdivate --free
 git stash drop      # the stash holds only regenerated files
 ```
+
+### TestFlight: updates without a Mac in the loop (paid membership)
+
+With the Apple Developer Program ($99/yr), merging to `main` can deliver straight to the TestFlight
+app on your phone — you tap Update, and Xcode is out of your life. The workflow
+(`.github/workflows/testflight.yml`) already exists and is **dormant**: it stops with a green notice
+until the secrets below are set, so it costs nothing meanwhile.
+
+One-time setup, in order:
+
+1. Join the Apple Developer Program at https://developer.apple.com/programs/enroll/.
+2. In App Store Connect (https://appstoreconnect.apple.com) → **Users and Access → Integrations →
+   App Store Connect API**: create a **Team key** with the **App Manager** role. Note the **Key ID**
+   and **Issuer ID**, and download the `.p8` file — it can only be downloaded once.
+3. Still in App Store Connect → **Apps → +**: create the app record. Platform iOS, bundle ID
+   `com.<yourname>.app` (register it at developer.apple.com → Identifiers first if it is not
+   offered). The name shown in TestFlight is set here.
+4. In the GitHub repository → **Settings → Secrets and variables → Actions**, add five secrets:
+   `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (paste the whole `.p8` file's contents),
+   `APPLE_TEAM_ID`, `TRADEWIND_PREFIX` (e.g. `com.rohitdivate`).
+5. Run the **TestFlight** workflow from the Actions tab (or merge anything to `main`).
+6. On the phone: install Apple's **TestFlight** app, accept the invite for your own app (App Store
+   Connect → your app → TestFlight → add yourself as an internal tester).
+
+From then on every merge to `main` shows up on the phone in ~15 minutes. This also unlocks widgets,
+Live Activity data, iCloud sync and the share extension — run
+`python3 Tools/setup_signing.py --paid` for local builds.
+
+Honest limit: the upload path cannot be exercised until the membership exists, so its first real run
+is its first test. The dormant path is what CI proves today.
 
 ### What that script touches
 
