@@ -36,6 +36,7 @@
 		98A03B648288823C5F906925 /* SpotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797F7DFA5C92376EC9F8433F /* SpotStore.swift */; };
 		DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
+		5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		AEF17A23956928DE882ED870 /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
 		C14E7EF100A2606CC9EB12D7 /* SharedSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */; };
 		9B0C5277346B9394AA123DEA /* AppRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C172965368D30FF21C48BE0C /* AppRouter.swift */; };
@@ -103,6 +104,7 @@
 		A34B21FB1C3A70C8BE4021F4 /* SpotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797F7DFA5C92376EC9F8433F /* SpotStore.swift */; };
 		607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
+		D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		C1A85BF6D29E0E2E8D1DB0AA /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
 		FA337C2513D3E42FB45E07F3 /* SharedSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */; };
 		DA52B76166101FCCA2912C40 /* HeadingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125CE65EDDF92126FF28520B /* HeadingLiveActivity.swift */; };
@@ -134,11 +136,13 @@
 		690FE776F9A03E323CE4A73B /* GPSMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */; };
 		EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
+		205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		864284B0766E066F2F7DAC7A /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
 		24DF2F34A6A9CDC844B2CC6C /* SharedSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */; };
 		743DA49B0898AD146EF71370 /* BearingMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */; };
 		BCE705FECEDC38EF7F1B7C5E /* DistanceFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */; };
 		B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */; };
+		9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */; };
 		5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */; };
 		CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */; };
 	/* End PBXBuildFile section */
@@ -197,6 +201,7 @@
 		797F7DFA5C92376EC9F8433F /* SpotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotStore.swift; sourceTree = "<group>"; };
 		C07064A66E87DD3F7B94CB72 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAction.swift; sourceTree = "<group>"; };
+		6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlan.swift; sourceTree = "<group>"; };
 		CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshot.swift; sourceTree = "<group>"; };
 		2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshotStore.swift; sourceTree = "<group>"; };
 		C172965368D30FF21C48BE0C /* AppRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRouter.swift; sourceTree = "<group>"; };
@@ -239,6 +244,7 @@
 		6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BearingMathTests.swift; sourceTree = "<group>"; };
 		1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceFormattingTests.swift; sourceTree = "<group>"; };
 		1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSMetadataTests.swift; sourceTree = "<group>"; };
+		E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlanTests.swift; sourceTree = "<group>"; };
 		9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshotTests.swift; sourceTree = "<group>"; };
 		5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTimesTests.swift; sourceTree = "<group>"; };
 		125CE65EDDF92126FF28520B /* HeadingLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingLiveActivity.swift; sourceTree = "<group>"; };
@@ -352,6 +358,7 @@
 			children = (
 				C07064A66E87DD3F7B94CB72 /* AppGroup.swift */,
 				B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */,
+				6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */,
 				CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */,
 				2AD2155680392CA30F27322B /* SharedSnapshotStore.swift */,
 			);
@@ -526,6 +533,7 @@
 				6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */,
 				1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */,
 				1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */,
+				E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */,
 				9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */,
 				5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */,
 			);
@@ -759,6 +767,7 @@
 				98A03B648288823C5F906925 /* SpotStore.swift in Sources */,
 				DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */,
 				F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */,
+				5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */,
 				AEF17A23956928DE882ED870 /* SharedSnapshot.swift in Sources */,
 				C14E7EF100A2606CC9EB12D7 /* SharedSnapshotStore.swift in Sources */,
 				9B0C5277346B9394AA123DEA /* AppRouter.swift in Sources */,
@@ -814,6 +823,7 @@
 				A34B21FB1C3A70C8BE4021F4 /* SpotStore.swift in Sources */,
 				607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */,
 				FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */,
+				D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */,
 				C1A85BF6D29E0E2E8D1DB0AA /* SharedSnapshot.swift in Sources */,
 				FA337C2513D3E42FB45E07F3 /* SharedSnapshotStore.swift in Sources */,
 				DA52B76166101FCCA2912C40 /* HeadingLiveActivity.swift in Sources */,
@@ -834,11 +844,13 @@
 				690FE776F9A03E323CE4A73B /* GPSMetadata.swift in Sources */,
 				EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */,
 				79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */,
+				205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */,
 				864284B0766E066F2F7DAC7A /* SharedSnapshot.swift in Sources */,
 				24DF2F34A6A9CDC844B2CC6C /* SharedSnapshotStore.swift in Sources */,
 				743DA49B0898AD146EF71370 /* BearingMathTests.swift in Sources */,
 				BCE705FECEDC38EF7F1B7C5E /* DistanceFormattingTests.swift in Sources */,
 				B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */,
+				9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */,
 				5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */,
 				CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */,
 			);

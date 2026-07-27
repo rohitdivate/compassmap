@@ -1,36 +1,21 @@
 import Foundation
 import SwiftData
 
-/// How the store ended up being opened. Surfaced in Settings so the person can see whether
-/// sync is actually running rather than having to trust a toggle.
-enum PersistenceMode: String, Sendable {
-    /// Shared container plus CloudKit — spots follow you between devices.
-    case syncing
-    /// Shared container, no CloudKit. Widgets work, sync does not.
-    case sharedLocal
-    /// Private container. Widgets will show nothing; only happens without the App Group.
-    case appLocal
-    /// Nothing on disk. The last resort, so the app opens instead of crashing.
-    case memoryOnly
-
-    var summary: String {
-        switch self {
-        case .syncing: return "Syncing with iCloud"
-        case .sharedLocal: return "On this iPhone only"
-        case .appLocal: return "On this iPhone (widgets unavailable)"
-        case .memoryOnly: return "Temporary — nothing is being saved"
-        }
-    }
-
-    var isHealthy: Bool { self == .syncing || self == .sharedLocal }
-}
-
 /// Opens the SwiftData store, degrading rather than crashing.
 ///
-/// A CloudKit-backed container refuses to open when the iCloud entitlement is missing or the
-/// container identifier does not exist — which is the normal state of a fresh clone before
-/// signing is set up. Rather than trap on `try!`, each configuration is attempted in turn and
-/// the app reports what it got.
+/// Two different failure modes, and they need different handling — conflating them cost a launch
+/// crash on the first real device build:
+///
+/// * **A missing iCloud entitlement or container** makes `ModelContainer(for:)` *throw*, so `try?`
+///   handles it and the next rung down is attempted.
+/// * **A missing App Group entitlement does not throw.** SwiftData resolves the group container
+///   path eagerly and calls `fatalError` ("Unable to find App Group Container in Entitlements"),
+///   which no amount of `try?` can catch. So any configuration naming a group container must be
+///   ruled out *before* it is constructed, not caught afterwards.
+///
+/// `PersistencePlan` decides which rungs are safe from a probe of the App Group; this type only
+/// walks the list it is given. The probe itself, `AppGroup.containerURL`, returns nil rather than
+/// trapping, which makes it the one safe way to ask the question.
 enum AppModelContainer {
 
     static let schema = Schema([Spot.self, Trip.self])
@@ -41,21 +26,39 @@ enum AppModelContainer {
     }
 
     static func make(cloudSyncEnabled: Bool) -> Result {
-        if cloudSyncEnabled, let container = try? cloudKitContainer() {
-            return Result(container: container, mode: .syncing)
+        // Resolved once: it touches the filesystem, and the answer cannot change mid-launch.
+        let hasAppGroup = AppGroup.containerURL != nil
+        let attempts = PersistencePlan.attempts(
+            hasAppGroup: hasAppGroup,
+            cloudSyncEnabled: cloudSyncEnabled
+        )
+
+        for attempt in attempts {
+            guard let result = open(attempt) else { continue }
+            return result
         }
-        if let container = try? sharedLocalContainer() {
-            return Result(container: container, mode: .sharedLocal)
-        }
-        if let container = try? appLocalContainer() {
-            return Result(container: container, mode: .appLocal)
-        }
+
         // If even an in-memory store cannot be built the process is unusable, and a trap here
         // is more honest than an empty screen.
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         // swiftlint:disable:next force_try
         let container = try! ModelContainer(for: schema, configurations: [configuration])
         return Result(container: container, mode: .memoryOnly)
+    }
+
+    /// Attempts one configuration. Safe to call only for attempts `PersistencePlan` allowed.
+    private static func open(_ attempt: PersistenceAttempt) -> Result? {
+        switch attempt {
+        case .cloudKit:
+            guard let container = try? cloudKitContainer() else { return nil }
+            return Result(container: container, mode: .syncing)
+        case .sharedLocal:
+            guard let container = try? sharedLocalContainer() else { return nil }
+            return Result(container: container, mode: .sharedLocal)
+        case .appLocal:
+            guard let container = try? appLocalContainer() else { return nil }
+            return Result(container: container, mode: .appLocal)
+        }
     }
 
     /// An empty in-memory container for SwiftUI previews.

@@ -85,9 +85,12 @@ test bundle compiles them directly, so there is no host app and no signing in th
 rotation makes the arrow jitter; averaging them makes it spin the long way past north. The filter
 steps along the shortest arc and hands SwiftUI an unwrapped angle that keeps increasing.
 
-**Persistence degrades in steps.** A CloudKit container refuses to open without its entitlement —
-which is the normal state of a fresh clone — so the store falls back App Group → local → in-memory,
-and Settings reports which one it actually got rather than which one you asked for.
+**Persistence degrades in steps, and the two failure modes are not alike.** A missing iCloud
+entitlement makes SwiftData *throw*, so the store falls back App Group → local → in-memory and
+Settings reports which rung it actually got. A missing **App Group** entitlement does not throw —
+SwiftData resolves the group path eagerly and traps — so that one is ruled out by probing
+`AppGroup.containerURL` before any configuration naming it is constructed. Catching what cannot be
+caught is what crashed the first device build.
 
 There is more on the visual side, including what the widgets deliberately do *not* pretend to do, in
 **[`docs/DESIGN.md`](docs/DESIGN.md)**.

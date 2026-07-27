@@ -13,9 +13,17 @@ struct TradewindApp: App {
     init() {
         // Opening the store is the one thing that can fail before there is any UI to report it
         // with, so it degrades in steps and records what it managed. Settings shows the result.
+        // The App Group is probed rather than attempted — see AppModelContainer for why that
+        // distinction is load-bearing.
         let result = AppModelContainer.make(cloudSyncEnabled: AppSettings.shared.cloudSyncEnabled)
         persistence = result
         AppSettings.shared.persistenceMode = result.mode
+
+        #if DEBUG
+        // A font that fails to register substitutes the system face silently, so the app just
+        // looks a bit wrong. Worth one line in the console on the first run of a fresh build.
+        Fonts.verifyRegistration()
+        #endif
     }
 
     var body: some Scene {

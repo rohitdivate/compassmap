@@ -44,14 +44,18 @@ free account, run:
 python3 Tools/setup_signing.py --prefix com.rohitdivate --free
 ```
 
+That removes the App Group, iCloud and push entitlements — without it, Xcode refuses to build at all,
+with *"Personal development teams do not support the App Groups capability"*.
+
 The prefix needs a dot and needs to be yours: `com.rohitdivate` provisions, `tradewind` does not, and
 `com.yourname` is refused outright because it is this page's placeholder rather than an identifier.
 `--team` is optional — leave it off and the script adopts whatever team is already selected in Xcode,
 so regenerating the project does not undo that choice.
 
-which removes the App Group, iCloud and push entitlements — without that, Xcode refuses to build at
-all, with *"Personal development teams do not support the App Groups capability"*. The app then falls
-back to a private store and Settings honestly reports **"On this iPhone (widgets unavailable)"**.
+The app then opens a private store instead of the shared one and Settings reports **"On this iPhone
+(widgets unavailable)"**, with the reason underneath. **That is the expected state of a free build,
+not a failure** — the app itself works normally; only the widgets and the Live Activity are cut off,
+because a private store is not something an extension can read.
 
 If you later pay for a membership, `--paid` puts the entitlements back:
 
@@ -80,6 +84,10 @@ generator. Nothing else in the code refers to an identifier.
   `--prefix`; it does not need to be a domain you actually own, just one nobody else has claimed.
 - **"Unable to install"** on the phone — you have hit the free account's ten-app limit, or the
   certificate needs trusting; see the Trust step above.
+- **It installs, launches to a blank screen, and quits.** Fixed — but if you are on a build from
+  before that fix, the console shows `Unable to find App Group Container in Entitlements`. The store
+  was attempting a shared container the build is not entitled to, and SwiftData traps rather than
+  throwing. Pull `main` and rebuild.
 
 ## Selecting a simulator vs. a device
 
