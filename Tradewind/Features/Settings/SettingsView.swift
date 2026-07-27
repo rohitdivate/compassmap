@@ -306,21 +306,33 @@ struct SettingsView: View {
                     Text("Photograph a place. Walk away. Come back to it.")
                         .font(theme.captionFont)
                         .foregroundStyle(theme.textMuted)
-                    Text(versionLine)
+                    Text(build.summary())
                         .font(theme.labelFont)
                         .foregroundStyle(theme.textMuted)
                         .padding(.top, 4)
+                        .accessibilityIdentifier("build-summary")
+                    if let identifier = build.identifierLine {
+                        Text(identifier)
+                            .font(theme.labelFont)
+                            .foregroundStyle(build.usesPlaceholderIdentifier
+                                ? theme.secondary
+                                : theme.textFaint)
+                    }
+                    if build.usesPlaceholderIdentifier {
+                        // The repository's placeholder. Seeing it here means setup_signing.py has not
+                        // been run — which is otherwise invisible until Xcode refuses to sign.
+                        Text("Placeholder identifier — run Tools/setup_signing.py")
+                            .font(theme.labelFont)
+                            .foregroundStyle(theme.secondary)
+                    }
                 }
             }
         }
     }
 
-    private var versionLine: String {
-        let info = Bundle.main.infoDictionary
-        let version = info?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let build = info?["CFBundleVersion"] as? String ?? "1"
-        return "Version \(version) (\(build))"
-    }
+    /// Reported rather than hardcoded: a version line that never changes is worse than none, because
+    /// it looks like information. See `BuildInfo`.
+    private var build: BuildInfo { .current }
 
     private func openSystemSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }

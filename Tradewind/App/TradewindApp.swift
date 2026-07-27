@@ -24,6 +24,9 @@ struct TradewindApp: App {
         // Printed on every build, not just DEBUG. This app is developed without a Mac, so when it
         // misbehaves on someone's phone this report is the only evidence that exists — and a report
         // that only prints in one configuration is the one you do not have when you need it.
+        // Which build this is, first line of every launch. The report below is useless without it:
+        // several rounds of "the fix did not work" turned out to be an old binary.
+        print("[Tradewind] \(BuildInfo.current.summary()) — \(BuildInfo.current.identifierLine ?? "no bundle id")")
         print(outcome.report.text)
 
         #if DEBUG
