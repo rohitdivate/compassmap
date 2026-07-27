@@ -10,7 +10,11 @@ struct SpotsGalleryView: View {
     @Environment(\.theme) private var theme
     @Environment(\.modelContext) private var modelContext
 
-    @Query(sort: \Spot.capturedAt, order: .reverse) private var spots: [Spot]
+    @Query(
+        filter: #Predicate<Spot> { $0.deletedAt == nil },
+        sort: \Spot.capturedAt,
+        order: .reverse
+    ) private var spots: [Spot]
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
 
     @State private var location = LocationService.shared
@@ -19,6 +23,13 @@ struct SpotsGalleryView: View {
     @State private var searchQuery = ""
     @State private var isSearching = false
     @FocusState private var searchFocused: Bool
+    /// The spot just soft-deleted, while its undo toast is up.
+    @State private var undoCandidate: UndoCandidate?
+
+    private struct UndoCandidate: Equatable {
+        let id: UUID
+        let name: String
+    }
 
     var hero: Namespace.ID
 
@@ -82,6 +93,53 @@ struct SpotsGalleryView: View {
             location.requestOneShotLocation()
             store.refreshSnapshot()
         }
+        .overlay(alignment: .bottom) {
+            if let candidate = undoCandidate {
+                undoToast(for: candidate)
+            }
+        }
+        // Restarting the timer when a second delete replaces the toast — keyed by the candidate.
+        .task(id: undoCandidate) {
+            guard undoCandidate != nil else { return }
+            try? await Task.sleep(nanoseconds: UInt64(TrashPolicy.undoWindow * 1_000_000_000))
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { undoCandidate = nil }
+        }
+    }
+
+    /// Delete needs no dialog because this is the net: five seconds of Undo, and Recently
+    /// Deleted in Settings for the thirty days after that.
+    private func undoToast(for candidate: UndoCandidate) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "trash")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(theme.textMuted)
+            Text(TrashPolicy.undoMessage(spotName: candidate.name))
+                .font(theme.captionFont)
+                .foregroundStyle(theme.text)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            Button("Undo") {
+                if let spot = store.anySpot(id: candidate.id) {
+                    store.restore(spot)
+                    FeedbackService.shared.lightTap()
+                }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { undoCandidate = nil }
+            }
+            .font(theme.sans(13, weight: .bold))
+            .foregroundStyle(theme.accent)
+            .accessibilityIdentifier("undo-delete")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background {
+            Capsule().fill(theme.surfaceRaised)
+                .overlay { Capsule().strokeBorder(theme.hairline, lineWidth: 1) }
+                .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 88)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .accessibilityIdentifier("undo-toast")
     }
 
     @ViewBuilder
@@ -98,6 +156,7 @@ struct SpotsGalleryView: View {
                 hero: hero,
                 onOpen: { open(featured.spot) }
             )
+            .contextMenu { spotMenu(for: featured.spot) }
             .padding(.horizontal, 18)
         }
         if ranked.count > 1 { grid }
@@ -374,7 +433,11 @@ struct SpotsGalleryView: View {
             }
         }
         Button(role: .destructive) {
+            let candidate = UndoCandidate(id: spot.id, name: spot.displayName)
             store.delete(spot)
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                undoCandidate = candidate
+            }
         } label: {
             Label("Delete", systemImage: "trash")
         }

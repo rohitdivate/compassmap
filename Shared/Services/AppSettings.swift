@@ -46,6 +46,8 @@ final class AppSettings {
         usesTrueNorth = defaults.object(forKey: Key.trueNorth) as? Bool ?? true
         cloudSyncEnabled = defaults.object(forKey: Key.cloudSync) as? Bool ?? true
         hasCompletedOnboarding = defaults.bool(forKey: Key.onboarded)
+        lastBackupExportAt = defaults.object(forKey: Key.lastBackupExport) as? Date
+        lastAutoSnapshotAt = defaults.object(forKey: Key.lastAutoSnapshot) as? Date
     }
 
     // MARK: - Stored preferences
@@ -87,6 +89,18 @@ final class AppSettings {
         didSet { defaults.set(hasCompletedOnboarding, forKey: Key.onboarded) }
     }
 
+    /// When "Back up now" last produced a file the person actually saved somewhere. Drives the
+    /// "Last backed up" line and the nudge when it grows stale.
+    var lastBackupExportAt: Date? {
+        didSet { defaults.set(lastBackupExportAt, forKey: Key.lastBackupExport) }
+    }
+
+    /// When the weekly automatic snapshot last ran. Not shown as "backed up" — it dies with an
+    /// uninstall, and conflating the two would be a lie about durability.
+    var lastAutoSnapshotAt: Date? {
+        didSet { defaults.set(lastAutoSnapshotAt, forKey: Key.lastAutoSnapshot) }
+    }
+
     // MARK: - Derived
 
     var theme: Theme { ThemeCatalog.theme(id: themeID) }
@@ -117,5 +131,7 @@ final class AppSettings {
         static let trueNorth = "settings.trueNorth"
         static let cloudSync = "settings.cloudSync"
         static let onboarded = "settings.onboardingComplete"
+        static let lastBackupExport = "settings.lastBackupExport"
+        static let lastAutoSnapshot = "settings.lastAutoSnapshot"
     }
 }

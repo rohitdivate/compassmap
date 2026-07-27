@@ -10,7 +10,7 @@ struct TripsView: View {
     @Environment(\.modelContext) private var modelContext
 
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
-    @Query private var spots: [Spot]
+    @Query(filter: #Predicate<Spot> { $0.deletedAt == nil }) private var spots: [Spot]
 
     @State private var location = LocationService.shared
     @State private var isNaming = false

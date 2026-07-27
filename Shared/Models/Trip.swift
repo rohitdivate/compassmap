@@ -37,11 +37,14 @@ final class Trip {
 }
 
 extension Trip {
+    /// Living spots only — a trip does not count what sits in the trash.
     var orderedSpots: [Spot] {
-        (spots ?? []).sorted { $0.capturedAt > $1.capturedAt }
+        (spots ?? [])
+            .filter { $0.deletedAt == nil }
+            .sorted { $0.capturedAt > $1.capturedAt }
     }
 
-    var spotCount: Int { spots?.count ?? 0 }
+    var spotCount: Int { orderedSpots.count }
 
     var displayName: String {
         name.trimmingCharacters(in: .whitespaces).isEmpty ? "Untitled trip" : name

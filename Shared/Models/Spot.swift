@@ -56,6 +56,11 @@ final class Spot {
     /// spot would burn the 20-region budget on places nobody is walking back to.
     var alertsEnabled: Bool = false
 
+    /// Set when the spot is deleted. Deletion is soft — the spot vanishes from every list but
+    /// sits in Recently Deleted for `TrashPolicy.retentionDays`, so a slip of the thumb is not
+    /// the end of a memory. Nil means alive. Optional, so CloudKit's rules hold.
+    var deletedAt: Date?
+
     /// Full-size JPEG. External storage keeps the database small and lets CloudKit move the
     /// bytes as an asset rather than inline.
     @Attribute(.externalStorage) var photoData: Data?
@@ -146,6 +151,30 @@ extension Spot {
             tripName: trip?.name,
             glyph: glyph,
             kindRaw: kindRaw
+        )
+    }
+
+    /// This spot as a line in the backup file — every stored field, so a restore is faithful.
+    var backupRecord: BackupArchive.SpotRecord {
+        BackupArchive.SpotRecord(
+            id: id,
+            name: name,
+            placeName: placeName,
+            latitude: latitude,
+            longitude: longitude,
+            altitude: altitude,
+            horizontalAccuracy: horizontalAccuracy,
+            capturedAt: capturedAt,
+            headingAtCapture: headingAtCapture,
+            note: note,
+            glyph: glyph,
+            kindRaw: kindRaw,
+            isPinned: isPinned,
+            alertsEnabled: alertsEnabled,
+            deletedAt: deletedAt,
+            reminderAt: reminderAt,
+            tripID: trip?.id,
+            photoFilename: hasPhoto ? BackupArchive.photoFilename(spotID: id) : nil
         )
     }
 

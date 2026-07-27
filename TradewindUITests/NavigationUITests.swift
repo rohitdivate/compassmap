@@ -241,6 +241,77 @@ extension NavigationUITests {
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
+    /// Wave 4: delete is soft. The undo toast brings a spot straight back; Recently Deleted in
+    /// Settings holds it for thirty days and restores it too. Both restores are asserted against
+    /// the gallery, because "the row disappeared from the trash" is not the same fact as "the
+    /// spot is back".
+    func testDeleteUndoAndRecentlyDeletedRestore() throws {
+        // One spot via the proven save-here flow.
+        app.buttons["save-here-button"].tap()
+        XCTAssertTrue(app.buttons["kind-place"].waitForExistence(timeout: 5))
+        app.buttons["kind-place"].tap()
+        let nameField = app.textFields["save-here-name"]
+        nameField.tap()
+        nameField.typeText("Trash Cove")
+        app.buttons["save-here-confirm"].tap()
+        let card = app.staticTexts["Trash Cove"]
+        XCTAssertTrue(card.waitForExistence(timeout: 8))
+
+        // Delete from the context menu — no confirmation dialog, the toast is the safety net.
+        deleteFromContextMenu(card)
+        XCTAssertTrue(
+            app.buttons["undo-delete"].waitForExistence(timeout: 5),
+            "No undo toast after deleting"
+        )
+        app.buttons["undo-delete"].tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 5), "Undo did not bring the spot back")
+
+        // Delete again, and this time recover it through Recently Deleted in Settings.
+        deleteFromContextMenu(card)
+        XCTAssertTrue(app.buttons["undo-delete"].waitForExistence(timeout: 5))
+
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
+        settingsButton.tap()
+        XCTAssertTrue(screen("settings-screen").waitForExistence(timeout: 5))
+
+        let trashLink = app.buttons["recently-deleted-link"]
+        for _ in 0..<6 where !(trashLink.exists && trashLink.isHittable) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(trashLink.waitForExistence(timeout: 5), "No Recently Deleted entry in Settings")
+        trashLink.tap()
+
+        XCTAssertTrue(
+            screen("recently-deleted-screen").waitForExistence(timeout: 5),
+            "Recently Deleted did not open"
+        )
+        XCTAssertTrue(
+            app.staticTexts["Trash Cove"].waitForExistence(timeout: 5),
+            "The deleted spot is not in Recently Deleted"
+        )
+        app.buttons["restore-spot"].firstMatch.tap()
+
+        // Back out of Settings and confirm the spot is truly back in the gallery.
+        app.navigationBars.buttons.firstMatch.tap()
+        app.buttons["settings-done"].tap()
+        XCTAssertTrue(
+            app.staticTexts["Trash Cove"].waitForExistence(timeout: 5),
+            "Restoring from Recently Deleted did not return the spot to the gallery"
+        )
+    }
+
+    /// Long-presses a gallery card and picks Delete from its context menu.
+    private func deleteFromContextMenu(_ card: XCUIElement) {
+        card.press(forDuration: 1.2)
+        let delete = app.buttons["Delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 5), "The context menu did not open")
+        if delete.isHittable {
+            delete.tap()
+        } else {
+            delete.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
+    }
+
     /// Wave 2: save a spot, then find it by search — and prove a bogus query says so rather than
     /// showing an empty page. The store is in-memory under -ui-testing, so the only spot present
     /// is the one this test just made; both assertions are unambiguous.

@@ -14,7 +14,11 @@ struct SpotsMapView: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.theme) private var theme
 
-    @Query(sort: \Spot.capturedAt, order: .reverse) private var spots: [Spot]
+    @Query(
+        filter: #Predicate<Spot> { $0.deletedAt == nil },
+        sort: \Spot.capturedAt,
+        order: .reverse
+    ) private var spots: [Spot]
 
     @State private var location = LocationService.shared
     @State private var camera: MapCameraPosition = .automatic

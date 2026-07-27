@@ -211,6 +211,11 @@ membership — see the table above.
 13. **Area names** — open the details of a spot saved by an earlier build. Within a few seconds
     the *Area* row should read like a street or district ("Baker Street, London"), never a nearby
     business, and the gallery subtitle should stop showing raw degrees once names resolve.
+14. **Backup and restore** — Settings › Your data › *Back up now*, save the file to iCloud Drive
+    in Files. Delete a spot (long-press a card), let the undo toast lapse, check it sits in
+    *Recently Deleted* with a days-left label, restore it. Then *Restore from a backup* with the
+    file you saved — it should report "already here" and add nothing. GPX export should open in
+    any maps app that takes waypoints.
 
 ## Regenerating the project
 

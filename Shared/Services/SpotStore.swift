@@ -27,6 +27,7 @@ final class SpotStore {
 
     @discardableResult
     func createSpot(
+        id: UUID = UUID(),
         name: String,
         coordinate: Coordinate,
         altitude: Double? = nil,
@@ -38,10 +39,13 @@ final class SpotStore {
         glyph: String? = nil,
         note: String? = nil,
         kind: PlaceKind = .place,
+        placeName: String? = nil,
         trip: Trip? = nil
     ) -> Spot {
         let spot = Spot(
+            id: id,
             name: name,
+            placeName: placeName,
             latitude: coordinate.latitude,
             longitude: coordinate.longitude,
             altitude: altitude,
@@ -62,8 +66,12 @@ final class SpotStore {
         context.insert(spot)
         save()
 
-        // Name it properly in the background if the person did not.
-        resolvePlaceName(for: spot)
+        // Name it properly in the background if the person did not. A restore arrives with its
+        // name already resolved, and re-geocoding forty imported spots would burn the rate limit
+        // on answers we already have.
+        if placeName == nil {
+            resolvePlaceName(for: spot)
+        }
         refreshSnapshot()
         donateToSpotlight(spot)
 
@@ -150,17 +158,55 @@ final class SpotStore {
         refreshSnapshot()
     }
 
+    /// Soft delete: the spot leaves every list and sits in Recently Deleted for thirty days.
+    /// No confirmation dialog needed — the undo toast and the trash are the safety net, which is
+    /// why this must faithfully cancel everything that could still fire for the spot.
     func delete(_ spot: Spot) {
+        spot.deletedAt = Date()
+        if spot.isPinned { spot.isPinned = false }
+        save()
+        refreshSnapshot()
+        CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [spot.id.uuidString])
+        ReminderService.shared.cancel(spotID: spot.id)
+        if spot.alertsEnabled { rearmGeofences() }
+    }
+
+    /// Brings a deleted spot back, exactly as it was — except the widget thumbnail, which the
+    /// snapshot pruner may have removed; clearing the stale filename lets the backfill in
+    /// `refreshSnapshot` regenerate it from the stored photo.
+    func restore(_ spot: Spot) {
+        spot.deletedAt = nil
+        if let filename = spot.thumbnailFilename,
+           let url = AppGroup.thumbnailsURL?.appendingPathComponent(filename),
+           !FileManager.default.fileExists(atPath: url.path) {
+            spot.thumbnailFilename = nil
+        }
+        save()
+        refreshSnapshot()
+        donateToSpotlight(spot)
+        if spot.alertsEnabled { rearmGeofences() }
+        if let fireDate = spot.reminderAt, fireDate > Date() {
+            ReminderService.shared.schedule(spotID: spot.id, spotName: spot.displayName, at: fireDate)
+        }
+    }
+
+    /// The hard delete: photo, thumbnail and record, gone for good. Reached only from Recently
+    /// Deleted (behind its confirmation) and from the expiry sweep.
+    func purge(_ spot: Spot) {
         SharedSnapshotStore.removeThumbnail(named: spot.thumbnailFilename)
         let identifier = spot.id.uuidString
-        let hadAlert = spot.alertsEnabled
         context.delete(spot)
         save()
         refreshSnapshot()
         CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [identifier])
-        // A deleted spot must not keep its geofence — that would be a notification for a place
-        // that no longer exists in the app.
-        if hadAlert { rearmGeofences() }
+    }
+
+    /// Purges whatever has sat in the trash past its thirty days. Called on scene-activation;
+    /// cheap when the trash is empty.
+    func purgeExpired(now: Date = Date()) {
+        for spot in deletedSpots() where TrashPolicy.isExpired(deletedAt: spot.deletedAt ?? now, now: now) {
+            purge(spot)
+        }
     }
 
     func delete(_ trip: Trip) {
@@ -171,13 +217,30 @@ final class SpotStore {
 
     // MARK: - Reading
 
+    /// Living spots only — the trash is invisible to every caller except the trash screen.
     func allSpots() -> [Spot] {
+        fetchEverySpot().filter { $0.deletedAt == nil }
+    }
+
+    /// The trash, newest deletion first.
+    func deletedSpots() -> [Spot] {
+        fetchEverySpot()
+            .filter { $0.deletedAt != nil }
+            .sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
+    }
+
+    private func fetchEverySpot() -> [Spot] {
         let descriptor = FetchDescriptor<Spot>(sortBy: [SortDescriptor(\.capturedAt, order: .reverse)])
         return (try? context.fetch(descriptor)) ?? []
     }
 
     func spot(id: UUID) -> Spot? {
         allSpots().first { $0.id == id }
+    }
+
+    /// Looks in the trash too — the undo toast restores by id after the spot left every list.
+    func anySpot(id: UUID) -> Spot? {
+        fetchEverySpot().first { $0.id == id }
     }
 
     func allTrips() -> [Trip] {

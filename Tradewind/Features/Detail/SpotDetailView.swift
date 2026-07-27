@@ -41,7 +41,7 @@ struct SpotDetailView: View {
                 }
                 Button("Keep it", role: .cancel) {}
             } message: {
-                Text("The photo goes with it. This cannot be undone.")
+                Text("It moves to Recently Deleted, in Settings, for \(TrashPolicy.retentionDays) days — then it's gone for good.")
             }
             .sheet(item: $shareImage) { postcard in
                 ShareSheet(items: shareItems(for: postcard))
