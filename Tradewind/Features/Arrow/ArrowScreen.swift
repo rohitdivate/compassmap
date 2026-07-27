@@ -22,6 +22,9 @@ struct ArrowScreen: View {
     @State private var celebrationStartedAt: Date?
     @State private var isShowingDetail = false
     @State private var hasAnnouncedArrival = false
+    /// Area name for a guest destination — a coordinate from a shared link has no stored
+    /// `placeName`, so it is resolved here and shown instead of raw degrees.
+    @State private var guestArea: String?
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
@@ -160,7 +163,7 @@ struct ArrowScreen: View {
                 .tracking(theme.displayTracking)
                 .foregroundStyle(.white)
                 .lineLimit(2)
-            if let subtitle = destination.subtitle {
+            if let subtitle = displaySubtitle {
                 Text(subtitle)
                     .font(theme.captionFont)
                     .foregroundStyle(.white.opacity(0.72))
@@ -184,6 +187,7 @@ struct ArrowScreen: View {
             } label: {
                 Label("Spot details", systemImage: "info.circle")
             }
+            .accessibilityIdentifier("spot-details-item")
             if let url = spot.deepLinkURL {
                 ShareLink(item: url) {
                     Label("Share this spot", systemImage: "square.and.arrow.up")
@@ -195,6 +199,7 @@ struct ArrowScreen: View {
         } label: {
             circularGlyph("ellipsis")
         }
+        .accessibilityIdentifier("spot-more-button")
         .accessibilityLabel("More options")
     }
 
@@ -407,6 +412,13 @@ struct ArrowScreen: View {
 
     // MARK: - Behaviour
 
+    /// The guest area once resolved, otherwise whatever the destination already knows. Saved
+    /// spots carry their own `placeName`; only shared coordinates need the live lookup.
+    private var displaySubtitle: String? {
+        if destination.spot == nil, let guestArea { return guestArea }
+        return destination.subtitle
+    }
+
     private func begin() {
         engine.target = destination.coordinate
         engine.targetAltitude = destination.altitude
@@ -414,6 +426,16 @@ struct ArrowScreen: View {
         FeedbackService.shared.startPulsing()
         if engine.hasArrived {
             hasAnnouncedArrival = true
+        }
+        resolveGuestArea()
+    }
+
+    /// A shared coordinate arrives nameless; naming its street or district beats showing degrees.
+    private func resolveGuestArea() {
+        guard destination.spot == nil, guestArea == nil else { return }
+        let coordinate = destination.coordinate
+        Task { @MainActor in
+            guestArea = await GeocodeService.shared.placeName(for: coordinate)
         }
     }
 

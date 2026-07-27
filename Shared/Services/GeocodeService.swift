@@ -44,29 +44,18 @@ actor GeocodeService {
         String(format: "%.4f,%.4f", coordinate.latitude, coordinate.longitude)
     }
 
-    /// Prefers the most specific useful thing: a named place, then a street, then a
-    /// neighbourhood, then the town. Two components at most — this is a subtitle, not an
-    /// address label.
+    /// Street, neighbourhood, town — never `placemark.name`, which for an arbitrary coordinate
+    /// is usually the nearest business: a "random place" nobody asked about. The formatting rule
+    /// itself lives in `PlaceNameFormatter`, pure and tested; this is only the CLPlacemark adapter,
+    /// and `PlaceFields` has no slot the POI name could even be poured into.
     static func describe(_ placemark: CLPlacemark) -> String? {
-        var parts: [String] = []
-
-        if let poi = placemark.name, !poi.isEmpty, poi != placemark.thoroughfare {
-            parts.append(poi)
-        } else if let street = placemark.thoroughfare, !street.isEmpty {
-            parts.append(street)
-        } else if let area = placemark.subLocality, !area.isEmpty {
-            parts.append(area)
-        }
-
-        if let town = placemark.locality, !town.isEmpty, !parts.contains(town) {
-            parts.append(town)
-        } else if let region = placemark.administrativeArea, !region.isEmpty, !parts.contains(region) {
-            parts.append(region)
-        } else if let country = placemark.country, !country.isEmpty, !parts.contains(country) {
-            parts.append(country)
-        }
-
-        let joined = parts.prefix(2).joined(separator: ", ")
-        return joined.isEmpty ? nil : joined
+        PlaceNameFormatter.line(from: PlaceFields(
+            thoroughfare: placemark.thoroughfare,
+            subLocality: placemark.subLocality,
+            locality: placemark.locality,
+            subAdministrativeArea: placemark.subAdministrativeArea,
+            administrativeArea: placemark.administrativeArea,
+            country: placemark.country
+        ))
     }
 }

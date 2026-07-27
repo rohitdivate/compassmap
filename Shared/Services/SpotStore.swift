@@ -1,6 +1,7 @@
 import CoreSpotlight
 import Foundation
 import SwiftData
+import UserNotifications
 import WidgetKit
 
 /// The write path for spots and trips.
@@ -113,6 +114,19 @@ final class SpotStore {
         }
     }
 
+    /// Switches the arrival alert for one spot and re-arms the geofences to match. When turning
+    /// on, notification permission is requested here — the moment the person can see why.
+    func setAlertsEnabled(_ spot: Spot, _ enabled: Bool) {
+        spot.alertsEnabled = enabled
+        save()
+        // Not under UI testing: the system permission alert would sit over every assertion
+        // that follows, and the simulator has nowhere to walk anyway.
+        if enabled, !AppSettings.isUITesting {
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        }
+        rearmGeofences()
+    }
+
     func update(_ spot: Spot, glyph: String?) {
         spot.glyph = glyph
         save()
@@ -139,10 +153,14 @@ final class SpotStore {
     func delete(_ spot: Spot) {
         SharedSnapshotStore.removeThumbnail(named: spot.thumbnailFilename)
         let identifier = spot.id.uuidString
+        let hadAlert = spot.alertsEnabled
         context.delete(spot)
         save()
         refreshSnapshot()
         CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [identifier])
+        // A deleted spot must not keep its geofence — that would be a notification for a place
+        // that no longer exists in the app.
+        if hadAlert { rearmGeofences() }
     }
 
     func delete(_ trip: Trip) {
@@ -165,6 +183,38 @@ final class SpotStore {
     func allTrips() -> [Trip] {
         let descriptor = FetchDescriptor<Trip>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
         return (try? context.fetch(descriptor)) ?? []
+    }
+
+    // MARK: - Geofences
+
+    /// Recomputes which spots deserve a monitored region and hands the set to `GeofenceService`.
+    /// Called on scene-activation and after any toggle change; `GeofencePlan` owns the rule, so
+    /// this is only plumbing.
+    func rearmGeofences() {
+        let regions = GeofencePlan.regions(
+            from: allSpots().map(\.geofenceCandidate),
+            origin: LocationService.shared.coordinate
+        )
+        GeofenceService.shared.rearm(regions)
+    }
+
+    // MARK: - Place names
+
+    /// Fills in area names for spots that never got one — a capture with no network, or a spot
+    /// that predates geocoding. A few per pass: CLGeocoder allows roughly a request a second and
+    /// `GeocodeService` serialises, so a large backlog drains across launches rather than in one.
+    func resolveMissingPlaceNames(limit: Int = 5) {
+        let missing = allSpots().filter { ($0.placeName ?? "").isEmpty }
+        for spot in missing.prefix(limit) {
+            resolvePlaceName(for: spot)
+        }
+    }
+
+    /// Re-resolves one spot's area name. Detail screens call this on appear, so names written by
+    /// the old rule — which preferred the nearest business — improve as spots are looked at,
+    /// without a bulk re-geocode that would hammer the rate limit.
+    func refreshPlaceName(for spot: Spot) {
+        resolvePlaceName(for: spot)
     }
 
     // MARK: - Widget snapshot

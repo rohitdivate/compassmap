@@ -170,6 +170,76 @@ extension NavigationUITests {
         )
     }
 
+    /// Wave 3: the arrival-alert toggle exists, turns on, and the choice survives closing the
+    /// detail sheet — it is a stored property, not view state. Region *entry* cannot be simulated
+    /// on CI hardware, so what fires when you actually walk up stays on the device checklist.
+    func testArrivalAlertToggleShowsAndPersists() throws {
+        // Arrange: one spot, via the same flow the save-here test proves.
+        app.buttons["save-here-button"].tap()
+        XCTAssertTrue(app.buttons["kind-stay"].waitForExistence(timeout: 5))
+        app.buttons["kind-stay"].tap()
+        let nameField = app.textFields["save-here-name"]
+        nameField.tap()
+        nameField.typeText("Alert Cove")
+        app.buttons["save-here-confirm"].tap()
+        let card = app.staticTexts["Alert Cove"]
+        XCTAssertTrue(card.waitForExistence(timeout: 8))
+
+        // The detail sheet lives behind the arrow screen's overflow menu.
+        card.tap()
+        openDetailFromArrow()
+
+        let toggle = scrollToArrivalToggle()
+        XCTAssertTrue(waitForSwitchValue(toggle, "0"), "A new spot should start with alerts off")
+        toggle.tap()
+        XCTAssertTrue(waitForSwitchValue(toggle, "1"), "The toggle did not turn on")
+
+        app.buttons["detail-done"].tap()
+        XCTAssertTrue(
+            app.buttons["spot-more-button"].waitForExistence(timeout: 5),
+            "Dismissing the detail sheet did not return to the arrow screen"
+        )
+        openDetailFromArrow()
+        let reopened = scrollToArrivalToggle()
+        XCTAssertTrue(
+            waitForSwitchValue(reopened, "1"),
+            "The alert choice did not survive closing and reopening the detail sheet"
+        )
+    }
+
+    private func openDetailFromArrow() {
+        let more = app.buttons["spot-more-button"]
+        XCTAssertTrue(more.waitForExistence(timeout: 5), "No overflow menu on the arrow screen")
+        more.tap()
+        // Menu items usually surface by identifier, but SwiftUI has been known to expose only the
+        // label, so both are accepted.
+        let byIdentifier = app.buttons["spot-details-item"]
+        let item = byIdentifier.waitForExistence(timeout: 2) ? byIdentifier : app.buttons["Spot details"]
+        XCTAssertTrue(item.waitForExistence(timeout: 5), "The overflow menu did not open")
+        item.tap()
+    }
+
+    /// The arrival section sits low on the detail scroll view, below the photo and the facts.
+    private func scrollToArrivalToggle() -> XCUIElement {
+        let toggle = app.switches["arrival-toggle"]
+        for _ in 0..<6 where !(toggle.exists && toggle.isHittable) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5), "No arrival alert toggle on the detail screen")
+        return toggle
+    }
+
+    /// Switch state changes are animated, so the value is awaited rather than read immediately.
+    private func waitForSwitchValue(
+        _ element: XCUIElement,
+        _ value: String,
+        timeout: TimeInterval = 5
+    ) -> Bool {
+        let predicate = NSPredicate(format: "value == %@", value)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
+
     /// Wave 2: save a spot, then find it by search — and prove a bogus query says so rather than
     /// showing an empty page. The store is in-memory under -ui-testing, so the only spot present
     /// is the one this test just made; both assertions are unambiguous.

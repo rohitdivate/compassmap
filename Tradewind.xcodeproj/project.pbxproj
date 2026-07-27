@@ -23,6 +23,7 @@
 		AEBCB0B45C82BAE1855D002D /* GPSMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */; };
 		C860F55CA01E27C42980DDAD /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
 		28AB8E6391651A4EC01C067E /* MapsLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */; };
+		7D12B38EA3C0BDA230FF8ECA /* PlaceNameFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */; };
 		8AB9231CF1D452197D7A52A5 /* AppModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */; };
 		FA937D3E56A9017FBF08CA83 /* Spot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F6EC23B5ED8212D4AF9110 /* Spot.swift */; };
 		ACC70B44AD8DF549DC23B199 /* Trip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681735495DF5481567AA0F94 /* Trip.swift */; };
@@ -31,6 +32,7 @@
 		55E4F26400022E6E3AF3FAD1 /* CurrentLocationProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C9A3535CC4C62DFA561E2F /* CurrentLocationProbe.swift */; };
 		60CD4A7CC02D0E40F278CF0E /* FeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82942F2172A5840F6A232A00 /* FeedbackService.swift */; };
 		BB17AA2976C0E4A7A7BBCDB8 /* GeocodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAF4F427E16C9C7491A16A37 /* GeocodeService.swift */; };
+		0FFC402A3534C92D9383839D /* GeofenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76433BA9ACA1631BAECDAC04 /* GeofenceService.swift */; };
 		08D24F8718983FF2848902D1 /* HeadingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D89190DF62BA79BB40412AC /* HeadingActivityAttributes.swift */; };
 		8B186F07918386F164F39F8C /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */; };
 		36FA936D6C06363036E78C33 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A3D8BCDBC98AF520738780 /* LocationService.swift */; };
@@ -40,6 +42,7 @@
 		1596C55B8965DC107BA34141 /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		193E3730F5558A5B8CB4448D /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
+		5647BFD08776D6AA6A52744D /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		59B679A7FD58F339FF1C21F6 /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
 		5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
@@ -103,6 +106,7 @@
 		8177A18667781B456F8E27D2 /* GPSMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */; };
 		8D360309FC12C10DCF31357C /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
 		EBBBE5F1E3BAC3D05E77029A /* MapsLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */; };
+		FB11CA9F3EBC230C3B02127A /* PlaceNameFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */; };
 		778EB0809F2C5CE88713F07E /* AppModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */; };
 		6D94F1AC8FB3A71A51A3A3EC /* Spot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F6EC23B5ED8212D4AF9110 /* Spot.swift */; };
 		68A39D27CE82EADFB8241CBB /* Trip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681735495DF5481567AA0F94 /* Trip.swift */; };
@@ -111,6 +115,7 @@
 		CD5E562A20832D0240B8418E /* CurrentLocationProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C9A3535CC4C62DFA561E2F /* CurrentLocationProbe.swift */; };
 		37699ACF6F34B17388533F0F /* FeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82942F2172A5840F6A232A00 /* FeedbackService.swift */; };
 		0E36ECCE8ED86AC7285EC1A6 /* GeocodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAF4F427E16C9C7491A16A37 /* GeocodeService.swift */; };
+		7FB6995D39D600675D6DC580 /* GeofenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76433BA9ACA1631BAECDAC04 /* GeofenceService.swift */; };
 		E4B5BE99AB057F42FDCA617D /* HeadingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D89190DF62BA79BB40412AC /* HeadingActivityAttributes.swift */; };
 		7DE9A36F0AD6E5E9AF217761 /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */; };
 		61F83801C75D762CA15739C4 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A3D8BCDBC98AF520738780 /* LocationService.swift */; };
@@ -120,6 +125,7 @@
 		43E6586B69FDA319FAE191AC /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		2E07A9353740D9F26301525D /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
+		B9CF77EE08C5F9627B1262E5 /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		C646DAAD3ACEDBAE4CEECDC7 /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
 		D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
@@ -158,9 +164,11 @@
 		690FE776F9A03E323CE4A73B /* GPSMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */; };
 		1E5B4AFA4559336B9B05C8FA /* LibraryAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B5B258633A3B91B026EA57 /* LibraryAccess.swift */; };
 		8827569F793B0BAD2BB09310 /* MapsLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */; };
+		DD7F02C1BDDE6A89ECBAA3A9 /* PlaceNameFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */; };
 		DD4774E37BBE553470C48CB5 /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		13109515F2A891109F680B42 /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
+		76161908CA6A46322959813E /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		38D4A3B87FDA0AB4F761F44C /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
 		205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
@@ -175,10 +183,12 @@
 		4E63D30C84F0F47F4FAD21EF /* BuildInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F892ECF97D4E6E3BA3687210 /* BuildInfoTests.swift */; };
 		BCE705FECEDC38EF7F1B7C5E /* DistanceFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */; };
 		B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */; };
+		3C5C98E42D7E26A0D3945E32 /* GeofencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD9491343F20D001C3339DDF /* GeofencePlanTests.swift */; };
 		762D5EC6D231B9F53DCD84FF /* LibraryAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */; };
 		2B99EE7B03E9B784A112988D /* MapsLinkParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */; };
 		D86169E5CA694C1A78258CD5 /* MeterReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */; };
 		9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */; };
+		31AF459C365B004AF6966B2D /* PlaceNameFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7892EF4E5477622F815BD2C7 /* PlaceNameFormatterTests.swift */; };
 		5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */; };
 		CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */; };
 		84B7762AB59882B25BA0253D /* SpotSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7339A85B32401117D2D282A /* SpotSearchTests.swift */; };
@@ -233,6 +243,7 @@
 		1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSMetadata.swift; sourceTree = "<group>"; };
 		12B5B258633A3B91B026EA57 /* LibraryAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAccess.swift; sourceTree = "<group>"; };
 		DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapsLinkParser.swift; sourceTree = "<group>"; };
+		88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceNameFormatter.swift; sourceTree = "<group>"; };
 		5505CD8CF60A05CC3F49527A /* AppModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelContainer.swift; sourceTree = "<group>"; };
 		48F6EC23B5ED8212D4AF9110 /* Spot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spot.swift; sourceTree = "<group>"; };
 		681735495DF5481567AA0F94 /* Trip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trip.swift; sourceTree = "<group>"; };
@@ -241,6 +252,7 @@
 		74C9A3535CC4C62DFA561E2F /* CurrentLocationProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentLocationProbe.swift; sourceTree = "<group>"; };
 		82942F2172A5840F6A232A00 /* FeedbackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackService.swift; sourceTree = "<group>"; };
 		FAF4F427E16C9C7491A16A37 /* GeocodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeocodeService.swift; sourceTree = "<group>"; };
+		76433BA9ACA1631BAECDAC04 /* GeofenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofenceService.swift; sourceTree = "<group>"; };
 		3D89190DF62BA79BB40412AC /* HeadingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingActivityAttributes.swift; sourceTree = "<group>"; };
 		CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
 		69A3D8BCDBC98AF520738780 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
@@ -250,6 +262,7 @@
 		CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityPushPolicy.swift; sourceTree = "<group>"; };
 		C07064A66E87DD3F7B94CB72 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfo.swift; sourceTree = "<group>"; };
+		D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofencePlan.swift; sourceTree = "<group>"; };
 		4F3FB534A816D801FFB6A44D /* MeterReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeterReminder.swift; sourceTree = "<group>"; };
 		B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAction.swift; sourceTree = "<group>"; };
 		6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlan.swift; sourceTree = "<group>"; };
@@ -303,10 +316,12 @@
 		F892ECF97D4E6E3BA3687210 /* BuildInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoTests.swift; sourceTree = "<group>"; };
 		1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceFormattingTests.swift; sourceTree = "<group>"; };
 		1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSMetadataTests.swift; sourceTree = "<group>"; };
+		CD9491343F20D001C3339DDF /* GeofencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofencePlanTests.swift; sourceTree = "<group>"; };
 		120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAccessTests.swift; sourceTree = "<group>"; };
 		F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapsLinkParserTests.swift; sourceTree = "<group>"; };
 		A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeterReminderTests.swift; sourceTree = "<group>"; };
 		E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlanTests.swift; sourceTree = "<group>"; };
+		7892EF4E5477622F815BD2C7 /* PlaceNameFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceNameFormatterTests.swift; sourceTree = "<group>"; };
 		9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshotTests.swift; sourceTree = "<group>"; };
 		5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTimesTests.swift; sourceTree = "<group>"; };
 		A7339A85B32401117D2D282A /* SpotSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotSearchTests.swift; sourceTree = "<group>"; };
@@ -396,6 +411,7 @@
 				1309712FAABEA700C6C7C8F7 /* GPSMetadata.swift */,
 				12B5B258633A3B91B026EA57 /* LibraryAccess.swift */,
 				DEBB60184F5C9EE6DF0C1ED0 /* MapsLinkParser.swift */,
+				88BC3A5B141DC8CE1979B5D4 /* PlaceNameFormatter.swift */,
 			);
 			path = Metadata;
 			sourceTree = "<group>";
@@ -418,6 +434,7 @@
 				74C9A3535CC4C62DFA561E2F /* CurrentLocationProbe.swift */,
 				82942F2172A5840F6A232A00 /* FeedbackService.swift */,
 				FAF4F427E16C9C7491A16A37 /* GeocodeService.swift */,
+				76433BA9ACA1631BAECDAC04 /* GeofenceService.swift */,
 				3D89190DF62BA79BB40412AC /* HeadingActivityAttributes.swift */,
 				CA0478FB5A49C3D5EC0B5304 /* LiveActivityService.swift */,
 				69A3D8BCDBC98AF520738780 /* LocationService.swift */,
@@ -434,6 +451,7 @@
 				CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */,
 				C07064A66E87DD3F7B94CB72 /* AppGroup.swift */,
 				6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */,
+				D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */,
 				4F3FB534A816D801FFB6A44D /* MeterReminder.swift */,
 				B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */,
 				6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */,
@@ -619,10 +637,12 @@
 				F892ECF97D4E6E3BA3687210 /* BuildInfoTests.swift */,
 				1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */,
 				1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */,
+				CD9491343F20D001C3339DDF /* GeofencePlanTests.swift */,
 				120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */,
 				F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */,
 				A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */,
 				E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */,
+				7892EF4E5477622F815BD2C7 /* PlaceNameFormatterTests.swift */,
 				9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */,
 				5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */,
 				A7339A85B32401117D2D282A /* SpotSearchTests.swift */,
@@ -883,6 +903,7 @@
 				AEBCB0B45C82BAE1855D002D /* GPSMetadata.swift in Sources */,
 				C860F55CA01E27C42980DDAD /* LibraryAccess.swift in Sources */,
 				28AB8E6391651A4EC01C067E /* MapsLinkParser.swift in Sources */,
+				7D12B38EA3C0BDA230FF8ECA /* PlaceNameFormatter.swift in Sources */,
 				8AB9231CF1D452197D7A52A5 /* AppModelContainer.swift in Sources */,
 				FA937D3E56A9017FBF08CA83 /* Spot.swift in Sources */,
 				ACC70B44AD8DF549DC23B199 /* Trip.swift in Sources */,
@@ -891,6 +912,7 @@
 				55E4F26400022E6E3AF3FAD1 /* CurrentLocationProbe.swift in Sources */,
 				60CD4A7CC02D0E40F278CF0E /* FeedbackService.swift in Sources */,
 				BB17AA2976C0E4A7A7BBCDB8 /* GeocodeService.swift in Sources */,
+				0FFC402A3534C92D9383839D /* GeofenceService.swift in Sources */,
 				08D24F8718983FF2848902D1 /* HeadingActivityAttributes.swift in Sources */,
 				8B186F07918386F164F39F8C /* LiveActivityService.swift in Sources */,
 				36FA936D6C06363036E78C33 /* LocationService.swift in Sources */,
@@ -900,6 +922,7 @@
 				1596C55B8965DC107BA34141 /* ActivityPushPolicy.swift in Sources */,
 				DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */,
 				193E3730F5558A5B8CB4448D /* BuildInfo.swift in Sources */,
+				5647BFD08776D6AA6A52744D /* GeofencePlan.swift in Sources */,
 				59B679A7FD58F339FF1C21F6 /* MeterReminder.swift in Sources */,
 				F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */,
 				5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */,
@@ -951,6 +974,7 @@
 				8177A18667781B456F8E27D2 /* GPSMetadata.swift in Sources */,
 				8D360309FC12C10DCF31357C /* LibraryAccess.swift in Sources */,
 				EBBBE5F1E3BAC3D05E77029A /* MapsLinkParser.swift in Sources */,
+				FB11CA9F3EBC230C3B02127A /* PlaceNameFormatter.swift in Sources */,
 				778EB0809F2C5CE88713F07E /* AppModelContainer.swift in Sources */,
 				6D94F1AC8FB3A71A51A3A3EC /* Spot.swift in Sources */,
 				68A39D27CE82EADFB8241CBB /* Trip.swift in Sources */,
@@ -959,6 +983,7 @@
 				CD5E562A20832D0240B8418E /* CurrentLocationProbe.swift in Sources */,
 				37699ACF6F34B17388533F0F /* FeedbackService.swift in Sources */,
 				0E36ECCE8ED86AC7285EC1A6 /* GeocodeService.swift in Sources */,
+				7FB6995D39D600675D6DC580 /* GeofenceService.swift in Sources */,
 				E4B5BE99AB057F42FDCA617D /* HeadingActivityAttributes.swift in Sources */,
 				7DE9A36F0AD6E5E9AF217761 /* LiveActivityService.swift in Sources */,
 				61F83801C75D762CA15739C4 /* LocationService.swift in Sources */,
@@ -968,6 +993,7 @@
 				43E6586B69FDA319FAE191AC /* ActivityPushPolicy.swift in Sources */,
 				607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */,
 				2E07A9353740D9F26301525D /* BuildInfo.swift in Sources */,
+				B9CF77EE08C5F9627B1262E5 /* GeofencePlan.swift in Sources */,
 				C646DAAD3ACEDBAE4CEECDC7 /* MeterReminder.swift in Sources */,
 				FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */,
 				D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */,
@@ -995,9 +1021,11 @@
 				690FE776F9A03E323CE4A73B /* GPSMetadata.swift in Sources */,
 				1E5B4AFA4559336B9B05C8FA /* LibraryAccess.swift in Sources */,
 				8827569F793B0BAD2BB09310 /* MapsLinkParser.swift in Sources */,
+				DD7F02C1BDDE6A89ECBAA3A9 /* PlaceNameFormatter.swift in Sources */,
 				DD4774E37BBE553470C48CB5 /* ActivityPushPolicy.swift in Sources */,
 				EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */,
 				13109515F2A891109F680B42 /* BuildInfo.swift in Sources */,
+				76161908CA6A46322959813E /* GeofencePlan.swift in Sources */,
 				38D4A3B87FDA0AB4F761F44C /* MeterReminder.swift in Sources */,
 				79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */,
 				205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */,
@@ -1012,10 +1040,12 @@
 				4E63D30C84F0F47F4FAD21EF /* BuildInfoTests.swift in Sources */,
 				BCE705FECEDC38EF7F1B7C5E /* DistanceFormattingTests.swift in Sources */,
 				B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */,
+				3C5C98E42D7E26A0D3945E32 /* GeofencePlanTests.swift in Sources */,
 				762D5EC6D231B9F53DCD84FF /* LibraryAccessTests.swift in Sources */,
 				2B99EE7B03E9B784A112988D /* MapsLinkParserTests.swift in Sources */,
 				D86169E5CA694C1A78258CD5 /* MeterReminderTests.swift in Sources */,
 				9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */,
+				31AF459C365B004AF6966B2D /* PlaceNameFormatterTests.swift in Sources */,
 				5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */,
 				CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */,
 				84B7762AB59882B25BA0253D /* SpotSearchTests.swift in Sources */,

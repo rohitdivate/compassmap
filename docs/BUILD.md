@@ -203,6 +203,14 @@ membership — see the table above.
 11. **Sharing** — share a spot to yourself in Messages. The postcard image and the link should both
     arrive; tapping the link should open the arrow. Try it on a device where the spot is *not*
     saved — the arrow should still work from the coordinates in the link, offering to save it.
+12. **Arrival alert** — open a spot's details, turn on *Alert me when I'm near*, and allow *Always*
+    location access when the caveat offers it. Walk 250 m away, put the phone to sleep, and walk
+    back: within about 200 m a "You're near…" notification should land — carrying your note if you
+    left one — and tapping it should open the arrow at that spot. The simulator cannot prove this;
+    only a walk can.
+13. **Area names** — open the details of a spot saved by an earlier build. Within a few seconds
+    the *Area* row should read like a street or district ("Baker Street, London"), never a nearby
+    business, and the gallery subtitle should stop showing raw degrees once names resolve.
 
 ## Regenerating the project
 
