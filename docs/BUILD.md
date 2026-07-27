@@ -196,7 +196,11 @@ membership — see the table above.
    should appear and update as you move. Check the Dynamic Island while another app is foreground.
 8. **Siri** — "How far to \<spot name\> in Tradewind". It answers without opening the app.
 9. **Spotlight** — swipe down, type a spot name; it should appear and open onto its arrow.
-10. **Sharing** — share a spot to yourself in Messages. The postcard image and the link should both
+10. **Save here, no photo** — from the gallery, tap *Save here*, pick *Stay*, add a note like
+    "Level 3, aisle F" and a 15-minute reminder. The spot should appear with a bed symbol instead of
+    a photo, the arrow should navigate to it, the note should show when you arrive, and the
+    notification should land in 15 minutes and open the arrow when tapped.
+11. **Sharing** — share a spot to yourself in Messages. The postcard image and the link should both
     arrive; tapping the link should open the arrow. Try it on a device where the spot is *not*
     saved — the arrow should still work from the coordinates in the link, offering to save it.
 

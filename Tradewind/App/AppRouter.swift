@@ -44,6 +44,7 @@ final class AppRouter {
 
     var isShowingCapture = false
     var isShowingSettings = false
+    var isShowingSaveHere = false
     var isShowingImporter = false
 
     /// Set when a link referenced a spot we do not have, so the UI can say so rather than

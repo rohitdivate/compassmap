@@ -58,6 +58,8 @@ struct SpotDetailView: View {
                     glyphPicker
                     tripAssignment
                     noteField
+                    kindSection
+                    reminderSection
                     actions
                 }
                 .padding(.bottom, 40)
@@ -349,6 +351,81 @@ struct SpotDetailView: View {
         .onChange(of: draftNote) { _, newValue in
             store.update(spot, note: newValue.isEmpty ? nil : newValue)
         }
+    }
+
+    // MARK: - Kind and reminder
+
+    /// What sort of place this is. Changing it re-badges the spot everywhere a photo is absent —
+    /// cards, pins, widgets.
+    private var kindSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Kind")
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(PlaceKind.pickable) { candidate in
+                        ChipButton(
+                            title: candidate.label,
+                            symbol: candidate.symbol,
+                            isSelected: spot.placeKind == candidate
+                        ) {
+                            store.update(spot, kind: candidate)
+                            FeedbackService.shared.lightTap()
+                        }
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+        }
+        .padding(.horizontal, 18)
+    }
+
+    /// The meter timer. Active shows a live countdown and a way out; inactive shows the presets.
+    private var reminderSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(eyebrow: "Meters, check-outs, closing times", title: "Remind me")
+            Surface(padding: 14) {
+                if let fireDate = spot.reminderAt, MeterReminder.isActive(fireDate, now: Date()) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(theme.highlight)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Reminder set")
+                                .font(theme.cardTitleFont)
+                                .foregroundStyle(theme.text)
+                            Text(fireDate, style: .relative)
+                                .font(theme.captionFont)
+                                .foregroundStyle(theme.textMuted)
+                                .monospacedDigit()
+                        }
+                        Spacer()
+                        Button("Cancel") { store.setReminder(spot, at: nil) }
+                            .font(theme.sans(13, weight: .medium))
+                            .foregroundStyle(theme.negative)
+                    }
+                } else {
+                    ScrollView(.horizontal) {
+                        HStack(spacing: 8) {
+                            ForEach(MeterReminder.presets, id: \.self) { preset in
+                                ChipButton(
+                                    title: MeterReminder.label(for: preset),
+                                    symbol: "bell.fill",
+                                    isSelected: false
+                                ) {
+                                    store.setReminder(
+                                        spot,
+                                        at: MeterReminder.fireDate(after: preset, from: Date())
+                                    )
+                                    FeedbackService.shared.lightTap()
+                                }
+                            }
+                        }
+                    }
+                    .scrollIndicators(.hidden)
+                }
+            }
+        }
+        .padding(.horizontal, 18)
     }
 
     // MARK: - Actions

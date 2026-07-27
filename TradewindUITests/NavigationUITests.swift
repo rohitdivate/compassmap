@@ -136,3 +136,37 @@ final class NavigationUITests: XCTestCase {
         )
     }
 }
+
+// MARK: - Saving without a photo
+
+extension NavigationUITests {
+
+    /// The Wave 1 loop end to end: tap Save here, pick a kind, name it, save, and see it in the
+    /// gallery. Runs in the simulator because the flow needs no camera — which is the point of it.
+    /// The coordinate comes from the -ui-testing seam; CI simulators have no location fix.
+    func testSaveHereCreatesASpotWithoutAPhoto() throws {
+        let saveHere = app.buttons["save-here-button"]
+        XCTAssertTrue(saveHere.waitForExistence(timeout: 5), "No Save here button on the gallery")
+        saveHere.tap()
+
+        let stayKind = app.buttons["kind-stay"]
+        XCTAssertTrue(stayKind.waitForExistence(timeout: 5), "The save-here sheet did not present")
+        stayKind.tap()
+
+        let nameField = app.textFields["save-here-name"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 3))
+        nameField.tap()
+        nameField.typeText("Test Hotel")
+
+        let confirm = app.buttons["save-here-confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 3))
+        XCTAssertTrue(confirm.isEnabled, "Save disabled — the UI-test location seam is not supplying a coordinate")
+        confirm.tap()
+
+        // The sheet dismisses back to the gallery, which now contains the spot.
+        XCTAssertTrue(
+            app.staticTexts["Test Hotel"].waitForExistence(timeout: 8),
+            "The saved spot did not appear in the gallery"
+        )
+    }
+}

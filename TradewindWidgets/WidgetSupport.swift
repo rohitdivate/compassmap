@@ -272,6 +272,12 @@ struct WidgetPhoto: View {
                     .scaledToFill()
             } else if let glyph = spot?.glyph, !glyph.isEmpty {
                 Text(glyph).font(theme.sans(26))
+            } else if let spot {
+                // A photo-less spot shows its kind's mark, so a saved station reads as a station
+                // on the home screen too.
+                Image(systemName: PlaceKind.from(rawValue: spot.kindRaw).symbol)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundStyle(theme.accent)
             }
         }
     }

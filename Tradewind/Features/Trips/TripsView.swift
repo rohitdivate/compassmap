@@ -252,7 +252,7 @@ private struct LooseSpotChip: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            PhotoView(data: ranked.spot.photoData, maxDimension: 400, glyph: ranked.spot.glyph)
+            PhotoView(data: ranked.spot.photoData, maxDimension: 400, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
                 .frame(width: 128, height: 96)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
@@ -396,7 +396,7 @@ private struct TripSpotRow: View {
     var body: some View {
         Surface(cornerRadius: 20, padding: 12) {
             HStack(spacing: 14) {
-                PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph)
+                PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
                     .frame(width: 56, height: 56)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 

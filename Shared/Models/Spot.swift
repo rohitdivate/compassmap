@@ -37,6 +37,10 @@ final class Spot {
     /// An emoji the person picked, used as the spot's mark where a photo would be too big.
     var glyph: String?
 
+    /// When a "remind me" notification is due to fire, or nil when none is set. A past date means
+    /// the notification already fired; `MeterReminder.isActive` is the read that matters.
+    var reminderAt: Date?
+
     /// What sort of place this is — `PlaceKind.rawValue`.
     ///
     /// Stored as an optional string rather than the enum so CloudKit's rules hold and so an

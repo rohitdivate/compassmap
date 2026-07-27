@@ -58,6 +58,9 @@ struct PhotoView: View {
     var data: Data?
     var maxDimension: CGFloat = 900
     var glyph: String?
+    /// Shown when there is neither a photo nor a glyph — a station saved from Save Here has no
+    /// picture, and its kind's symbol is what makes the card read as that place.
+    var fallbackSymbol: String?
 
     @State private var image: UIImage?
     @State private var didAttempt = false
@@ -84,6 +87,10 @@ struct PhotoView: View {
         .overlay {
             if let glyph, !glyph.isEmpty {
                 Text(glyph).font(.system(size: 34))
+            } else if data == nil || data?.isEmpty == true, let fallbackSymbol {
+                Image(systemName: fallbackSymbol)
+                    .font(.system(size: 30, weight: .medium))
+                    .foregroundStyle(theme.accent)
             } else if didAttempt, image == nil {
                 Image(systemName: "photo")
                     .font(.system(size: 22, weight: .light))
