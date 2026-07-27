@@ -23,10 +23,13 @@ struct UndoToastHost: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: undo.candidate)
-        // Keyed by the candidate so deleting a second spot restarts the five seconds.
+        // Keyed by the candidate so deleting a second spot restarts the five seconds. Under the
+        // test seam the window stretches: a synthesized tap racing the auto-clear loses by
+        // milliseconds and falls through a just-vanished toast.
         .task(id: undo.candidate) {
             guard undo.candidate != nil else { return }
-            try? await Task.sleep(nanoseconds: UInt64(TrashPolicy.undoWindow * 1_000_000_000))
+            let window = AppSettings.isUITesting ? 30 : TrashPolicy.undoWindow
+            try? await Task.sleep(nanoseconds: UInt64(window * 1_000_000_000))
             undo.clear()
         }
         .allowsHitTesting(undo.candidate != nil)
