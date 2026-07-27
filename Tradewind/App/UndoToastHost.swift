@@ -64,6 +64,7 @@ struct UndoToastHost: View {
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 96)
-        .accessibilityIdentifier("undo-toast")
+        // No identifier on the container: SwiftUI stamps a container's identifier onto every
+        // child, which silently overwrote the Undo button's own — and made it unfindable.
     }
 }

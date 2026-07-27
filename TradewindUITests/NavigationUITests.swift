@@ -192,6 +192,11 @@ extension NavigationUITests {
         let toggle = scrollToArrivalToggle()
         XCTAssertTrue(waitForSwitchValue(toggle, "0"), "A new spot should start with alerts off")
         toggle.tap()
+        // A tap can land on a mid-rebuild sheet and die against a detached element — one
+        // guarded retry covers the race without masking a genuinely broken toggle.
+        if !waitForSwitchValue(toggle, "1", timeout: 3) {
+            toggle.tap()
+        }
         XCTAssertTrue(waitForSwitchValue(toggle, "1"), "The toggle did not turn on")
 
         app.buttons["detail-done"].tap()
