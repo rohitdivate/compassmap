@@ -246,23 +246,11 @@ extension NavigationUITests {
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
-    /// Wave 4: delete is soft. The undo toast brings a spot straight back; Recently Deleted in
-    /// Settings holds it for thirty days and restores it too. Both restores are asserted against
-    /// the gallery, because "the row disappeared from the trash" is not the same fact as "the
-    /// spot is back".
-    func testDeleteUndoAndRecentlyDeletedRestore() throws {
-        // One spot via the proven save-here flow.
-        app.buttons["save-here-button"].tap()
-        XCTAssertTrue(app.buttons["kind-place"].waitForExistence(timeout: 5))
-        app.buttons["kind-place"].tap()
-        let nameField = app.textFields["save-here-name"]
-        nameField.tap()
-        nameField.typeText("Trash Cove")
-        app.buttons["save-here-confirm"].tap()
-        // firstMatch: after a restore the name can briefly match twice (the card's title and its
-        // combined accessibility element) and an ambiguous tap throws.
-        let card = app.staticTexts["Trash Cove"].firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: 8))
+    /// Wave 4, first half: delete is soft, and the undo toast brings the spot straight back.
+    /// One arrow entry per app launch — the flaky move on CI was ever *re-entering* the arrow
+    /// after a restore, so the trash half lives in its own test with its own fresh launch.
+    func testDeleteShowsUndoToastAndUndoRestores() throws {
+        let card = saveSpot(named: "Trash Cove")
 
         // Delete through the detail screen — deterministic buttons the whole way, unlike
         // context-menu synthesis, which XCUITest fires unreliably. The context menu still
@@ -275,8 +263,13 @@ extension NavigationUITests {
         )
         app.buttons["undo-delete"].tap()
         XCTAssertTrue(card.waitForExistence(timeout: 5), "Undo did not bring the spot back")
+    }
 
-        // Delete again, and this time recover it through Recently Deleted in Settings.
+    /// Wave 4, second half: Recently Deleted holds the spot and restores it. Asserted against
+    /// the gallery, because "the row disappeared from the trash" is not the same fact as "the
+    /// spot is back".
+    func testRecentlyDeletedHoldsAndRestores() throws {
+        let card = saveSpot(named: "Trash Cove")
         deleteFromDetail(card)
         XCTAssertTrue(app.buttons["undo-delete"].waitForExistence(timeout: 5))
 
@@ -285,7 +278,7 @@ extension NavigationUITests {
         XCTAssertTrue(screen("settings-screen").waitForExistence(timeout: 5))
 
         let trashLink = app.buttons["recently-deleted-link"]
-        for _ in 0..<6 where !(trashLink.exists && trashLink.isHittable) {
+        for _ in 0..<6 where !trashLink.isHittable {
             app.swipeUp()
         }
         XCTAssertTrue(trashLink.waitForExistence(timeout: 5), "No Recently Deleted entry in Settings")
@@ -305,9 +298,25 @@ extension NavigationUITests {
         app.navigationBars.buttons.firstMatch.tap()
         app.buttons["settings-done"].tap()
         XCTAssertTrue(
-            app.staticTexts["Trash Cove"].waitForExistence(timeout: 5),
+            app.staticTexts["Trash Cove"].firstMatch.waitForExistence(timeout: 5),
             "Restoring from Recently Deleted did not return the spot to the gallery"
         )
+    }
+
+    /// Saves a photo-less spot through the save-here flow and returns its gallery card.
+    private func saveSpot(named name: String) -> XCUIElement {
+        app.buttons["save-here-button"].tap()
+        XCTAssertTrue(app.buttons["kind-place"].waitForExistence(timeout: 5))
+        app.buttons["kind-place"].tap()
+        let nameField = app.textFields["save-here-name"]
+        nameField.tap()
+        nameField.typeText(name)
+        app.buttons["save-here-confirm"].tap()
+        // firstMatch: a name can match both the card's title and its combined accessibility
+        // element, and an ambiguous tap throws.
+        let card = app.staticTexts[name].firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 8), "The saved spot did not appear")
+        return card
     }
 
     /// Deletes a spot via its detail screen: card → arrow → title → Delete spot → confirm.
