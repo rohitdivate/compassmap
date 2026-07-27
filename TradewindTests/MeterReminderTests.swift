@@ -12,10 +12,12 @@ struct MeterReminderTests {
     func presets() {
         #expect(MeterReminder.presets == MeterReminder.presets.sorted())
         #expect(Set(MeterReminder.presets).count == MeterReminder.presets.count)
-        // One tap must cover the common cases: a short meter and a half-day.
-        #expect(MeterReminder.presets.first == 15 * 60)
+        // One tap must cover the common cases: a short meter and a half-day. The literals are
+        // typed explicitly: `presets.first == 15 * 60` resolved as Double? against Int, which
+        // compiles under the #expect macro and is then false at runtime — 900.0 is not Int 900.
+        #expect(MeterReminder.presets.first == TimeInterval(15 * 60))
         #expect(MeterReminder.presets.contains(60 * 60))
-        #expect(MeterReminder.presets.last == 4 * 60 * 60)
+        #expect(MeterReminder.presets.last == TimeInterval(4 * 60 * 60))
     }
 
     @Test("Fire date is now plus the duration, exactly")
