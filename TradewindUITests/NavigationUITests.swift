@@ -216,7 +216,14 @@ extension NavigationUITests {
         let byIdentifier = app.buttons["spot-details-item"]
         let item = byIdentifier.waitForExistence(timeout: 2) ? byIdentifier : app.buttons["Spot details"]
         XCTAssertTrue(item.waitForExistence(timeout: 5), "The overflow menu did not open")
-        item.tap()
+        // SwiftUI menu items can report an invalid activation point ("no suggested hit points")
+        // even with a perfectly good frame — the first CI run failed on exactly that. Tapping the
+        // frame's centre coordinate bypasses the activation-point computation entirely.
+        if item.isHittable {
+            item.tap()
+        } else {
+            item.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
     }
 
     /// The arrival section sits low on the detail scroll view, below the photo and the facts.

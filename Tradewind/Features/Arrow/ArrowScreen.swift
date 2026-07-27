@@ -277,7 +277,11 @@ struct ArrowScreen: View {
             .animation(.snappy(duration: 0.25), value: distance.value)
         } else {
             VStack(spacing: 6) {
-                ProgressView().tint(theme.accent)
+                // The spinner is the other animation that never ends: a simulator has no fix, so
+                // under the test seam it would keep the app from ever idling for XCUITest.
+                if !AppSettings.isUITesting {
+                    ProgressView().tint(theme.accent)
+                }
                 Text(location.isAuthorized ? "Finding you" : "Location is off")
                     .font(theme.captionFont)
                     .foregroundStyle(.white.opacity(0.72))

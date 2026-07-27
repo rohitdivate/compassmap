@@ -243,24 +243,36 @@ struct RadarRings: View {
     var period: Double = 3.6
 
     var body: some View {
-        // Driven from the clock rather than from an animated `@State`: the rings wrap around
-        // continuously, and a wrapping value is exactly what SwiftUI's interpolation cannot
-        // animate sensibly.
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
-            let time = context.date.timeIntervalSinceReferenceDate / period
-            ZStack {
-                ForEach(0..<ringCount, id: \.self) { index in
-                    let progress = (time + Double(index) / Double(ringCount))
-                        .truncatingRemainder(dividingBy: 1)
-                    Circle()
-                        .strokeBorder(theme.accent.opacity(0.45 * (1 - progress)), lineWidth: 1.5)
-                        .scaleEffect(0.3 + progress * 0.7)
+        Group {
+            if AppSettings.isUITesting {
+                // XCUITest waits for the app to go idle before every interaction, and a 30 fps
+                // clock that never stops means it never does — every tap stalls out its 60 s
+                // animation budget. Under the test seam the rings hold one frame.
+                rings(at: 0.5)
+            } else {
+                // Driven from the clock rather than from an animated `@State`: the rings wrap
+                // around continuously, and a wrapping value is exactly what SwiftUI's
+                // interpolation cannot animate sensibly.
+                TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+                    rings(at: context.date.timeIntervalSinceReferenceDate / period)
                 }
             }
         }
         .frame(width: diameter, height: diameter)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private func rings(at time: Double) -> some View {
+        ZStack {
+            ForEach(0..<ringCount, id: \.self) { index in
+                let progress = (time + Double(index) / Double(ringCount))
+                    .truncatingRemainder(dividingBy: 1)
+                Circle()
+                    .strokeBorder(theme.accent.opacity(0.45 * (1 - progress)), lineWidth: 1.5)
+                    .scaleEffect(0.3 + progress * 0.7)
+            }
+        }
     }
 }
 
