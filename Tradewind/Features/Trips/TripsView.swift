@@ -26,6 +26,8 @@ struct TripsView: View {
 
     var body: some View {
         content
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("trips-screen")
             .alert("Name this trip", isPresented: $isNaming) {
                 TextField("Sri Lanka, March", text: $draftName)
                 Button("Create", action: createTrip)

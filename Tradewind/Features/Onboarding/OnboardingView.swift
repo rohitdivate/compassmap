@@ -132,6 +132,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, 30)
 
                 Button("Skip") { finish() }
+                    .accessibilityIdentifier("onboarding-skip")
                     .font(theme.captionFont)
                     .foregroundStyle(theme.textMuted)
             }

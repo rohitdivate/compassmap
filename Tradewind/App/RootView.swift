@@ -331,6 +331,7 @@ private struct FloatingBar: View {
             }
         }
         .buttonStyle(PressableStyle(scale: 0.92))
+        .accessibilityIdentifier("tab-\(tab.title)")
         .accessibilityLabel(tab.title)
     }
 
@@ -347,6 +348,8 @@ private struct FloatingBar: View {
                 }
                 .overlay { Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1) }
         }
+        .accessibilityIdentifier("capture-button")
+        .accessibilityLabel("Take a photo")
         .buttonStyle(PressableStyle(scale: 0.9))
         .accessibilityLabel("Save this place")
     }

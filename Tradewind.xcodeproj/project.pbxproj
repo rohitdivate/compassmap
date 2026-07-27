@@ -167,6 +167,7 @@
 		9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */; };
 		5DF5F94C3E43EB647A4DDF46 /* SharedSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */; };
 		CF956C7ABA96A6C3097D4729 /* SolarTimesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */; };
+		4391250DE53FA5F9208893E2 /* NavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E1C382B7BF8DC027F14366 /* NavigationUITests.swift */; };
 	/* End PBXBuildFile section */
 
 	/* Begin PBXContainerItemProxy section */
@@ -176,6 +177,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 2AAEE845ACE70C8BDAF32630;
 			remoteInfo = TradewindWidgets;
+		};
+		22C0601CE9E2BDC894CD655B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3B06176B31A70DEC27A87C26;
+			remoteInfo = Tradewind;
 		};
 	/* End PBXContainerItemProxy section */
 
@@ -279,6 +287,7 @@
 		E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlanTests.swift; sourceTree = "<group>"; };
 		9E6FCF62FCD2C492131654EC /* SharedSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshotTests.swift; sourceTree = "<group>"; };
 		5E36D8C63692CB0F882E6C62 /* SolarTimesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTimesTests.swift; sourceTree = "<group>"; };
+		C8E1C382B7BF8DC027F14366 /* NavigationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationUITests.swift; sourceTree = "<group>"; };
 		125CE65EDDF92126FF28520B /* HeadingLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingLiveActivity.swift; sourceTree = "<group>"; };
 		8176FC86D02FF25D92027C4E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5F88A74DF2A4F4714F376064 /* NearestSpotsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestSpotsWidget.swift; sourceTree = "<group>"; };
@@ -289,6 +298,7 @@
 		D118763BC4572ABA57CE916E /* Tradewind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tradewind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		339F2C126CF412C3F3519132 /* TradewindWidgets.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = TradewindWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC131E98BA2376332EE22242 /* TradewindTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TradewindTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8BBF73295816852DB0E64FC5 /* TradewindUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TradewindUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 	/* End PBXFileReference section */
 
 	/* Begin PBXFrameworksBuildPhase section */
@@ -307,6 +317,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1B8238DD1A00BA6C0DF2187E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86F5A9453086F03E79CAC518 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -582,6 +599,14 @@
 			path = TradewindTests;
 			sourceTree = "<group>";
 		};
+		635A9BBB7D30CB83CD18E904 /* TradewindUITests */ = {
+			isa = PBXGroup;
+			children = (
+				C8E1C382B7BF8DC027F14366 /* NavigationUITests.swift */,
+			);
+			path = TradewindUITests;
+			sourceTree = "<group>";
+		};
 		1D196B0D8C943B8A8630641F /* TradewindWidgets */ = {
 			isa = PBXGroup;
 			children = (
@@ -602,6 +627,7 @@
 				D118763BC4572ABA57CE916E /* Tradewind.app */,
 				339F2C126CF412C3F3519132 /* TradewindWidgets.appex */,
 				FC131E98BA2376332EE22242 /* TradewindTests.xctest */,
+				8BBF73295816852DB0E64FC5 /* TradewindUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -612,6 +638,7 @@
 				8C53392C38D2FECC52E97FFF /* Shared */,
 				1ED798B81CFA1F0834D236F4 /* Tradewind */,
 				F5E03DA4C6AA025D77291CB0 /* TradewindTests */,
+				635A9BBB7D30CB83CD18E904 /* TradewindUITests */,
 				1D196B0D8C943B8A8630641F /* TradewindWidgets */,
 				BE321093A59A0C014F79EB54 /* Products */,
 			);
@@ -673,6 +700,24 @@
 			productReference = FC131E98BA2376332EE22242 /* TradewindTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		2274A2F46542270F2C0616A1 /* TradewindUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5AA1470DC039A472C87A3FB1 /* Build configuration list for PBXNativeTarget "TradewindUITests" */;
+			buildPhases = (
+				CE5F83E8FEB14205195B248B /* Sources */,
+				86F5A9453086F03E79CAC518 /* Frameworks */,
+				D894B925DE8AA6035EEF5098 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D094997B672B1F751EB4BA6F /* PBXTargetDependency */,
+			);
+			name = TradewindUITests;
+			productName = TradewindUITests;
+			productReference = 8BBF73295816852DB0E64FC5 /* TradewindUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 	/* End PBXNativeTarget section */
 
 	/* Begin PBXProject section */
@@ -690,6 +735,9 @@
 						CreatedOnToolsVersion = 16.0;
 					};
 					CC624FD8B7EF895915B50501 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					2274A2F46542270F2C0616A1 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -711,6 +759,7 @@
 				3B06176B31A70DEC27A87C26 /* Tradewind */,
 				2AAEE845ACE70C8BDAF32630 /* TradewindWidgets */,
 				CC624FD8B7EF895915B50501 /* TradewindTests */,
+				2274A2F46542270F2C0616A1 /* TradewindUITests */,
 			);
 		};
 	/* End PBXProject section */
@@ -767,6 +816,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4AAEEB87433B3B84A78E5C6F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D894B925DE8AA6035EEF5098 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -920,6 +976,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CE5F83E8FEB14205195B248B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4391250DE53FA5F9208893E2 /* NavigationUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 	/* End PBXSourcesBuildPhase section */
 
 	/* Begin PBXTargetDependency section */
@@ -927,6 +991,11 @@
 			isa = PBXTargetDependency;
 			target = 2AAEE845ACE70C8BDAF32630 /* TradewindWidgets */;
 			targetProxy = 69DCFB4B64B39895C189A5E4 /* PBXContainerItemProxy */;
+		};
+		D094997B672B1F751EB4BA6F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3B06176B31A70DEC27A87C26 /* Tradewind */;
+			targetProxy = 22C0601CE9E2BDC894CD655B /* PBXContainerItemProxy */;
 		};
 	/* End PBXTargetDependency section */
 
@@ -1124,6 +1193,49 @@
 			};
 			name = Release;
 		};
+		6DB34866793D6015279B910A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tradewind.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = -Onone;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Tradewind;
+			};
+			name = Debug;
+		};
+		A919A5B03B063F8A779A2E88 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tradewind.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Tradewind;
+			};
+			name = Release;
+		};
 	/* End XCBuildConfiguration section */
 
 	/* Begin XCConfigurationList section */
@@ -1159,6 +1271,15 @@
 			buildConfigurations = (
 				817EB2267F9C8F233BC288C4 /* Debug */,
 				0BC24A1D981D8A063CDC8D3F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5AA1470DC039A472C87A3FB1 /* Build configuration list for PBXNativeTarget "TradewindUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6DB34866793D6015279B910A /* Debug */,
+				A919A5B03B063F8A779A2E88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

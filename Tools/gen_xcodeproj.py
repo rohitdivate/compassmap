@@ -28,6 +28,7 @@ PROJECT_DIR = os.path.join(ROOT, f"{PROJECT_NAME}.xcodeproj")
 APP_BUNDLE_ID = "com.tradewind.app"
 WIDGET_BUNDLE_ID = "com.tradewind.app.widgets"
 TESTS_BUNDLE_ID = "com.tradewind.app.tests"
+UITESTS_BUNDLE_ID = "com.tradewind.app.uitests"
 # Empty means "whatever Xcode picks", which is right for CI and for a simulator build. Set it with
 # `python3 Tools/setup_signing.py --team ABCDE12345` so a device build does not need a UI visit.
 DEVELOPMENT_TEAM = ""
@@ -206,7 +207,31 @@ def build_targets() -> list[Target]:
         },
     )
 
-    return [app, widgets, tests]
+    # UI tests launch the real app in a simulator, which is the one thing the unit bundle above
+    # cannot do — it has no host application on purpose. Two bugs reached a device because nothing
+    # ever launched this app: a crash in init() and a Settings screen that could not be opened.
+    #
+    # TEST_TARGET_NAME is what makes this a *UI* test target rather than a unit one: it tells Xcode
+    # which application to install and drive. Without it the bundle builds and tests nothing.
+    ui_tests = Target(
+        name="TradewindUITests",
+        product_type="com.apple.product-type.bundle.ui-testing",
+        product_name="TradewindUITests",
+        product_ext="xctest",
+        bundle_id=UITESTS_BUNDLE_ID,
+        sources=swift_sources("TradewindUITests"),
+        info_plist=None,
+        entitlements=None,
+        extra_settings={
+            **common,
+            "GENERATE_INFOPLIST_FILE": "YES",
+            "TEST_TARGET_NAME": "Tradewind",
+            "CODE_SIGNING_ALLOWED": "NO",
+        },
+        dependencies=["Tradewind"],
+    )
+
+    return [app, widgets, tests, ui_tests]
 
 
 # --------------------------------------------------------------------------------------
@@ -710,6 +735,31 @@ def validate(pbxproj: str, expected_paths: list[str]) -> None:
         )
 
 
+
+def testable_references(names: list[str]) -> str:
+    """One <TestableReference> per test bundle.
+
+    The scheme used to hardcode a single one. A UI test target that is not listed here builds and
+    then never runs under `xcodebuild test`, which is a silent pass — the worst possible outcome for
+    the tests whose whole job is catching what CI otherwise cannot see.
+    """
+    blocks = []
+    for name in names:
+        blocks.append(
+            f"""         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "{oid('target', name)}"
+               BuildableName = "{name}.xctest"
+               BlueprintName = "{name}"
+               ReferencedContainer = "container:Tradewind.xcodeproj">
+            </BuildableReference>
+         </TestableReference>"""
+        )
+    return "\n".join(blocks)
+
+
 SCHEME_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1600"
@@ -740,16 +790,7 @@ SCHEME_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "{tests_id}"
-               BuildableName = "TradewindTests.xctest"
-               BlueprintName = "TradewindTests"
-               ReferencedContainer = "container:Tradewind.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
+{testables}
       </Testables>
    </TestAction>
    <LaunchAction
@@ -828,7 +869,12 @@ def main() -> int:
     with open(
         os.path.join(PROJECT_DIR, "xcshareddata", "xcschemes", f"{PROJECT_NAME}.xcscheme"), "w", encoding="utf-8"
     ) as fh:
-        fh.write(SCHEME_TEMPLATE.format(app_id=oid("target", "Tradewind"), tests_id=oid("target", "TradewindTests")))
+        fh.write(
+            SCHEME_TEMPLATE.format(
+                app_id=oid("target", "Tradewind"),
+                testables=testable_references(["TradewindTests", "TradewindUITests"]),
+            )
+        )
 
     targets = build_targets()
     print(f"wrote {os.path.relpath(PROJECT_DIR, ROOT)}")

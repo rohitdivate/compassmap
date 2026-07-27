@@ -36,11 +36,14 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
+                        .accessibilityIdentifier("settings-done")
                         .foregroundStyle(theme.accent)
                 }
             }
         }
         .tint(theme.accent)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("settings-screen")
     }
 
     // MARK: - Units

@@ -38,6 +38,16 @@
                ReferencedContainer = "container:Tradewind.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2274A2F46542270F2C0616A1"
+               BuildableName = "TradewindUITests.xctest"
+               BlueprintName = "TradewindUITests"
+               ReferencedContainer = "container:Tradewind.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -47,6 +47,8 @@ struct SpotsGalleryView: View {
         }
         .scrollIndicators(.hidden)
         .ignoresSafeArea(edges: .top)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("gallery-screen")
         .refreshable {
             location.requestOneShotLocation()
             store.refreshSnapshot()

@@ -36,6 +36,8 @@ struct SpotsMapView: View {
             header
             if let selected { selectionBar(selected) }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("map-screen")
     }
 
     private func selectionBar(_ selected: RankedSpot) -> some View {
