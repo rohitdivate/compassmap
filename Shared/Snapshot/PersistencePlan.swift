@@ -29,6 +29,16 @@ enum PersistenceAttempt: String, CaseIterable, Sendable {
         case .appLocal: return false
         }
     }
+
+    /// What Settings should report if this attempt is the one that opens. Kept here rather than at
+    /// the call site so an attempt and the mode it produces cannot drift apart.
+    var mode: PersistenceMode {
+        switch self {
+        case .cloudKit: return .syncing
+        case .sharedLocal: return .sharedLocal
+        case .appLocal: return .appLocal
+        }
+    }
 }
 
 enum PersistencePlan {

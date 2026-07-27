@@ -101,3 +101,60 @@ struct PersistencePlanTests {
         }
     }
 }
+
+/// The report is the only evidence that exists when the app misbehaves on someone else's phone,
+/// so its content is worth pinning rather than trusting.
+@Suite("Startup report")
+struct StartupReportTests {
+
+    private func report(appGroupResolved: Bool, cloudSyncRequested: Bool = true) -> StartupReport {
+        StartupReport(
+            appGroupIdentifier: "group.com.example.app",
+            appGroupResolved: appGroupResolved,
+            cloudSyncRequested: cloudSyncRequested
+        )
+    }
+
+    @Test("A missing entitlement is named as such, not left as a bare 'no'")
+    func namesTheMissingEntitlement() {
+        let text = report(appGroupResolved: false).text
+        #expect(text.contains("group.com.example.app"))
+        #expect(text.contains("entitlement missing"))
+    }
+
+    @Test("An opened attempt reads as opened; a failed one carries its reason")
+    func stepsReadClearly() {
+        var subject = report(appGroupResolved: true)
+        subject.record("cloudKit", failure: "CloudKit integration requires the iCloud entitlement.")
+        subject.record("sharedLocal")
+
+        #expect(subject.didOpen)
+        #expect(subject.text.contains("cloudKit: failed — CloudKit integration requires"))
+        #expect(subject.text.contains("sharedLocal: opened"))
+    }
+
+    @Test("A report with no attempts says so rather than showing an empty list")
+    func noAttempts() {
+        let subject = report(appGroupResolved: false)
+        #expect(subject.didOpen == false)
+        #expect(subject.text.contains("nothing was considered safe to try"))
+    }
+
+    @Test("Nothing opening is distinguishable from something opening")
+    func failureIsDistinguishable() {
+        var subject = report(appGroupResolved: false)
+        subject.record("appLocal", failure: "disk full")
+        subject.record("memoryOnly", failure: "schema invalid")
+        #expect(subject.didOpen == false)
+        #expect(subject.steps.count == 2)
+    }
+
+    @Test("Every attempt's raw value survives into the text, so modes cannot be mislabelled")
+    func attemptNamesRoundTrip() {
+        for attempt in PersistenceAttempt.allCases {
+            var subject = report(appGroupResolved: true)
+            subject.record(attempt.rawValue)
+            #expect(subject.text.contains("\(attempt.rawValue): opened"))
+        }
+    }
+}

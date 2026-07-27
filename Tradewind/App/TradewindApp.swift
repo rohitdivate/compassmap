@@ -8,16 +8,23 @@ struct TradewindApp: App {
     @State private var settings = AppSettings.shared
     @State private var router = AppRouter()
 
-    private let persistence: AppModelContainer.Result
+    private let outcome: AppModelContainer.Outcome
 
     init() {
         // Opening the store is the one thing that can fail before there is any UI to report it
-        // with, so it degrades in steps and records what it managed. Settings shows the result.
-        // The App Group is probed rather than attempted — see AppModelContainer for why that
-        // distinction is load-bearing.
-        let result = AppModelContainer.make(cloudSyncEnabled: AppSettings.shared.cloudSyncEnabled)
-        persistence = result
-        AppSettings.shared.persistenceMode = result.mode
+        // with. It degrades in steps, and the App Group is *probed* rather than attempted — see
+        // AppModelContainer for why that distinction is load-bearing rather than pedantic.
+        let outcome = AppModelContainer.make(cloudSyncEnabled: AppSettings.shared.cloudSyncEnabled)
+        self.outcome = outcome
+
+        if case .opened(let result) = outcome {
+            AppSettings.shared.persistenceMode = result.mode
+        }
+
+        // Printed on every build, not just DEBUG. This app is developed without a Mac, so when it
+        // misbehaves on someone's phone this report is the only evidence that exists — and a report
+        // that only prints in one configuration is the one you do not have when you need it.
+        print(outcome.report.text)
 
         #if DEBUG
         // A font that fails to register substitutes the system face silently, so the app just
@@ -28,24 +35,39 @@ struct TradewindApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(settings)
-                .environment(router)
-                .environment(\.theme, settings.theme)
-                // Each theme fixes its own scheme: Tropical Spritz is a cream, light mood and
-                // Nomad Money a near-black one, and neither survives being inverted.
-                .preferredColorScheme(settings.theme.colorScheme)
-                .tint(settings.theme.accent)
-                .onOpenURL { url in
-                    router.handle(url: url)
-                }
-                .onContinueUserActivity(CSSearchableItemActionType) { activity in
-                    guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier]
-                        as? String
-                    else { return }
-                    router.openSpot(identifier: identifier)
-                }
+            content
         }
-        .modelContainer(persistence.container)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch outcome {
+        case .opened(let result):
+            main.modelContainer(result.container)
+        case .failed(let report):
+            // No theme, no custom fonts, no environment — the fewest possible dependencies, since
+            // this is the path taken when something fundamental is already wrong.
+            StartupFailureView(report: report)
+        }
+    }
+
+    private var main: some View {
+        RootView()
+            .environment(settings)
+            .environment(router)
+            .environment(\.theme, settings.theme)
+            // Each theme fixes its own scheme: Tropical Spritz is a cream, light mood and
+            // Nomad Money a near-black one, and neither survives being inverted.
+            .preferredColorScheme(settings.theme.colorScheme)
+            .tint(settings.theme.accent)
+            .onOpenURL { url in
+                router.handle(url: url)
+            }
+            .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier]
+                    as? String
+                else { return }
+                router.openSpot(identifier: identifier)
+            }
     }
 }

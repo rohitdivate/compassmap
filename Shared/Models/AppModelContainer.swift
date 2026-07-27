@@ -23,41 +23,68 @@ enum AppModelContainer {
     struct Result {
         let container: ModelContainer
         let mode: PersistenceMode
+        let report: StartupReport
     }
 
-    static func make(cloudSyncEnabled: Bool) -> Result {
+    enum Outcome {
+        case opened(Result)
+        /// Nothing opened, not even in memory. The app shows the report rather than dying, because
+        /// a white screen tells whoever is holding the phone nothing at all.
+        case failed(StartupReport)
+
+        var report: StartupReport {
+            switch self {
+            case .opened(let result): return result.report
+            case .failed(let report): return report
+            }
+        }
+    }
+
+    static func make(cloudSyncEnabled: Bool) -> Outcome {
         // Resolved once: it touches the filesystem, and the answer cannot change mid-launch.
         let hasAppGroup = AppGroup.containerURL != nil
+        var report = StartupReport(
+            appGroupIdentifier: AppGroup.identifier,
+            appGroupResolved: hasAppGroup,
+            cloudSyncRequested: cloudSyncEnabled
+        )
+
         let attempts = PersistencePlan.attempts(
             hasAppGroup: hasAppGroup,
             cloudSyncEnabled: cloudSyncEnabled
         )
-
         for attempt in attempts {
-            guard let result = open(attempt) else { continue }
-            return result
+            do {
+                let container = try open(attempt)
+                report.record(attempt.rawValue)
+                return .opened(Result(container: container, mode: attempt.mode, report: report))
+            } catch {
+                report.record(attempt.rawValue, failure: String(describing: error))
+            }
         }
 
-        // If even an in-memory store cannot be built the process is unusable, and a trap here
-        // is more honest than an empty screen.
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        // swiftlint:disable:next force_try
-        let container = try! ModelContainer(for: schema, configurations: [configuration])
-        return Result(container: container, mode: .memoryOnly)
+        // In-memory is not in the plan because it is not a place to keep someone's spots; it is
+        // what stops a broken disk from being a broken app.
+        do {
+            let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            let container = try ModelContainer(for: schema, configurations: [configuration])
+            report.record("memoryOnly")
+            return .opened(Result(container: container, mode: .memoryOnly, report: report))
+        } catch {
+            report.record("memoryOnly", failure: String(describing: error))
+        }
+
+        // Every rung failed. There used to be a `try!` here, which turned this into a crash with no
+        // explanation — the same class of mistake as catching a fatalError. Report it instead.
+        return .failed(report)
     }
 
     /// Attempts one configuration. Safe to call only for attempts `PersistencePlan` allowed.
-    private static func open(_ attempt: PersistenceAttempt) -> Result? {
+    private static func open(_ attempt: PersistenceAttempt) throws -> ModelContainer {
         switch attempt {
-        case .cloudKit:
-            guard let container = try? cloudKitContainer() else { return nil }
-            return Result(container: container, mode: .syncing)
-        case .sharedLocal:
-            guard let container = try? sharedLocalContainer() else { return nil }
-            return Result(container: container, mode: .sharedLocal)
-        case .appLocal:
-            guard let container = try? appLocalContainer() else { return nil }
-            return Result(container: container, mode: .appLocal)
+        case .cloudKit: return try cloudKitContainer()
+        case .sharedLocal: return try sharedLocalContainer()
+        case .appLocal: return try appLocalContainer()
         }
     }
 
