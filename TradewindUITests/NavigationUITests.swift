@@ -217,7 +217,9 @@ extension NavigationUITests {
     /// wait on CI — and the menu items reported invalid activation points on two separate runs.
     private func openDetailFromArrow() {
         let title = app.buttons["spot-title-button"]
-        XCTAssertTrue(title.waitForExistence(timeout: 5), "No tappable title on the arrow screen")
+        // Hittable, not merely existing — the arrow inserts with a spring, and taps synthesized
+        // against the mid-animation frame die. Same fix that stabilised the delete journey.
+        XCTAssertTrue(waitForHittable(title), "No tappable title on the arrow screen")
         title.tap()
         XCTAssertTrue(
             app.buttons["detail-done"].waitForExistence(timeout: 5),
@@ -231,7 +233,7 @@ extension NavigationUITests {
         for _ in 0..<6 where !(toggle.exists && toggle.isHittable) {
             app.swipeUp()
         }
-        XCTAssertTrue(toggle.waitForExistence(timeout: 5), "No arrival alert toggle on the detail screen")
+        XCTAssertTrue(waitForHittable(toggle), "No arrival alert toggle on the detail screen")
         return toggle
     }
 

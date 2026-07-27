@@ -12,6 +12,7 @@
 		A10509C8C73691AD2F0FA80A /* CompassRose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECC46C7EBA4B47446FBE492 /* CompassRose.swift */; };
 		B62CC6C995B31128B521050C /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3005062DF44B3707F98F0431 /* Components.swift */; };
 		BAAD828D2FC6928EAE3BF4CF /* Fonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7621A63898AB25F17BD4ED4A /* Fonts.swift */; };
+		6713D5E3210890EDD2BB8003 /* Theme+Living.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE9656412FC34F805C76FA6 /* Theme+Living.swift */; };
 		A5664847B126E0BAD57E2FEF /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C3CF38AB46BA4492E924F86 /* Theme.swift */; };
 		A6E23CB0D2B3E367C2C2D808 /* ThemedBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65EAD4FADE4B8948D71476 /* ThemedBackground.swift */; };
 		6CED844F331B6CA77F54F713 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E67551FE9EE3B6B4C726D30 /* Typography.swift */; };
@@ -51,6 +52,7 @@
 		DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		193E3730F5558A5B8CB4448D /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
 		5647BFD08776D6AA6A52744D /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
+		42BCD588CBC6756227257BAC /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		59B679A7FD58F339FF1C21F6 /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
 		5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
@@ -107,6 +109,7 @@
 		331F86110DD55862017ABB5D /* CompassRose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ECC46C7EBA4B47446FBE492 /* CompassRose.swift */; };
 		A06D88AD5AAFC4DE274E3067 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3005062DF44B3707F98F0431 /* Components.swift */; };
 		A6B3D23C6121AE0AAC560432 /* Fonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7621A63898AB25F17BD4ED4A /* Fonts.swift */; };
+		B6466D68E251A5FC25EAF254 /* Theme+Living.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE9656412FC34F805C76FA6 /* Theme+Living.swift */; };
 		C1775244B72A96E70F74E545 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C3CF38AB46BA4492E924F86 /* Theme.swift */; };
 		C05ECD77CCDA09542A9F240F /* ThemedBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65EAD4FADE4B8948D71476 /* ThemedBackground.swift */; };
 		CF2DA55CEAEACAD569CA940C /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E67551FE9EE3B6B4C726D30 /* Typography.swift */; };
@@ -146,6 +149,7 @@
 		607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		2E07A9353740D9F26301525D /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
 		B9CF77EE08C5F9627B1262E5 /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
+		3A6B989B3406218449564642 /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		C646DAAD3ACEDBAE4CEECDC7 /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
 		D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
@@ -194,6 +198,7 @@
 		EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		13109515F2A891109F680B42 /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
 		76161908CA6A46322959813E /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
+		FCA1B42A629ECA891D6C09F8 /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		38D4A3B87FDA0AB4F761F44C /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
 		205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
@@ -213,6 +218,7 @@
 		B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */; };
 		3C5C98E42D7E26A0D3945E32 /* GeofencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD9491343F20D001C3339DDF /* GeofencePlanTests.swift */; };
 		762D5EC6D231B9F53DCD84FF /* LibraryAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */; };
+		8F5A28D433DC5B966EADF85A /* LivingPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38324E1728E1E188C8F81654 /* LivingPaletteTests.swift */; };
 		2B99EE7B03E9B784A112988D /* MapsLinkParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */; };
 		D86169E5CA694C1A78258CD5 /* MeterReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */; };
 		9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */; };
@@ -263,6 +269,7 @@
 		3ECC46C7EBA4B47446FBE492 /* CompassRose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompassRose.swift; sourceTree = "<group>"; };
 		3005062DF44B3707F98F0431 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		7621A63898AB25F17BD4ED4A /* Fonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fonts.swift; sourceTree = "<group>"; };
+		7AE9656412FC34F805C76FA6 /* Theme+Living.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Theme+Living.swift"; sourceTree = "<group>"; };
 		7C3CF38AB46BA4492E924F86 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1F65EAD4FADE4B8948D71476 /* ThemedBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemedBackground.swift; sourceTree = "<group>"; };
 		2E67551FE9EE3B6B4C726D30 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
@@ -302,6 +309,7 @@
 		C07064A66E87DD3F7B94CB72 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfo.swift; sourceTree = "<group>"; };
 		D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofencePlan.swift; sourceTree = "<group>"; };
+		6E948A2A123EC65C18AA252D /* LivingPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivingPalette.swift; sourceTree = "<group>"; };
 		4F3FB534A816D801FFB6A44D /* MeterReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeterReminder.swift; sourceTree = "<group>"; };
 		B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAction.swift; sourceTree = "<group>"; };
 		6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlan.swift; sourceTree = "<group>"; };
@@ -362,6 +370,7 @@
 		1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSMetadataTests.swift; sourceTree = "<group>"; };
 		CD9491343F20D001C3339DDF /* GeofencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofencePlanTests.swift; sourceTree = "<group>"; };
 		120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAccessTests.swift; sourceTree = "<group>"; };
+		38324E1728E1E188C8F81654 /* LivingPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivingPaletteTests.swift; sourceTree = "<group>"; };
 		F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapsLinkParserTests.swift; sourceTree = "<group>"; };
 		A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeterReminderTests.swift; sourceTree = "<group>"; };
 		E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlanTests.swift; sourceTree = "<group>"; };
@@ -426,6 +435,7 @@
 				3ECC46C7EBA4B47446FBE492 /* CompassRose.swift */,
 				3005062DF44B3707F98F0431 /* Components.swift */,
 				7621A63898AB25F17BD4ED4A /* Fonts.swift */,
+				7AE9656412FC34F805C76FA6 /* Theme+Living.swift */,
 				7C3CF38AB46BA4492E924F86 /* Theme.swift */,
 				1F65EAD4FADE4B8948D71476 /* ThemedBackground.swift */,
 				2E67551FE9EE3B6B4C726D30 /* Typography.swift */,
@@ -507,6 +517,7 @@
 				C07064A66E87DD3F7B94CB72 /* AppGroup.swift */,
 				6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */,
 				D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */,
+				6E948A2A123EC65C18AA252D /* LivingPalette.swift */,
 				4F3FB534A816D801FFB6A44D /* MeterReminder.swift */,
 				B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */,
 				6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */,
@@ -699,6 +710,7 @@
 				1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */,
 				CD9491343F20D001C3339DDF /* GeofencePlanTests.swift */,
 				120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */,
+				38324E1728E1E188C8F81654 /* LivingPaletteTests.swift */,
 				F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */,
 				A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */,
 				E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */,
@@ -955,6 +967,7 @@
 				A10509C8C73691AD2F0FA80A /* CompassRose.swift in Sources */,
 				B62CC6C995B31128B521050C /* Components.swift in Sources */,
 				BAAD828D2FC6928EAE3BF4CF /* Fonts.swift in Sources */,
+				6713D5E3210890EDD2BB8003 /* Theme+Living.swift in Sources */,
 				A5664847B126E0BAD57E2FEF /* Theme.swift in Sources */,
 				A6E23CB0D2B3E367C2C2D808 /* ThemedBackground.swift in Sources */,
 				6CED844F331B6CA77F54F713 /* Typography.swift in Sources */,
@@ -994,6 +1007,7 @@
 				DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */,
 				193E3730F5558A5B8CB4448D /* BuildInfo.swift in Sources */,
 				5647BFD08776D6AA6A52744D /* GeofencePlan.swift in Sources */,
+				42BCD588CBC6756227257BAC /* LivingPalette.swift in Sources */,
 				59B679A7FD58F339FF1C21F6 /* MeterReminder.swift in Sources */,
 				F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */,
 				5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */,
@@ -1038,6 +1052,7 @@
 				331F86110DD55862017ABB5D /* CompassRose.swift in Sources */,
 				A06D88AD5AAFC4DE274E3067 /* Components.swift in Sources */,
 				A6B3D23C6121AE0AAC560432 /* Fonts.swift in Sources */,
+				B6466D68E251A5FC25EAF254 /* Theme+Living.swift in Sources */,
 				C1775244B72A96E70F74E545 /* Theme.swift in Sources */,
 				C05ECD77CCDA09542A9F240F /* ThemedBackground.swift in Sources */,
 				CF2DA55CEAEACAD569CA940C /* Typography.swift in Sources */,
@@ -1077,6 +1092,7 @@
 				607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */,
 				2E07A9353740D9F26301525D /* BuildInfo.swift in Sources */,
 				B9CF77EE08C5F9627B1262E5 /* GeofencePlan.swift in Sources */,
+				3A6B989B3406218449564642 /* LivingPalette.swift in Sources */,
 				C646DAAD3ACEDBAE4CEECDC7 /* MeterReminder.swift in Sources */,
 				FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */,
 				D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */,
@@ -1114,6 +1130,7 @@
 				EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */,
 				13109515F2A891109F680B42 /* BuildInfo.swift in Sources */,
 				76161908CA6A46322959813E /* GeofencePlan.swift in Sources */,
+				FCA1B42A629ECA891D6C09F8 /* LivingPalette.swift in Sources */,
 				38D4A3B87FDA0AB4F761F44C /* MeterReminder.swift in Sources */,
 				79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */,
 				205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */,
@@ -1133,6 +1150,7 @@
 				B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */,
 				3C5C98E42D7E26A0D3945E32 /* GeofencePlanTests.swift in Sources */,
 				762D5EC6D231B9F53DCD84FF /* LibraryAccessTests.swift in Sources */,
+				8F5A28D433DC5B966EADF85A /* LivingPaletteTests.swift in Sources */,
 				2B99EE7B03E9B784A112988D /* MapsLinkParserTests.swift in Sources */,
 				D86169E5CA694C1A78258CD5 /* MeterReminderTests.swift in Sources */,
 				9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */,
