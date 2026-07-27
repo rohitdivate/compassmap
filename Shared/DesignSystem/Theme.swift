@@ -104,6 +104,14 @@ struct Theme: Identifiable, Hashable, Sendable {
     let arrow: [Color]
     /// Palette for the arrival celebration.
     let celebration: [Color]
+    /// Background for the Lock Screen Live Activity.
+    ///
+    /// Deliberately its own token rather than `canvas`. A Live Activity is not an app screen — it sits
+    /// over a wallpaper, usually a dark and photographic one, in a container the system draws. Spritz
+    /// set `canvas` here and rendered as a bright cream slab across the middle of the Lock Screen. The
+    /// mood still has to be recognisable, so this is warm and deep rather than neutral black, but it
+    /// recedes instead of glaring.
+    let activityTint: Color
     /// Film grain over the backdrop. Spritz is paper and takes some; Nomad is a screen and takes none.
     let grainOpacity: Double
 
@@ -203,6 +211,9 @@ enum ThemeCatalog {
             Color(hex: "#FF6B8B"), Color(hex: "#FF8C42"),
             Color(hex: "#B8E62E"), Color(hex: "#1FA3B8"),
         ],
+        // Deep Lagoon pulled most of the way to ink: unmistakably this mood's blue-green, dark
+        // enough to sit under a Lock Screen without shouting.
+        activityTint: Color(hex: "#0A2730"),
         grainOpacity: 0.035,
 
         displayFont: Fonts.Serif.regular,
@@ -261,6 +272,8 @@ enum ThemeCatalog {
             Color(hex: "#C6F24E"), Color(hex: "#9CBB3E"),
             Color(hex: "#4ADE80"), Color(hex: "#F2F4F7"),
         ],
+        // This mood is already a dark screen; its raised surface is the right material here.
+        activityTint: Color(hex: "#131519"),
         grainOpacity: 0,
 
         displayFont: Fonts.Grotesk.bold,

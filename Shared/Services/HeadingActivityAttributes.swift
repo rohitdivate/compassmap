@@ -39,19 +39,27 @@ struct HeadingActivityAttributes: ActivityAttributes {
     public var themeID: String
     /// `UnitPreference.rawValue`, passed as a string to keep the attributes trivially Codable.
     public var unitPreferenceRaw: String
+    /// How far away the spot was when the walk began. Fixed for the life of the activity, which is
+    /// why it belongs here rather than in `ContentState`.
+    ///
+    /// Optional so an activity started by an earlier build still decodes — the progress bar falls
+    /// back to showing no progress rather than failing to render.
+    public var startingDistanceMetres: Double?
 
     public init(
         spotID: UUID,
         spotName: String,
         placeName: String? = nil,
         themeID: String,
-        unitPreferenceRaw: String
+        unitPreferenceRaw: String,
+        startingDistanceMetres: Double? = nil
     ) {
         self.spotID = spotID
         self.spotName = spotName
         self.placeName = placeName
         self.themeID = themeID
         self.unitPreferenceRaw = unitPreferenceRaw
+        self.startingDistanceMetres = startingDistanceMetres
     }
 
     var unitPreference: UnitPreference {
