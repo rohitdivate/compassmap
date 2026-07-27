@@ -16,6 +16,9 @@ struct SpotsGalleryView: View {
     @State private var location = LocationService.shared
     @State private var selectedTripID: UUID?
     @State private var selectedKind: PlaceKind?
+    @State private var searchQuery = ""
+    @State private var isSearching = false
+    @FocusState private var searchFocused: Bool
 
     var hero: Namespace.ID
 
@@ -28,6 +31,16 @@ struct SpotsGalleryView: View {
         }
         if let selectedKind {
             result = result.filter { $0.placeKind == selectedKind }
+        }
+        if isSearching {
+            result = result.filter {
+                SpotSearch.matches(
+                    query: searchQuery,
+                    name: $0.displayName,
+                    placeName: $0.placeName,
+                    note: $0.note
+                )
+            }
         }
         return result
     }
@@ -73,8 +86,10 @@ struct SpotsGalleryView: View {
 
     @ViewBuilder
     private var content: some View {
+        if isSearching { searchField }
         if !trips.isEmpty { tripFilter }
         if kindsInUse.count > 1 { kindFilter }
+        if ranked.isEmpty, !spots.isEmpty { noMatches }
         if let featured = SpotRanking.featured(in: ranked) {
             FeaturedSpotCard(
                 ranked: featured,
@@ -161,6 +176,18 @@ struct SpotsGalleryView: View {
                             .accessibilityIdentifier("gallery-screen")
                     }
                     Spacer()
+                    CircularButton(symbol: "magnifyingglass", onHero: true) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                            isSearching.toggle()
+                        }
+                        if isSearching {
+                            searchFocused = true
+                        } else {
+                            searchQuery = ""
+                        }
+                    }
+                    .accessibilityIdentifier("search-button")
+                    .accessibilityLabel("Search spots")
                     CircularButton(symbol: "slider.horizontal.3", onHero: true) {
                         router.isShowingSettings = true
                     }
@@ -252,6 +279,62 @@ struct SpotsGalleryView: View {
             .padding(.horizontal, 18)
         }
         .scrollIndicators(.hidden)
+    }
+
+    private var searchField: some View {
+        Surface(padding: 12) {
+            HStack(spacing: 9) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(theme.textMuted)
+                TextField("Name, place, or a note like \"aisle F\"", text: $searchQuery)
+                    .font(theme.bodyTextFont)
+                    .foregroundStyle(theme.text)
+                    .focused($searchFocused)
+                    .submitLabel(.search)
+                    .autocorrectionDisabled()
+                    .accessibilityIdentifier("search-field")
+                if !searchQuery.isEmpty {
+                    Button {
+                        searchQuery = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(theme.textFaint)
+                    }
+                    .accessibilityLabel("Clear search")
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+    }
+
+    /// Spots exist, the filters just excluded all of them — a different fact from "no spots yet",
+    /// and one the person can fix from right here.
+    private var noMatches: some View {
+        VStack(spacing: 8) {
+            Text("Nothing matches")
+                .font(theme.sectionTitleFont)
+                .foregroundStyle(theme.text)
+            Text(searchQuery.isEmpty
+                ? "No spots under these filters."
+                : "No spot, place or note contains \"\(searchQuery)\".")
+                .font(theme.captionFont)
+                .foregroundStyle(theme.textMuted)
+                .multilineTextAlignment(.center)
+            Button("Clear filters") {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                    searchQuery = ""
+                    selectedKind = nil
+                    selectedTripID = nil
+                }
+            }
+            .font(theme.sans(13, weight: .medium))
+            .foregroundStyle(theme.accent)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .accessibilityIdentifier("no-matches")
     }
 
     private var kindFilter: some View {

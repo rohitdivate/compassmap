@@ -41,6 +41,26 @@ enum AppModelContainer {
     }
 
     static func make(cloudSyncEnabled: Bool) -> Outcome {
+        // UI tests get a store that holds nothing between launches. Each test relaunches the app,
+        // and a spot saved by one test appearing in another's gallery makes every assertion about
+        // "the spot appears" ambiguous. Real launches never take this branch.
+        if AppSettings.isUITesting {
+            var report = StartupReport(
+                appGroupIdentifier: AppGroup.identifier,
+                appGroupResolved: false,
+                cloudSyncRequested: false
+            )
+            if let container = try? ModelContainer(
+                for: schema,
+                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
+            ) {
+                report.record("memoryOnly (ui-testing)")
+                return .opened(Result(container: container, mode: .memoryOnly, report: report))
+            }
+            report.record("memoryOnly (ui-testing)", failure: "could not build in-memory store")
+            return .failed(report)
+        }
+
         // Resolved once: it touches the filesystem, and the answer cannot change mid-launch.
         let hasAppGroup = AppGroup.containerURL != nil
         print("[Tradewind] app group \(AppGroup.identifier) resolved: \(hasAppGroup)")
