@@ -18,6 +18,15 @@ Settings → Accounts → your Apple ID → Manage Certificates has it in the wi
 team ID at all, sign in to Xcode with your Apple ID once and it will create a Personal Team.
 
 Re-running is safe, and `--reset` puts the placeholders back.
+
+**After the first run, plain `git pull` will refuse.** Every file this script rewrites is tracked, so
+the working tree is dirty from then on and git will not overwrite it. Use:
+
+    python3 Tools/setup_signing.py --update
+
+which discards the files this script owns (all regenerable), fast-forwards, and re-applies exactly
+what was set before. Without it a pull fails and the next build quietly produces the *old* app, which
+looks identical to a change that did not work.
 """
 
 from __future__ import annotations
@@ -81,6 +90,65 @@ PAID_WIDGET_ENTITLEMENTS = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+# Everything this script rewrites. All of it is regenerable from the prefix, the team and the
+# free/paid choice, which is what makes discarding it safe.
+OWNED_FILES = [
+    "Tools/gen_xcodeproj.py",
+    "Shared/Snapshot/AppGroup.swift",
+    "Tradewind/Info.plist",
+    "Tradewind/Tradewind.entitlements",
+    "TradewindWidgets/TradewindWidgets.entitlements",
+    "project.yml",
+    "Tradewind.xcodeproj/project.pbxproj",
+]
+
+
+def git(*args: str, check: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(ROOT), *args], check=check, capture_output=True, text=True
+    )
+
+
+def is_free_build() -> bool:
+    # Whether the entitlements currently have the App Group stripped.
+    path = ROOT / "Tradewind" / "Tradewind.entitlements"
+    return "com.apple.security.application-groups" not in path.read_text(encoding="utf-8")
+
+
+def update(regenerate) -> int:
+    # Pull, then put your own identifiers back.
+    #
+    # This exists because the obvious thing does not work. Once this script has run, the tree is dirty
+    # in seven tracked files and `git pull` refuses. A build after a failed pull produces the previous
+    # commit's app, which is indistinguishable from a change that did not take effect — so the failure
+    # mode is silent and expensive.
+    prefix, team, free = current_prefix(), configured_team(), is_free_build()
+    print(f"preserving: prefix={prefix}  team={team or '(none)'}  {'free' if free else 'paid'}")
+
+    # Safe because every one of these is rewritten from the three values above.
+    print("discarding the generated files")
+    git("checkout", "--", *OWNED_FILES, check=False)
+
+    dirty = git("status", "--porcelain").stdout.strip()
+    if dirty:
+        sys.exit(
+            "there are other local changes, so pulling automatically is not safe:\n"
+            + dirty
+            + "\n\nCommit or stash them, then re-run."
+        )
+
+    branch = git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    print(f"pulling {branch}")
+    pull = git("pull", "--ff-only", "origin", branch, check=False)
+    print((pull.stdout + pull.stderr).strip())
+    if pull.returncode != 0:
+        sys.exit("pull failed — resolve the above, then re-run")
+
+    print(f"now at {git('log', '--oneline', '-1').stdout.strip()}")
+    print("re-applying your identifiers")
+    return regenerate(prefix, team, free)
+
+
 def current_prefix() -> str:
     """Whatever prefix the repository is currently set to, so re-running is idempotent."""
     text = (ROOT / "Tools" / "gen_xcodeproj.py").read_text(encoding="utf-8")
@@ -128,11 +196,31 @@ def validate_prefix(prefix: str) -> None:
         )
 
 
-def swap(path: pathlib.Path, old: str, new: str, *, expected: int) -> None:
+def swap(
+    path: pathlib.Path,
+    old: str,
+    new: str,
+    *,
+    expected: int | None = None,
+    at_least: int = 1,
+) -> None:
+    """Rewrite every occurrence, asserting the count is what we thought.
+
+    `expected` is an exact count, for files whose shape is fixed — an entitlements plist has exactly
+    one App Group entry, and if it has two something is wrong. `at_least` is for files that legitimately
+    grow: the generator gained a fourth bundle identifier when the UI test target was added, and an
+    exact count there turned a routine addition into a script that refused to run at all. Keying an
+    assertion to a literal count is fine right up until someone adds a constant.
+    """
     text = path.read_text(encoding="utf-8")
     found = text.count(old)
-    if found != expected:
+    if expected is not None and found != expected:
         sys.exit(f"{path.relative_to(ROOT)}: expected {expected} occurrences of {old!r}, found {found}")
+    if found < at_least:
+        sys.exit(
+            f"{path.relative_to(ROOT)}: expected at least {at_least} occurrence(s) of {old!r}, "
+            f"found {found}"
+        )
     path.write_text(text.replace(old, new), encoding="utf-8")
     print(f"  {path.relative_to(ROOT)}  ({found})")
 
@@ -147,6 +235,22 @@ def set_team(team: str) -> None:
         sys.exit("could not find DEVELOPMENT_TEAM in Tools/gen_xcodeproj.py")
     path.write_text(updated, encoding="utf-8")
     print(f"  Tools/gen_xcodeproj.py  DEVELOPMENT_TEAM = {team or '(none)'}")
+
+
+
+def reapply(prefix: str, team: str, free: bool) -> int:
+    """Re-run this script's own work for a known configuration.
+
+    Goes back through `main` rather than duplicating its logic, so `--update` can never drift from
+    what a direct invocation does.
+    """
+    argv = ["--prefix", prefix, "--team", team]
+    argv.append("--free" if free else "--paid")
+    saved, sys.argv = sys.argv, [sys.argv[0], *argv]
+    try:
+        return main()
+    finally:
+        sys.argv = saved
 
 
 def main() -> int:
@@ -175,13 +279,23 @@ def main() -> int:
         help="restore the App Group and iCloud entitlements after a --free run",
     )
     parser.add_argument("--reset", action="store_true", help="put the com.tradewind placeholders back")
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="pull the latest code and re-apply your identifiers. Use this instead of `git pull`: this "
+        "script rewrites tracked files, so a plain pull refuses and the next build silently produces "
+        "the previous commit's app.",
+    )
     args = parser.parse_args()
+
+    if args.update:
+        return update(reapply)
 
     if args.reset:
         args.prefix, args.team, args.paid = PLACEHOLDER, "", True
 
     if not any([args.prefix, args.team is not None, args.free, args.paid]):
-        parser.error("nothing to do — pass --prefix, --team, --free, --paid or --reset")
+        parser.error("nothing to do — pass --prefix, --team, --free, --paid, --reset or --update")
 
     old = current_prefix()
     new = args.prefix or old
@@ -199,7 +313,7 @@ def main() -> int:
 
     if new != old:
         print(f"identifiers: {old}.app -> {new}.app")
-        swap(ROOT / "Tools" / "gen_xcodeproj.py", f'"{old}.app', f'"{new}.app', expected=3)
+        swap(ROOT / "Tools" / "gen_xcodeproj.py", f'"{old}.app', f'"{new}.app', at_least=3)
         swap(ROOT / "Shared" / "Snapshot" / "AppGroup.swift", f"{old}.app", f"{new}.app", expected=2)
         swap(ROOT / "Tradewind" / "Info.plist", f"{old}.app.spot", f"{new}.app.spot", expected=1)
         swap(ROOT / "project.yml", old, new, expected=4)

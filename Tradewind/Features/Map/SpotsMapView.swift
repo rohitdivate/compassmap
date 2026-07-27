@@ -130,8 +130,14 @@ struct SpotsMapView: View {
                 Text("The map")
                     .font(theme.titleFont)
                     .foregroundStyle(theme.text)
+                    .accessibilityIdentifier("map-screen")
             }
             Spacer()
+            CircularButton(symbol: "slider.horizontal.3") {
+                router.isShowingSettings = true
+            }
+            .accessibilityIdentifier("settings-button")
+            .accessibilityLabel("Settings")
             ringsButton
             recentreButton
         }

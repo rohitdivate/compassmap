@@ -1,8 +1,9 @@
 name: iOS
 
 # Tradewind is developed in an environment without Xcode, so this workflow is the
-# compiler of record: it builds the app and widget extension for the simulator and runs
-# the unit tests.
+# compiler of record: it builds the app and widget extension for the simulator, runs the
+# unit tests, and — since two bugs reached a device that no unit test could have caught —
+# launches the app in a simulator and drives it through XCUITest.
 #
 # Note on cost: macOS runner minutes bill at 10x on private repositories. If that is not
 # wanted, disable this workflow in the repository's Actions settings — nothing else in
@@ -100,7 +101,16 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
 
-      - name: Run unit tests
+      # The simulator has to be booted before UI tests, otherwise the first launch races the
+      # runtime coming up and fails in a way that looks like a test failure rather than a timing one.
+      - name: Boot the simulator
+        run: |
+          xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
+          xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
+
+      # Unit tests and UI tests in one invocation: the scheme lists both testables, so this runs the
+      # pure suites and then launches the app and taps through it.
+      - name: Run unit and UI tests
         run: |
           xcodebuild test \
             -project Tradewind.xcodeproj \
@@ -108,6 +118,18 @@ jobs:
             -configuration Debug \
             -destination "id=${{ steps.sim.outputs.udid }}" \
             -derivedDataPath build \
+            -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
+
+      # The result bundle carries a screenshot of the screen at the moment each UI test failed. That
+      # is the only way anyone developing this without a Mac can see what the app actually looked
+      # like, so it is worth keeping even though it is only useful on red.
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: TestResults.xcresult
+          retention-days: 7

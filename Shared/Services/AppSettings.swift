@@ -11,7 +11,32 @@ final class AppSettings {
 
     @ObservationIgnored private let defaults: UserDefaults
 
-    init(defaults: UserDefaults = AppGroup.defaults) {
+    /// True when launched by the UI tests.
+    ///
+    /// Those tests assert on navigation, and navigation that depends on whatever the last run left
+    /// behind is not an assertion. Under this flag the app reads and writes a throwaway defaults
+    /// suite, so every run starts from a genuinely first-launch state — including onboarding, which is
+    /// then part of what gets exercised rather than something skipped.
+    static var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("-ui-testing")
+    }
+
+    /// A defaults suite that holds nothing between launches.
+    private static func ephemeralDefaults() -> UserDefaults {
+        let suite = "com.tradewind.uitesting"
+        let defaults = UserDefaults(suiteName: suite) ?? .standard
+        defaults.removePersistentDomain(forName: suite)
+        return defaults
+    }
+
+    /// Pass a suite to override; nil picks the right one for how the app was launched.
+    ///
+    /// The choice is made in the body rather than as a default argument: a default argument on an
+    /// internal initialiser cannot reference a private helper, so expressing it there would have made
+    /// `ephemeralDefaults` internal for no reason other than syntax.
+    init(defaults: UserDefaults? = nil) {
+        let defaults = defaults
+            ?? (Self.isUITesting ? Self.ephemeralDefaults() : AppGroup.defaults)
         self.defaults = defaults
         themeID = defaults.string(forKey: Key.theme) ?? ThemeCatalog.fallback.id
         unitPreference = UnitPreference(rawValue: defaults.string(forKey: Key.units) ?? "")

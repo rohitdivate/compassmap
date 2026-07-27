@@ -37,6 +37,13 @@ final class Spot {
     /// An emoji the person picked, used as the spot's mark where a photo would be too big.
     var glyph: String?
 
+    /// What sort of place this is — `PlaceKind.rawValue`.
+    ///
+    /// Stored as an optional string rather than the enum so CloudKit's rules hold and so an
+    /// unrecognised value from a future build degrades to the default instead of failing to decode.
+    /// Read it through `placeKind`, never directly.
+    var kindRaw: String?
+
     /// The spot the widgets lead with. Only one spot is pinned at a time; `SpotStore`
     /// enforces that.
     var isPinned: Bool = false
@@ -65,6 +72,7 @@ final class Spot {
         isPinned: Bool = false,
         photoData: Data? = nil,
         thumbnailFilename: String? = nil,
+        kind: PlaceKind = .place,
         trip: Trip? = nil
     ) {
         self.id = id
@@ -81,6 +89,7 @@ final class Spot {
         self.isPinned = isPinned
         self.photoData = photoData
         self.thumbnailFilename = thumbnailFilename
+        self.kindRaw = kind.rawValue
         self.trip = trip
     }
 }
@@ -89,6 +98,19 @@ extension Spot {
 
     var coordinate: Coordinate {
         Coordinate(latitude: latitude, longitude: longitude)
+    }
+
+    /// The spot's kind, tolerating anything unexpected on disk.
+    var placeKind: PlaceKind {
+        get { PlaceKind.from(rawValue: kindRaw) }
+        set { kindRaw = newValue.rawValue }
+    }
+
+    /// True when there is no photograph — a station or a hotel saved from a link or the calendar.
+    /// The gallery and detail screens lean on the kind's symbol instead of a picture.
+    var hasPhoto: Bool {
+        guard let photoData else { return false }
+        return !photoData.isEmpty
     }
 
     /// Never blank: falls back to the place name, then to a date.
@@ -114,7 +136,8 @@ extension Spot {
             capturedAt: capturedAt,
             thumbnailFilename: thumbnailFilename,
             tripName: trip?.name,
-            glyph: glyph
+            glyph: glyph,
+            kindRaw: kindRaw
         )
     }
 

@@ -37,28 +37,37 @@ struct RootView: View {
             }
     }
 
+    /// Presentations, deliberately spread across three hosts rather than chained onto one.
+    ///
+    /// Settings could not be opened. Two `fullScreenCover`s and a `sheet` were all attached to the
+    /// same view, and SwiftUI does not reliably honour competing presentation modifiers on one host —
+    /// the last one added is the one that loses, and that was Settings. Each now sits on a distinct
+    /// level of the hierarchy: onboarding outermost, Settings in the middle, capture innermost on the
+    /// content itself.
     private var presentations: some View {
-        stack
+        onboardingLayer
+            .alert("Nothing to show", isPresented: hasUnresolvedLink) {
+                Button("OK", role: .cancel) { router.unresolvedLinkMessage = nil }
+            } message: {
+                Text(router.unresolvedLinkMessage ?? "")
+            }
+    }
+
+    private var onboardingLayer: some View {
+        settingsLayer
             .fullScreenCover(isPresented: hasNotOnboarded) {
                 OnboardingView()
                     .environment(settings)
                     .environment(\.theme, theme)
             }
-            .fullScreenCover(isPresented: showingCapture) {
-                CaptureFlowView()
-                    .environment(settings)
-                    .environment(router)
-                    .environment(\.theme, theme)
-            }
+    }
+
+    private var settingsLayer: some View {
+        stack
             .sheet(isPresented: showingSettings) {
                 SettingsView()
                     .environment(settings)
                     .environment(\.theme, theme)
-            }
-            .alert("Nothing to show", isPresented: hasUnresolvedLink) {
-                Button("OK", role: .cancel) { router.unresolvedLinkMessage = nil }
-            } message: {
-                Text(router.unresolvedLinkMessage ?? "")
             }
     }
 
@@ -70,6 +79,12 @@ struct RootView: View {
                 .safeAreaInset(edge: .bottom) {
                     // Reserve room for the floating bar so content can still scroll clear of it.
                     Color.clear.frame(height: 78)
+                }
+                .fullScreenCover(isPresented: showingCapture) {
+                    CaptureFlowView()
+                        .environment(settings)
+                        .environment(router)
+                        .environment(\.theme, theme)
                 }
 
             bar
@@ -316,6 +331,7 @@ private struct FloatingBar: View {
             }
         }
         .buttonStyle(PressableStyle(scale: 0.92))
+        .accessibilityIdentifier("tab-\(tab.title)")
         .accessibilityLabel(tab.title)
     }
 
@@ -332,6 +348,8 @@ private struct FloatingBar: View {
                 }
                 .overlay { Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1) }
         }
+        .accessibilityIdentifier("capture-button")
+        .accessibilityLabel("Take a photo")
         .buttonStyle(PressableStyle(scale: 0.9))
         .accessibilityLabel("Save this place")
     }

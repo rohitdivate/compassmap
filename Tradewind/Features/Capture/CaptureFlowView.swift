@@ -77,6 +77,8 @@ struct CaptureFlowView: View {
             camera.stop()
             handleCaptured(data)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("capture-screen")
         // Two pickers, because the argument lists differ and the choice is not cosmetic. The
         // shared-library one shows only authorized photos; the other needs no permission but cannot
         // give us an asset identifier. LibraryAccess decides which is presented.
