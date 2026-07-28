@@ -118,6 +118,10 @@ final class LiveActivityService {
 
     /// Ends with a final state, so the last thing shown on the Lock Screen is the arrival
     /// rather than a stale distance.
+    ///
+    /// The arrival goes through one last `update` with an alert before the end: the alert is
+    /// what lights the Lock Screen up at the moment that matters. A phone that has been in a
+    /// pocket for the whole walk should not keep "you made it" to itself.
     func finish(distanceMetres: Double, bearing: Double) {
         guard let activity else { return }
         driver?.stop()
@@ -127,10 +131,19 @@ final class LiveActivityService {
             bearing: bearing,
             isArrived: true
         )
+        let spotName = activity.attributes.spotName
         self.activity = nil
         activeSpotID = nil
         lastPush = nil
         Task {
+            await activity.update(
+                ActivityContent(state: state, staleDate: nil),
+                alertConfiguration: AlertConfiguration(
+                    title: "You made it",
+                    body: "\(spotName) is right here.",
+                    sound: .default
+                )
+            )
             await activity.end(
                 ActivityContent(state: state, staleDate: nil),
                 dismissalPolicy: .after(Date().addingTimeInterval(30))
