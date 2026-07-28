@@ -169,6 +169,7 @@ final class BackupService {
             spot.alertsEnabled = record.alertsEnabled
             spot.deletedAt = record.deletedAt
             spot.reminderAt = record.reminderAt
+            spot.sourceRaw = record.sourceRaw
             // A spot restored into the trash must not be findable from the Home Screen.
             if record.deletedAt != nil {
                 CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [record.id.uuidString])

@@ -85,7 +85,7 @@ final class NavigationUITests: XCTestCase {
     /// and the only entry point living in the Spots masthead so it did not exist on the other tabs.
     /// This asserts the reachable-from-everywhere half directly.
     func testSettingsOpensFromEveryTab() throws {
-        for tab in ["Spots", "Map", "Trips", "Nearby"] {
+        for tab in ["Spots", "Map", "Trips"] {
             let button = tabBarButton(tab)
             XCTAssertTrue(button.waitForExistence(timeout: 5), "No \(tab) tab")
             button.tap()
@@ -119,33 +119,18 @@ final class NavigationUITests: XCTestCase {
         tabBarButton("Trips").tap()
         XCTAssertTrue(screen("trips-screen").waitForExistence(timeout: 5), "Trips did not appear")
 
-        tabBarButton("Nearby").tap()
-        XCTAssertTrue(screen("nearby-screen").waitForExistence(timeout: 5), "Nearby did not appear")
-
         tabBarButton("Spots").tap()
         XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 5), "Spots did not appear")
     }
 
-    /// Wave 8: the Nearby tab scans the library (canned points under the seam), clusters them
-    /// into suggestions, and saving one lands it in the gallery as a real spot.
-    func testNearbySuggestsAndSavesACluster() throws {
-        tabBarButton("Nearby").tap()
-        XCTAssertTrue(screen("nearby-screen").waitForExistence(timeout: 5), "No Nearby tab")
-
-        let scan = app.buttons["scan-photos"]
-        XCTAssertTrue(waitForHittable(scan), "No priming card with a scan button")
-        scan.tap()
-
-        let save = app.buttons["save-suggestion"].firstMatch
-        XCTAssertTrue(save.waitForExistence(timeout: 10), "The scan produced no suggestion cards")
-        XCTAssertTrue(waitForHittable(save))
-        save.tap()
-
-        // Saving marks the card and the spot exists for real.
-        tabBarButton("Spots").tap()
+    /// The photo library's places arrive by themselves now: skipping onboarding kicks off the
+    /// automatic ingest, the canned scan produces two clusters, and both land in the gallery as
+    /// real spots — no tab, no scan button, no per-place save.
+    func testPhotoPlacesAutoAppearInGallery() throws {
+        XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 10), "No gallery")
         XCTAssertTrue(
-            app.staticTexts["Canned Corner, London"].firstMatch.waitForExistence(timeout: 8),
-            "The saved suggestion did not appear in the gallery"
+            app.staticTexts["Canned Corner, London"].firstMatch.waitForExistence(timeout: 10),
+            "The automatic ingest did not save the canned photo clusters as spots"
         )
     }
 
@@ -424,8 +409,9 @@ extension NavigationUITests {
     }
 
     /// Wave 2: save a spot, then find it by search — and prove a bogus query says so rather than
-    /// showing an empty page. The store is in-memory under -ui-testing, so the only spot present
-    /// is the one this test just made; both assertions are unambiguous.
+    /// showing an empty page. The store is in-memory under -ui-testing; besides the spot this
+    /// test makes, only the auto-ingested canned places exist, and neither name collides with
+    /// either query, so both assertions stay unambiguous.
     func testSearchFindsSpotsAndSaysWhenNothingMatches() throws {
         // Arrange: one spot, via the same flow the save-here test proves.
         app.buttons["save-here-button"].tap()

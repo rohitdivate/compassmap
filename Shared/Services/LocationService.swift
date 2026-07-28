@@ -39,6 +39,10 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     @ObservationIgnored private var lastPublishedLocation: CLLocation?
     @ObservationIgnored private var lastPublishedAt: Date?
 
+    /// Called with every accepted fix, view lifecycle be damned — this is what keeps the Live
+    /// Activity honest while the phone is locked. One consumer: `ActivityUpdateDriver`.
+    @ObservationIgnored var onLocationFix: ((CLLocation) -> Void)?
+
     override init() {
         super.init()
         manager.delegate = self
@@ -110,6 +114,25 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    /// Keeps fixes flowing after the phone locks, for as long as a walk is being tracked.
+    ///
+    /// `UIBackgroundModes` includes `location`, but that entitlement does nothing until
+    /// `allowsBackgroundLocationUpdates` is set — which is why the Live Activity used to freeze
+    /// the moment the screen turned off. Scoped strictly to an active tracked spot: the blue
+    /// indicator makes the cost visible, and `endBackgroundTracking` restores every default.
+    func beginBackgroundTracking() {
+        manager.allowsBackgroundLocationUpdates = true
+        manager.showsBackgroundLocationIndicator = true
+        manager.pausesLocationUpdatesAutomatically = false
+        startUpdating()
+    }
+
+    func endBackgroundTracking() {
+        manager.allowsBackgroundLocationUpdates = false
+        manager.showsBackgroundLocationIndicator = false
+        manager.pausesLocationUpdatesAutomatically = true
+    }
+
     /// Coarse background monitoring: enough to keep widgets roughly honest without holding
     /// GPS open. Requires "always" authorization to do anything useful.
     func startMonitoringSignificantChanges() {
@@ -169,6 +192,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         guard let latest = locations.last, latest.horizontalAccuracy >= 0 else { return }
         currentLocation = latest
         publishToSnapshotIfNeeded(latest)
+        onLocationFix?(latest)
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {

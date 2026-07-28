@@ -48,6 +48,9 @@ final class AppSettings {
         hasCompletedOnboarding = defaults.bool(forKey: Key.onboarded)
         lastBackupExportAt = defaults.object(forKey: Key.lastBackupExport) as? Date
         lastAutoSnapshotAt = defaults.object(forKey: Key.lastAutoSnapshot) as? Date
+        photoIngestEnabled = defaults.object(forKey: Key.photoIngest) as? Bool ?? true
+        lastPhotoIngestAt = defaults.object(forKey: Key.lastPhotoIngest) as? Date
+        photoIngestSeenKeys = defaults.stringArray(forKey: Key.photoIngestSeen) ?? []
     }
 
     // MARK: - Stored preferences
@@ -101,6 +104,23 @@ final class AppSettings {
         didSet { defaults.set(lastAutoSnapshotAt, forKey: Key.lastAutoSnapshot) }
     }
 
+    /// Whether the app quietly saves places found in the photo library. On by default; the
+    /// off-switch lives in Settings for anyone who wants their library left alone.
+    var photoIngestEnabled: Bool {
+        didSet { defaults.set(photoIngestEnabled, forKey: Key.photoIngest) }
+    }
+
+    /// When the automatic photo-library ingest last ran, successfully or not.
+    var lastPhotoIngestAt: Date? {
+        didSet { defaults.set(lastPhotoIngestAt, forKey: Key.lastPhotoIngest) }
+    }
+
+    /// Cluster keys the ingest has already saved, so a deliberately deleted place stays
+    /// deleted even after the trash purges the spot it would otherwise de-dupe against.
+    var photoIngestSeenKeys: [String] {
+        didSet { defaults.set(photoIngestSeenKeys, forKey: Key.photoIngestSeen) }
+    }
+
     // MARK: - Derived
 
     var theme: Theme { ThemeCatalog.theme(id: themeID) }
@@ -133,5 +153,8 @@ final class AppSettings {
         static let onboarded = "settings.onboardingComplete"
         static let lastBackupExport = "settings.lastBackupExport"
         static let lastAutoSnapshot = "settings.lastAutoSnapshot"
+        static let photoIngest = "settings.photoIngest"
+        static let lastPhotoIngest = "settings.lastPhotoIngest"
+        static let photoIngestSeen = "settings.photoIngestSeen"
     }
 }

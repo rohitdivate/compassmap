@@ -39,6 +39,13 @@ struct RootView: View {
             .onChange(of: scenePhase) { _, phase in
                 handle(scenePhase: phase)
             }
+            // The first activation happens under the onboarding cover, so the first ingest has
+            // to wait for the moment onboarding is dismissed — this is that moment.
+            .onChange(of: settings.hasCompletedOnboarding) { _, onboarded in
+                if onboarded {
+                    PhotoIngestService.shared.ingestIfDue(store: store)
+                }
+            }
     }
 
     /// Presentations, deliberately spread across three hosts rather than chained onto one.
@@ -200,6 +207,7 @@ struct RootView: View {
         store.resolveMissingPlaceNames()
         store.purgeExpired()
         BackupService.shared.autoSnapshotIfDue(store: store)
+        PhotoIngestService.shared.ingestIfDue(store: store)
 
         switch PendingAction.take() {
         case .openSpot(let id):
@@ -222,8 +230,6 @@ struct RootView: View {
             SpotsMapView()
         case .trips:
             TripsView(hero: hero)
-        case .nearby:
-            NearbyView()
         }
     }
 

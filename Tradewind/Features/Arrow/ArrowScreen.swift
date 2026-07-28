@@ -2,6 +2,7 @@ import CoreLocation
 import MapKit
 import SwiftData
 import SwiftUI
+import UIKit
 
 /// The screen the whole app exists for: an arrow, a distance, and the photo of where you are
 /// going sitting behind both.
@@ -11,6 +12,7 @@ struct ArrowScreen: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.theme) private var theme
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     var destination: ArrowDestination
     var engine: CompassEngine
@@ -45,11 +47,15 @@ struct ArrowScreen: View {
                 FeedbackService.shared.updatePulse(proximity: proximity)
             }
             .onChange(of: engine.distanceMetres) { _, _ in
-                pushLiveActivityUpdate()
                 refreshWalkingRoute()
             }
             .onChange(of: engine.hasArrived) { _, arrived in
                 handleArrival(arrived)
+            }
+            // The screen that is actively guiding someone must not dim mid-walk. Cleared on
+            // every path out — including the scene going inactive — so it can never stick.
+            .onChange(of: scenePhase) { _, phase in
+                UIApplication.shared.isIdleTimerDisabled = phase == .active
             }
     }
 
@@ -108,7 +114,12 @@ struct ArrowScreen: View {
         celebrationStartedAt = Date()
         FeedbackService.shared.arrived()
         FeedbackService.shared.stopPulsing()
-        pushLiveActivityUpdate()
+        // The driver ends the activity on its own fix; this only covers an arrival the engine
+        // noticed first, so the Lock Screen card says "arrived" the same moment the app does.
+        if liveActivity.isRunning, liveActivity.activeSpotID == destination.id,
+           let distance = engine.distanceMetres, let bearing = engine.bearing {
+            liveActivity.finish(distanceMetres: distance, bearing: bearing)
+        }
     }
 
     // MARK: - Backdrop
@@ -505,6 +516,7 @@ struct ArrowScreen: View {
         engine.target = destination.coordinate
         engine.targetAltitude = destination.altitude
         engine.start()
+        UIApplication.shared.isIdleTimerDisabled = true
         FeedbackService.shared.startPulsing()
         if engine.hasArrived {
             hasAnnouncedArrival = true
@@ -524,15 +536,20 @@ struct ArrowScreen: View {
 
     private func finish() {
         engine.target = nil
+        UIApplication.shared.isIdleTimerDisabled = false
         FeedbackService.shared.stopPulsing()
     }
 
     private func startLiveActivity() {
         guard let distance = engine.distanceMetres, let bearing = engine.bearing else { return }
+        // The activity drives its own updates from here on — `ActivityUpdateDriver` recomputes
+        // distance and bearing on every fix, locked phone included, so this screen no longer
+        // pushes anything itself.
         let started = liveActivity.start(
             spotID: destination.id,
             spotName: destination.name,
             placeName: destination.subtitle,
+            coordinate: destination.coordinate,
             distanceMetres: distance,
             bearing: bearing,
             themeID: settings.themeID,
@@ -543,16 +560,6 @@ struct ArrowScreen: View {
             // Background updates are what keep the Lock Screen honest once the phone is in a
             // pocket, and they need "always" authorization.
             location.requestAlwaysAuthorization()
-        }
-    }
-
-    private func pushLiveActivityUpdate() {
-        guard liveActivity.isRunning, liveActivity.activeSpotID == destination.id else { return }
-        guard let distance = engine.distanceMetres, let bearing = engine.bearing else { return }
-        if engine.hasArrived {
-            liveActivity.finish(distanceMetres: distance, bearing: bearing)
-        } else {
-            liveActivity.update(distanceMetres: distance, bearing: bearing, isArrived: false)
         }
     }
 

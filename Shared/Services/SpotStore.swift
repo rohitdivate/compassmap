@@ -40,6 +40,8 @@ final class SpotStore {
         note: String? = nil,
         kind: PlaceKind = .place,
         placeName: String? = nil,
+        source: String? = nil,
+        refreshingSnapshot: Bool = true,
         trip: Trip? = nil
     ) -> Spot {
         let spot = Spot(
@@ -56,6 +58,7 @@ final class SpotStore {
             glyph: glyph,
             photoData: photoData,
             kind: kind,
+            sourceRaw: source,
             trip: trip
         )
 
@@ -72,7 +75,10 @@ final class SpotStore {
         if placeName == nil {
             resolvePlaceName(for: spot)
         }
-        refreshSnapshot()
+        // A batch caller (the photo ingest) refreshes once at the end instead of once per spot.
+        if refreshingSnapshot {
+            refreshSnapshot()
+        }
         donateToSpotlight(spot)
 
         return spot

@@ -192,8 +192,11 @@ membership — see the table above.
    specific spot. Check the medium one lists your three nearest. Add the Lock Screen accessories.
 6. **Interactive widgets** — tap *Next* on the large widget. The pinned spot should move on without
    the app opening, and the app should agree next time you open it.
-7. **Live Activity** — tap *Track on Lock Screen* on the arrow screen. Lock the phone; the distance
-   should appear and update as you move. Check the Dynamic Island while another app is foreground.
+7. **Live Activity** — tap *Track on Lock Screen* on the arrow screen. Lock the phone and walk;
+   the distance should count down and the pointer swing as you move, with the blue location
+   indicator showing while the walk is tracked. Check the Dynamic Island while another app is
+   foreground. Back in the app, the arrow screen should not dim while you hold it. Arrival or
+   *Stop tracking* should end the card and the indicator together.
 8. **Siri** — "How far to \<spot name\> in Tradewind". It answers without opening the app.
 9. **Spotlight** — swipe down, type a spot name; it should appear and open onto its arrow.
 10. **Save here, no photo** — from the gallery, tap *Save here*, pick *Stay*, add a note like

@@ -13,10 +13,11 @@ import WidgetKit
 /// values on top of it, with the accent carrying the mood.
 ///
 /// **The pointer is a bearing, not a compass.** It rotates as you *move*, because moving changes the
-/// bearing, and the push policy now reacts to that. It will not rotate as you turn the phone on the
-/// spot — ActivityKit cannot stream sensor data, and pretending otherwise would be a lie most of the
-/// time. What does update continuously, for free and without any push, is the ETA: `Text(timerInterval:)`
-/// ticks on-device.
+/// bearing, and `ActivityUpdateDriver` pushes on every fix — locked phone included, now that the
+/// walk holds background location open. It will not rotate as you turn the phone on the spot —
+/// ActivityKit cannot stream sensor data, and pretending otherwise would be a lie most of the time.
+/// The ETA updates continuously for free besides: `Text(timerInterval:)` ticks on-device, and the
+/// distances roll between pushes with `.contentTransition(.numericText)` instead of hard-cutting.
 struct HeadingLiveActivity: Widget {
 
     var body: some WidgetConfiguration {
@@ -57,6 +58,7 @@ struct HeadingLiveActivity: Widget {
             Text(distanceText(state, attributes))
                 .font(theme.mono(13, medium: true))
                 .monospacedDigit()
+                .contentTransition(.numericText(countsDown: true))
                 .foregroundStyle(theme.accent)
         } minimal: {
             arrowGlyph(colour: theme.accent, bearing: state.bearing, width: 8, height: 13)
@@ -79,6 +81,7 @@ struct HeadingLiveActivity: Widget {
             Text(distanceText(state, attributes))
                 .font(theme.mono(20, medium: true))
                 .monospacedDigit()
+                .contentTransition(.numericText(countsDown: true))
                 .foregroundStyle(theme.accent)
             // The island is always black, so this must be light regardless of mood.
             if let walk = DistanceFormatting.walkingTime(metres: state.distanceMetres) {
@@ -249,6 +252,7 @@ private struct LockScreenView: View {
                 Text(readout.value)
                     .font(theme.mono(28, medium: true))
                     .monospacedDigit()
+                    .contentTransition(.numericText(countsDown: true))
                 Text(readout.unit)
                     .font(theme.mono(13, medium: true))
                     .foregroundStyle(.white.opacity(0.6))

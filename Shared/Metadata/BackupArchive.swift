@@ -47,6 +47,7 @@ enum BackupArchive {
         var alertsEnabled: Bool
         var deletedAt: Date?
         var reminderAt: Date?
+        var sourceRaw: String?
         var tripID: UUID?
         /// Filename under `photos/` when the spot has a photo, nil otherwise.
         var photoFilename: String?

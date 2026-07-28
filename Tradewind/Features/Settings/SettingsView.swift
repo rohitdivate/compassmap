@@ -19,6 +19,7 @@ struct SettingsView: View {
                     measurements
                     compassSection
                     feedbackSection
+                    photoPlacesSection
                     DataSection()
                     syncSection
                     widgetHelp
@@ -102,6 +103,26 @@ struct SettingsView: View {
 
     private var cloudSync: Binding<Bool> {
         Binding(get: { settings.cloudSyncEnabled }, set: { settings.cloudSyncEnabled = $0 })
+    }
+
+    private var photoIngest: Binding<Bool> {
+        Binding(get: { settings.photoIngestEnabled }, set: { settings.photoIngestEnabled = $0 })
+    }
+
+    // MARK: - Photo places
+
+    private var photoPlacesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Your photos")
+            Surface(padding: 14) {
+                SettingsToggleRow(
+                    symbol: "photo.on.rectangle.angled",
+                    title: "Add places from your photos",
+                    detail: "Places your library already knows appear as spots by themselves. The scan reads locations only, on this phone.",
+                    isOn: photoIngest
+                )
+            }
+        }
     }
 
     // MARK: - Compass

@@ -62,14 +62,17 @@ guard that one call with `#available(iOS 26.2, *)`.
 
 ## The two commissioned features
 
-**Onboarding photo ingestion (suggest-and-confirm, never auto-import).** PhotoKit cannot
-filter by location, so: metadata-only sweep of all image assets (no pixel decode — seconds
-for 50k photos), read `asset.location` in memory, cluster time-gapped sessions into
-~120 m places, rank by visits × photos, exclude the home cluster (the biggest one), name
-centroids through the existing serialized GeocodeService, and present cluster cards —
-top suggestions pre-selected, one explicit "Add N spots" commit through the existing
-`SpotStore.createSpot` path. Full-library permission is opt-in behind a priming card and
-skippable; Limited mode degrades honestly; the flow lives in onboarding *and* Settings.
+**Automatic photo ingestion (no tab, no per-place save).** PhotoKit cannot filter by
+location, so: metadata-only sweep of all image assets (no pixel decode — seconds for 50k
+photos), read `asset.location` in memory, cluster time-gapped sessions into ~150 m places,
+rank by visits × photos — and then save them, by itself. `PhotoIngestService` runs on scene
+activation, throttled to a pass per day and a dozen places per pass; each cluster becomes a
+spot through the existing `SpotStore.createSpot` path, reading "Somewhere you've been" until
+the serialized GeocodeService backfills the area name. The home cluster (the biggest one)
+is saved as a Home-kind spot. Idempotency is double-walled: geometry de-dupe against every
+existing spot including the trash, plus a persisted set of seen cluster keys so a place
+deleted on purpose never returns. Permission is the one system prompt, primed by an
+onboarding page; Limited mode degrades honestly; the off-switch lives in Settings.
 
 **Durability (free-tier honest) + deletion.** Nothing survives uninstall on a Personal
 Team — so durability is export: a `.zip` archive (manifest + spots.json + trips.json +
