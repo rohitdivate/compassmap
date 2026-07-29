@@ -59,6 +59,7 @@
 		5647BFD08776D6AA6A52744D /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		42BCD588CBC6756227257BAC /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		1C8CBF1471458B386648E945 /* MapSnapshotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE2A3F845C40E1D640D2C12 /* MapSnapshotKey.swift */; };
+		830ACA9F9C417341AE8A7A98 /* MemoryPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AE6D53A4AEA4B8E1EBBCA /* MemoryPolicy.swift */; };
 		59B679A7FD58F339FF1C21F6 /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		BC259245D83144F0A46585A9 /* MotionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEC97D244A6A9AD71AF0E95 /* MotionPolicy.swift */; };
 		F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
@@ -170,6 +171,7 @@
 		B9CF77EE08C5F9627B1262E5 /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		3A6B989B3406218449564642 /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		DCFB5EA7FD117B36744202A9 /* MapSnapshotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE2A3F845C40E1D640D2C12 /* MapSnapshotKey.swift */; };
+		BE51B57A3234952861EDC6D5 /* MemoryPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AE6D53A4AEA4B8E1EBBCA /* MemoryPolicy.swift */; };
 		C646DAAD3ACEDBAE4CEECDC7 /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		3EE1BCB9201111E394909D2E /* MotionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEC97D244A6A9AD71AF0E95 /* MotionPolicy.swift */; };
 		FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
@@ -226,6 +228,7 @@
 		76161908CA6A46322959813E /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		FCA1B42A629ECA891D6C09F8 /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		0F221B52D402588D957CD12F /* MapSnapshotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE2A3F845C40E1D640D2C12 /* MapSnapshotKey.swift */; };
+		7BDAABC4E93922F823BF6EDF /* MemoryPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440AE6D53A4AEA4B8E1EBBCA /* MemoryPolicy.swift */; };
 		38D4A3B87FDA0AB4F761F44C /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
 		0E2866E5952FC8396143E7DF /* MotionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEC97D244A6A9AD71AF0E95 /* MotionPolicy.swift */; };
 		79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */; };
@@ -253,6 +256,7 @@
 		762D5EC6D231B9F53DCD84FF /* LibraryAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */; };
 		8F5A28D433DC5B966EADF85A /* LivingPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38324E1728E1E188C8F81654 /* LivingPaletteTests.swift */; };
 		2B99EE7B03E9B784A112988D /* MapsLinkParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */; };
+		892FC6AB912AD92F3731E5C0 /* MemoryPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 590173272FA48791DCE7EB0C /* MemoryPolicyTests.swift */; };
 		D86169E5CA694C1A78258CD5 /* MeterReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */; };
 		C6E38A8C7AC0946DECAD02E4 /* MotionPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1408BA15B30BBEE5CB7587A4 /* MotionPolicyTests.swift */; };
 		9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */; };
@@ -353,6 +357,7 @@
 		D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofencePlan.swift; sourceTree = "<group>"; };
 		6E948A2A123EC65C18AA252D /* LivingPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivingPalette.swift; sourceTree = "<group>"; };
 		5FE2A3F845C40E1D640D2C12 /* MapSnapshotKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapSnapshotKey.swift; sourceTree = "<group>"; };
+		440AE6D53A4AEA4B8E1EBBCA /* MemoryPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryPolicy.swift; sourceTree = "<group>"; };
 		4F3FB534A816D801FFB6A44D /* MeterReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeterReminder.swift; sourceTree = "<group>"; };
 		3CEC97D244A6A9AD71AF0E95 /* MotionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionPolicy.swift; sourceTree = "<group>"; };
 		B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingAction.swift; sourceTree = "<group>"; };
@@ -424,6 +429,7 @@
 		120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAccessTests.swift; sourceTree = "<group>"; };
 		38324E1728E1E188C8F81654 /* LivingPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivingPaletteTests.swift; sourceTree = "<group>"; };
 		F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapsLinkParserTests.swift; sourceTree = "<group>"; };
+		590173272FA48791DCE7EB0C /* MemoryPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryPolicyTests.swift; sourceTree = "<group>"; };
 		A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeterReminderTests.swift; sourceTree = "<group>"; };
 		1408BA15B30BBEE5CB7587A4 /* MotionPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionPolicyTests.swift; sourceTree = "<group>"; };
 		E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlanTests.swift; sourceTree = "<group>"; };
@@ -580,6 +586,7 @@
 				D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */,
 				6E948A2A123EC65C18AA252D /* LivingPalette.swift */,
 				5FE2A3F845C40E1D640D2C12 /* MapSnapshotKey.swift */,
+				440AE6D53A4AEA4B8E1EBBCA /* MemoryPolicy.swift */,
 				4F3FB534A816D801FFB6A44D /* MeterReminder.swift */,
 				3CEC97D244A6A9AD71AF0E95 /* MotionPolicy.swift */,
 				B52159E71D3CE3D6BC2AC971 /* PendingAction.swift */,
@@ -783,6 +790,7 @@
 				120FDE34E48FAA3FF44241C1 /* LibraryAccessTests.swift */,
 				38324E1728E1E188C8F81654 /* LivingPaletteTests.swift */,
 				F503E4B9815EC5CB38B26762 /* MapsLinkParserTests.swift */,
+				590173272FA48791DCE7EB0C /* MemoryPolicyTests.swift */,
 				A95A59DCB02304DFE8294F6A /* MeterReminderTests.swift */,
 				1408BA15B30BBEE5CB7587A4 /* MotionPolicyTests.swift */,
 				E113FF08D76BBADF8E40F2F5 /* PersistencePlanTests.swift */,
@@ -1089,6 +1097,7 @@
 				5647BFD08776D6AA6A52744D /* GeofencePlan.swift in Sources */,
 				42BCD588CBC6756227257BAC /* LivingPalette.swift in Sources */,
 				1C8CBF1471458B386648E945 /* MapSnapshotKey.swift in Sources */,
+				830ACA9F9C417341AE8A7A98 /* MemoryPolicy.swift in Sources */,
 				59B679A7FD58F339FF1C21F6 /* MeterReminder.swift in Sources */,
 				BC259245D83144F0A46585A9 /* MotionPolicy.swift in Sources */,
 				F0FE7C275048BDAF2035BEFE /* PendingAction.swift in Sources */,
@@ -1188,6 +1197,7 @@
 				B9CF77EE08C5F9627B1262E5 /* GeofencePlan.swift in Sources */,
 				3A6B989B3406218449564642 /* LivingPalette.swift in Sources */,
 				DCFB5EA7FD117B36744202A9 /* MapSnapshotKey.swift in Sources */,
+				BE51B57A3234952861EDC6D5 /* MemoryPolicy.swift in Sources */,
 				C646DAAD3ACEDBAE4CEECDC7 /* MeterReminder.swift in Sources */,
 				3EE1BCB9201111E394909D2E /* MotionPolicy.swift in Sources */,
 				FD62A7474C91018808D13C75 /* PendingAction.swift in Sources */,
@@ -1233,6 +1243,7 @@
 				76161908CA6A46322959813E /* GeofencePlan.swift in Sources */,
 				FCA1B42A629ECA891D6C09F8 /* LivingPalette.swift in Sources */,
 				0F221B52D402588D957CD12F /* MapSnapshotKey.swift in Sources */,
+				7BDAABC4E93922F823BF6EDF /* MemoryPolicy.swift in Sources */,
 				38D4A3B87FDA0AB4F761F44C /* MeterReminder.swift in Sources */,
 				0E2866E5952FC8396143E7DF /* MotionPolicy.swift in Sources */,
 				79F87E951AA924C039C1C8CD /* PendingAction.swift in Sources */,
@@ -1260,6 +1271,7 @@
 				762D5EC6D231B9F53DCD84FF /* LibraryAccessTests.swift in Sources */,
 				8F5A28D433DC5B966EADF85A /* LivingPaletteTests.swift in Sources */,
 				2B99EE7B03E9B784A112988D /* MapsLinkParserTests.swift in Sources */,
+				892FC6AB912AD92F3731E5C0 /* MemoryPolicyTests.swift in Sources */,
 				D86169E5CA694C1A78258CD5 /* MeterReminderTests.swift in Sources */,
 				C6E38A8C7AC0946DECAD02E4 /* MotionPolicyTests.swift in Sources */,
 				9AE65CBF9C30DE50DC2F612A /* PersistencePlanTests.swift in Sources */,

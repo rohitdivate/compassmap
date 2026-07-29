@@ -59,6 +59,7 @@ struct SpotsGalleryView: View {
         var kindsInUse: [PlaceKind]
         var featured: RankedSpot?
         var gridItems: [RankedSpot]
+        var memory: (spot: Spot, yearsAgo: Int)?
     }
 
     private func makeModel() -> GalleryModel {
@@ -75,7 +76,22 @@ struct SpotsGalleryView: View {
         } else {
             gridItems = ranked
         }
-        return GalleryModel(ranked: ranked, kindsInUse: kinds, featured: featured, gridItems: gridItems)
+        // Memories come from the whole library, not the filtered view — the card just stays
+        // hidden while a filter or search is narrowing the screen.
+        let memory: (spot: Spot, yearsAgo: Int)? = {
+            guard let match = MemoryPolicy.memory(
+                in: spots.map { (id: $0.id, capturedAt: $0.capturedAt) },
+                today: Date()
+            ), let spot = spots.first(where: { $0.id == match.spotID }) else { return nil }
+            return (spot, match.yearsAgo)
+        }()
+        return GalleryModel(
+            ranked: ranked,
+            kindsInUse: kinds,
+            featured: featured,
+            gridItems: gridItems,
+            memory: memory
+        )
     }
 
     var body: some View {
@@ -114,6 +130,14 @@ struct SpotsGalleryView: View {
                 onOpen: { open(featured.spot) }
             )
             .contextMenu { spotMenu(for: featured.spot) }
+            .padding(.horizontal, 18)
+        }
+        if let memory = model.memory, !isSearching, selectedTripID == nil, selectedKind == nil {
+            MemoryCard(
+                spot: memory.spot,
+                yearsAgo: memory.yearsAgo,
+                onOpen: { open(memory.spot) }
+            )
             .padding(.horizontal, 18)
         }
         if model.ranked.count > 1 { grid(model) }
@@ -423,6 +447,57 @@ struct SpotsGalleryView: View {
         withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
             router.openSpot(id: spot.id)
         }
+    }
+}
+
+// MARK: - Memory card
+
+/// "One year ago today" — the resurfacing card, shown only on an exact anniversary.
+///
+/// Deliberately quieter than the featured card: a memory is an aside, not the reason the
+/// screen exists, so it reads as one row you can tap or scroll past.
+private struct MemoryCard: View {
+    @Environment(\.theme) private var theme
+
+    var spot: Spot
+    var yearsAgo: Int
+    var onOpen: () -> Void
+
+    var body: some View {
+        Button(action: onOpen) {
+            Surface(padding: 12) {
+                HStack(spacing: 14) {
+                    SpotPhotoView(spot: spot, sizeClass: .pin)
+                        .frame(width: 56, height: 56)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.radii.avatar, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(MemoryPolicy.label(yearsAgo: yearsAgo))
+                            .eyebrowStyle(theme: theme)
+                        Text(spot.displayName)
+                            .font(theme.cardTitleFont)
+                            .foregroundStyle(theme.text)
+                            .lineLimit(1)
+                        if let place = spot.placeName, !place.isEmpty {
+                            Text(place)
+                                .font(theme.captionFont)
+                                .foregroundStyle(theme.textMuted)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer(minLength: 8)
+
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(theme.accent)
+                }
+            }
+        }
+        .buttonStyle(PressableStyle(scale: 0.98))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(MemoryPolicy.label(yearsAgo: yearsAgo)): \(spot.displayName)")
+        .accessibilityHint("Opens the compass for this spot")
     }
 }
 
