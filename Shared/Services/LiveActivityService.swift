@@ -23,6 +23,9 @@ final class LiveActivityService {
     @ObservationIgnored private var driver: ActivityUpdateDriver?
 
     private(set) var activeSpotID: UUID?
+    /// Name of the spot being tracked, for surfaces (the tab accessory strip) that outlive
+    /// the arrow screen the walk started from.
+    private(set) var activeSpotName: String?
 
     var isSupported: Bool {
         ActivityAuthorizationInfo().areActivitiesEnabled
@@ -71,6 +74,7 @@ final class LiveActivityService {
                 pushType: nil
             )
             activeSpotID = spotID
+            activeSpotName = spotName
             lastPush = ActivityPushPolicy.LastPush(
                 at: Date(),
                 distanceMetres: distanceMetres,
@@ -134,6 +138,7 @@ final class LiveActivityService {
         let spotName = activity.attributes.spotName
         self.activity = nil
         activeSpotID = nil
+        activeSpotName = nil
         lastPush = nil
         Task {
             await activity.update(
@@ -157,6 +162,7 @@ final class LiveActivityService {
         guard let activity else { return }
         self.activity = nil
         activeSpotID = nil
+        activeSpotName = nil
         lastPush = nil
         Task { await activity.end(nil, dismissalPolicy: .immediate) }
     }

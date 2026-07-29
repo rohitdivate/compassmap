@@ -132,6 +132,9 @@ struct SpotsGalleryView: View {
                         ranked: item,
                         unitPreference: settings.unitPreference,
                         hero: hero,
+                        // The featured card can duplicate a pinned spot into the grid; only
+                        // one view per id may be a zoom source.
+                        isZoomSource: item.id != model.featured?.id,
                         onOpen: { open(item.spot) }
                     )
                     .contextMenu { spotMenu(for: item.spot) }
@@ -440,6 +443,9 @@ private struct FeaturedSpotCard: View {
             .shadow(color: .black.opacity(0.35), radius: 22, y: 12)
         }
         .buttonStyle(PressableStyle(scale: 0.98))
+        // The whole card is the zoom source: tapping it grows this card into the arrow
+        // screen, which is the moment the app either feels made-for-this or does not.
+        .matchedTransitionSource(id: ranked.spot.id, in: hero)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
         .accessibilityHint("Opens the compass for this spot")
@@ -447,7 +453,6 @@ private struct FeaturedSpotCard: View {
 
     private var photo: some View {
         SpotPhotoView(spot: ranked.spot, sizeClass: .hero)
-            .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
             .frame(height: 300)
             .overlay {
                 LinearGradient(
@@ -539,6 +544,7 @@ private struct SpotGridCard: View {
     var ranked: RankedSpot
     var unitPreference: UnitPreference
     var hero: Namespace.ID
+    var isZoomSource: Bool = true
     var onOpen: () -> Void
 
     var body: some View {
@@ -555,13 +561,13 @@ private struct SpotGridCard: View {
             }
         }
         .buttonStyle(PressableStyle(scale: 0.97))
+        .modifier(ZoomSourceIfEnabled(enabled: isZoomSource, id: ranked.spot.id, namespace: hero))
         .accessibilityElement(children: .combine)
     }
 
     private var photo: some View {
         ZStack(alignment: .topTrailing) {
             SpotPhotoView(spot: ranked.spot, sizeClass: .card)
-                .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
                 .frame(height: 132)
 
             if ranked.spot.isPinned {
@@ -614,6 +620,24 @@ private struct SpotGridCard: View {
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous)
             .fill(theme.surface)
+    }
+}
+
+// MARK: - Zoom source
+
+/// `matchedTransitionSource` cannot be applied conditionally inline, and two live sources
+/// with one id in the same namespace is a runtime complaint — this wraps the choice.
+private struct ZoomSourceIfEnabled: ViewModifier {
+    var enabled: Bool
+    var id: UUID
+    var namespace: Namespace.ID
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.matchedTransitionSource(id: id, in: namespace)
+        } else {
+            content
+        }
     }
 }
 

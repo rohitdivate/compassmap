@@ -22,7 +22,6 @@ struct ArrowScreen: View {
 
     var destination: ArrowDestination
     var engine: CompassEngine
-    var hero: Namespace.ID
     var onClose: () -> Void
 
     @State private var liveActivity = LiveActivityService.shared
@@ -96,7 +95,7 @@ struct ArrowScreen: View {
 
     private var layers: some View {
         ZStack {
-            ArrowBackdrop(theme: theme, destination: destination, hero: hero, dial: engine.dial)
+            ArrowBackdrop(theme: theme, destination: destination, dial: engine.dial)
 
             VStack(spacing: 0) {
                 topBar
@@ -323,7 +322,11 @@ struct ArrowScreen: View {
     }
 
     private func finish() {
-        engine.target = nil
+        // A tracked walk keeps the engine's target: the tab bar's mini compass strip reads
+        // the same dial and frame this screen did, and it takes over the moment this closes.
+        if !(liveActivity.isRunning && liveActivity.activeSpotID == destination.id) {
+            engine.target = nil
+        }
         UIApplication.shared.isIdleTimerDisabled = false
         FeedbackService.shared.stopPulsing()
     }

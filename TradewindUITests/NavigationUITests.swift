@@ -43,8 +43,12 @@ final class NavigationUITests: XCTestCase {
         }
     }
 
+    /// The system tab bar exposes its buttons by title. The old custom bar used
+    /// "tab-<Title>" identifiers; falling back keeps the helper honest if a control ever
+    /// reads as a plain button rather than a tab.
     private func tabBarButton(_ label: String) -> XCUIElement {
-        app.buttons["tab-\(label)"]
+        let system = app.tabBars.buttons[label]
+        return system.exists ? system : app.buttons[label]
     }
 
     private var settingsButton: XCUIElement { app.buttons["settings-button"] }

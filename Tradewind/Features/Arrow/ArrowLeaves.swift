@@ -15,7 +15,6 @@ import SwiftUI
 struct ArrowBackdrop: View {
     var theme: Theme
     var destination: ArrowDestination
-    var hero: Namespace.ID
     var dial: DialState
 
     @State private var timeOfDay = TimeOfDay.current(at: nil)
@@ -54,7 +53,6 @@ struct ArrowBackdrop: View {
     private func blurredPhoto(_ spot: Spot) -> some View {
         let radians = dial.parallaxAngle * .pi / 180
         return SpotPhotoView(spot: spot, sizeClass: .hero)
-            .matchedGeometryEffect(id: "photo-\(destination.id)", in: hero)
             .scaleEffect(1.25)
             .blur(radius: 44, opaque: false)
             .opacity(0.5)

@@ -1,13 +1,13 @@
 import SwiftData
 import SwiftUI
 
-/// The app shell: backdrop, the three main surfaces, a floating bar, and the arrow screen
-/// which rises over all of it.
+/// The app shell: a system tab bar (Liquid Glass, minimizing on scroll), a floating glass
+/// shutter, and the arrow screen presented as a full-screen cover.
 ///
-/// The arrow screen is an overlay in this same view tree rather than a sheet, so a tapped card
-/// can grow into it with `matchedGeometryEffect`. That transition is the moment the app either
-/// feels made-for-this or feels like a list of coordinates, so it is worth the slightly less
-/// conventional structure.
+/// The arrow used to be a ZStack overlay so a card could grow into it with
+/// `matchedGeometryEffect`; the zoom navigation transition does the same job across a real
+/// presentation now — the whole card grows, not just its photo — and the system bar brings
+/// the bottom accessory (the tracking strip) and the scroll-minimize behaviour with it.
 struct RootView: View {
 
     @Environment(AppSettings.self) private var settings
@@ -18,6 +18,7 @@ struct RootView: View {
 
     @State private var engine = CompassEngine()
     @State private var location = LocationService.shared
+    @State private var liveActivity = LiveActivityService.shared
     @Namespace private var hero
 
     private var store: SpotStore { SpotStore(context: modelContext) }
@@ -78,80 +79,120 @@ struct RootView: View {
 
     private var stack: some View {
         ZStack {
-            ThemedBackground(theme: theme)
-
-            surface
-                .safeAreaInset(edge: .bottom) {
-                    // Reserve room for the floating bar so content can still scroll clear of it.
-                    Color.clear.frame(height: 78)
-                }
-                .fullScreenCover(isPresented: showingCapture) {
-                    CaptureFlowView()
-                        .environment(settings)
-                        .environment(router)
-                        .environment(\.theme, theme)
-                }
-
-            bar
-                // Its own host, per the presentation-conflict lesson: nothing else presents here.
-                .sheet(isPresented: showingSaveHere) {
-                    SaveHereView()
-                        .environment(settings)
-                        .environment(\.theme, theme)
-                }
-
-            if let destination {
-                arrowScreen(for: destination)
-            }
-
-            // Above everything, including the arrow: a deletion from the detail sheet closes the
-            // arrow underneath it, and the undo must survive that collapse.
+            tabs
+            shutterOverlay
+            // Above everything: a deletion from the arrow's detail sheet closes the arrow
+            // cover, and the undo must be standing here when the collapse finishes.
             UndoToastHost()
                 .zIndex(30)
         }
-        .animation(.spring(response: 0.42, dampingFraction: 0.82), value: router.activeSpotID)
-        .animation(.spring(response: 0.42, dampingFraction: 0.82), value: router.guestDestination)
+        // The arrow rides its own presentation now. The cover's content carries the zoom
+        // transition, so the tapped card grows into the screen — unless Reduce Motion or the
+        // UI-test seam says otherwise (MotionPolicy).
+        .fullScreenCover(item: destinationItem) { destination in
+            arrowScreen(for: destination)
+        }
     }
 
-    private var bar: some View {
+    private var tabs: some View {
+        TabView(selection: tabSelection) {
+            Tab(AppRouter.Tab.spots.title, systemImage: AppRouter.Tab.spots.symbol, value: .spots) {
+                surface { SpotsGalleryView(hero: hero) }
+            }
+            Tab(AppRouter.Tab.map.title, systemImage: AppRouter.Tab.map.symbol, value: .map) {
+                surface { SpotsMapView() }
+            }
+            Tab(AppRouter.Tab.trips.title, systemImage: AppRouter.Tab.trips.symbol, value: .trips) {
+                surface { TripsView(hero: hero) }
+            }
+        }
+        .tabBarMinimizeBehavior(.onScrollDown)
+        .tabViewBottomAccessory { trackingAccessory }
+        .fullScreenCover(isPresented: showingCapture) {
+            CaptureFlowView()
+                .environment(settings)
+                .environment(router)
+                .environment(\.theme, theme)
+        }
+    }
+
+    private func surface(@ViewBuilder _ content: () -> some View) -> some View {
+        ZStack {
+            ThemedBackground(theme: theme)
+            content()
+        }
+        .scrollEdgeEffectStyle(.soft, for: .all)
+    }
+
+    /// The walk, kept in hand: while a Lock Screen walk is tracked, the tab bar grows the
+    /// mini compass strip, and tapping it reopens the arrow.
+    @ViewBuilder
+    private var trackingAccessory: some View {
+        if let id = liveActivity.activeSpotID {
+            MiniCompassStrip(
+                dial: engine.dial,
+                solution: engine.solution,
+                name: liveActivity.activeSpotName ?? "On your way"
+            ) {
+                FeedbackService.shared.lightTap()
+                router.openSpot(id: id)
+            }
+        }
+    }
+
+    /// The shutter floats above the bar on its own — not a tab, because photographing where
+    /// you stand is the app's verb, not a place in it.
+    private var shutterOverlay: some View {
         VStack {
             Spacer()
-            FloatingBar(
-                selection: router.tab,
-                onSelect: select(tab:),
-                onCapture: {
+            HStack {
+                Spacer()
+                GlassShutter {
                     FeedbackService.shared.lightTap()
                     router.isShowingCapture = true
                 }
-            )
-            .padding(.bottom, 8)
+            }
         }
+        .padding(.trailing, 20)
+        .padding(.bottom, 104)
         .ignoresSafeArea(.keyboard)
+        // Its own host, per the presentation-conflict lesson: nothing else presents here.
+        .sheet(isPresented: showingSaveHere) {
+            SaveHereView()
+                .environment(settings)
+                .environment(\.theme, theme)
+        }
     }
 
     private func arrowScreen(for destination: ArrowDestination) -> some View {
         ArrowScreen(
             destination: destination,
             engine: engine,
-            hero: hero,
-            onClose: {
-                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-                    router.dismissDestination()
-                }
-            }
+            onClose: { router.dismissDestination() }
         )
-        .zIndex(10)
-        .transition(.asymmetric(
-            insertion: .opacity.combined(with: .scale(scale: 0.94)),
-            removal: .opacity.combined(with: .scale(scale: 0.97))
-        ))
+        .environment(settings)
+        .environment(router)
+        .environment(\.theme, theme)
+        .modifier(ZoomTransition(sourceID: destination.id, namespace: hero))
     }
 
-    private func select(tab: AppRouter.Tab) {
-        FeedbackService.shared.lightTap()
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-            router.tab = tab
-        }
+    private var tabSelection: Binding<AppRouter.Tab> {
+        Binding(
+            get: { router.tab },
+            set: { newValue in
+                if router.tab != newValue { FeedbackService.shared.lightTap() }
+                router.tab = newValue
+            }
+        )
+    }
+
+    private var destinationItem: Binding<ArrowDestination?> {
+        Binding(
+            get: { destination },
+            set: { newValue in
+                if newValue == nil { router.dismissDestination() }
+            }
+        )
     }
 
     private func handle(scenePhase phase: ScenePhase) {
@@ -225,18 +266,6 @@ struct RootView: View {
     }
 
     // MARK: - Pieces
-
-    @ViewBuilder
-    private var surface: some View {
-        switch router.tab {
-        case .spots:
-            SpotsGalleryView(hero: hero)
-        case .map:
-            SpotsMapView()
-        case .trips:
-            TripsView(hero: hero)
-        }
-    }
 
     /// Resolves whatever the router has been asked to show into something the arrow screen can
     /// draw. A link to a deleted spot resolves to nothing rather than to an empty screen.
@@ -328,92 +357,45 @@ enum ArrowDestination: Identifiable {
     }
 }
 
-// MARK: - Floating bar
+// MARK: - Shutter
 
-/// Three surfaces and a shutter. A capsule rather than a system tab bar because the backdrop
-/// is the point of the app and a solid bar across the bottom would cut it in half.
-private struct FloatingBar: View {
+/// The camera, one tap from anywhere: a floating Liquid Glass button in the theme's accent.
+/// Interactive glass gives the press its squish; the identifier is load-bearing for XCUITest.
+private struct GlassShutter: View {
     @Environment(\.theme) private var theme
 
-    var selection: AppRouter.Tab
-    var onSelect: (AppRouter.Tab) -> Void
-    var onCapture: () -> Void
+    var action: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
-            tabStrip
-            shutter
-        }
-        .padding(.horizontal, 16)
-    }
-
-    private var tabStrip: some View {
-        HStack(spacing: 2) {
-            ForEach(AppRouter.Tab.allCases) { tab in
-                tabButton(tab)
-            }
-        }
-        .padding(5)
-        .background {
-            Capsule(style: .continuous)
-                .fill(theme.surface)
-                .overlay { Capsule().strokeBorder(theme.hairline, lineWidth: 1) }
-        }
-        .modifier(BarShadow(theme: theme))
-    }
-
-    private func tabButton(_ tab: AppRouter.Tab) -> some View {
-        let isSelected = selection == tab
-        return Button {
-            onSelect(tab)
-        } label: {
-            VStack(spacing: 3) {
-                Image(systemName: tab.symbol)
-                    .font(.system(size: 17, weight: .semibold))
-                Text(tab.title)
-                    .font(.system(size: 10, weight: .semibold))
-            }
-            .frame(width: 62, height: 46)
-            .foregroundStyle(isSelected ? theme.accent : theme.textMuted)
-            .background {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(theme.accent.opacity(0.14))
-                }
-            }
-        }
-        .buttonStyle(PressableStyle(scale: 0.92))
-        .accessibilityIdentifier("tab-\(tab.title)")
-        .accessibilityLabel(tab.title)
-    }
-
-    private var shutter: some View {
-        Button(action: onCapture) {
+        Button(action: action) {
             Image(systemName: "camera.fill")
                 .font(.system(size: 21, weight: .semibold))
-                .foregroundStyle(theme.canvas)
-                .frame(width: 56, height: 56)
-                .background {
-                    Circle()
-                        .fill(theme.accent)
-                        .shadow(color: theme.glow.opacity(0.5), radius: 16, y: 6)
-                }
-                .overlay { Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1) }
+                .foregroundStyle(theme.onAccent)
+                .frame(width: 60, height: 60)
         }
+        .glassEffect(.regular.tint(theme.accent).interactive(), in: .circle)
         .accessibilityIdentifier("capture-button")
         .accessibilityLabel("Take a photo")
-        .buttonStyle(PressableStyle(scale: 0.9))
-        .accessibilityLabel("Save this place")
     }
 }
 
-/// The floating bar lifts off a cream canvas, and sits flat on a hairline one.
-private struct BarShadow: ViewModifier {
-    var theme: Theme
+// MARK: - Zoom transition
+
+/// Applies the zoom navigation transition when `MotionPolicy` allows it. A plain conditional
+/// modifier because `NavigationTransition` values of different concrete types cannot share a
+/// ternary.
+private struct ZoomTransition: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var sourceID: UUID
+    var namespace: Namespace.ID
 
     func body(content: Content) -> some View {
-        if let shadow = theme.cardShadow {
-            content.shadow(color: shadow.color, radius: shadow.radius * 4, y: shadow.y * 4)
+        if MotionPolicy.allowsZoomTransition(
+            reduceMotion: reduceMotion,
+            isUITesting: AppSettings.isUITesting
+        ) {
+            content.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
         } else {
             content
         }

@@ -51,19 +51,19 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 5))
         app.buttons["Close"].firstMatch.tap()
 
-        XCTAssertTrue(app.buttons["tab-Map"].waitForExistence(timeout: 5))
-        app.buttons["tab-Map"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Map"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Map"].tap()
         XCTAssertTrue(screen("map-screen").waitForExistence(timeout: 5), "No map")
         snap("05-map")
 
-        app.buttons["tab-Trips"].tap()
+        app.tabBars.buttons["Trips"].tap()
         XCTAssertTrue(screen("trips-screen").waitForExistence(timeout: 5), "No trips")
         snap("06-trips")
 
         // No Nearby screenshot any more: photo-library places ingest themselves into the gallery.
         // (The canned scan's clusters share coordinates with the demo data here, so de-dupe
         // suppresses them — expected.)
-        app.buttons["tab-Spots"].tap()
+        app.tabBars.buttons["Spots"].tap()
         XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["settings-button"].waitForExistence(timeout: 5))
         app.buttons["settings-button"].tap()
