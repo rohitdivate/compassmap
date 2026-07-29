@@ -10,6 +10,11 @@ import SwiftData
 @Model
 final class Spot {
 
+    /// Local indexes for the three predicates every fetch runs on: alive-vs-trash, the
+    /// newest-first sort, and id lookup. Indexes are store metadata, not schema — CloudKit
+    /// never sees them, so the sync rules above are untouched.
+    #Index<Spot>([\.deletedAt], [\.capturedAt], [\.id])
+
     /// Stable identity used by widgets, deep links and App Intents. Not a unique attribute
     /// (CloudKit forbids those) — uniqueness is maintained by only ever creating one.
     var id: UUID = UUID()

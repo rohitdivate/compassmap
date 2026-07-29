@@ -37,7 +37,7 @@ jobs:
 
   build:
     name: Build and test
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +46,17 @@ jobs:
         run: |
           xcodebuild -version
           xcrun simctl list runtimes | sed -n '1,40p'
+
+      # The app targets iOS 26, which needs the Xcode 26 SDK. The runner image's default is
+      # usually already Xcode 26; this pins it explicitly when present so an image whose
+      # default lags behind does not fail with "SDK does not support iOS 26".
+      - name: Prefer Xcode 26
+        run: |
+          candidate=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)
+          if [ -n "$candidate" ]; then
+            sudo xcode-select -s "$candidate/Contents/Developer"
+          fi
+          xcodebuild -version
 
       - name: Pick a simulator
         id: sim
