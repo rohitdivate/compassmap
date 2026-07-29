@@ -95,6 +95,49 @@ struct CompassFrameTests {
         #expect(CompassFrame.proximityStep(forMetres: 200) == 25)
     }
 
+    @Test("Named bands change exactly at 400, 100 and 25 metres")
+    func namedBands() {
+        #expect(CompassFrame.proximityBand(forMetres: 401) == .far)
+        #expect(CompassFrame.proximityBand(forMetres: 400) == .approaching)
+        #expect(CompassFrame.proximityBand(forMetres: 101) == .approaching)
+        #expect(CompassFrame.proximityBand(forMetres: 100) == .near)
+        #expect(CompassFrame.proximityBand(forMetres: 26) == .near)
+        #expect(CompassFrame.proximityBand(forMetres: 25) == .arrived)
+        // Closer compares greater, which is what the escalation trigger keys on.
+        #expect(CompassFrame.ProximityBand.near > .approaching)
+        #expect(frame(metres: 180).proximityBand == .approaching)
+        #expect(frame(metres: nil).proximityBand == nil)
+    }
+
+    // MARK: - Distance type scale
+
+    @Test("The headline type grows monotonically and stays bounded")
+    func displayScaleCurve() {
+        #expect(CompassFrame.displayScale(forProximity: 0) == 1.0)
+        #expect(CompassFrame.displayScale(forProximity: 1) == 1.18)
+        #expect(CompassFrame.displayScale(forProximity: 0.5) > 1.0)
+        #expect(CompassFrame.displayScale(forProximity: 0.5)
+            < CompassFrame.displayScale(forProximity: 0.9))
+        // Eased in: at half proximity, well under half the growth has happened.
+        #expect(CompassFrame.displayScale(forProximity: 0.5) < 1.09)
+        // Out-of-range inputs clamp instead of extrapolating.
+        #expect(CompassFrame.displayScale(forProximity: 2) == 1.18)
+        #expect(CompassFrame.displayScale(forProximity: -1) == 1.0)
+    }
+
+    // MARK: - Cardinal crossings
+
+    @Test("A sweep across a cardinal ticks; a jump or a wobble does not")
+    func cardinalCrossings() {
+        #expect(CompassFrame.crossedCardinal(from: 88, to: 92))     // across east
+        #expect(CompassFrame.crossedCardinal(from: 92, to: 88))     // and back
+        #expect(CompassFrame.crossedCardinal(from: 355, to: 362))   // unwrapped across north
+        #expect(CompassFrame.crossedCardinal(from: -2, to: 2))      // negative unwrap, still north
+        #expect(!CompassFrame.crossedCardinal(from: 10, to: 20))    // no boundary between
+        #expect(!CompassFrame.crossedCardinal(from: 0, to: 180))    // a seed jump, not a sweep
+        #expect(!CompassFrame.crossedCardinal(from: 91, to: 91))    // a still phone
+    }
+
     // MARK: - Formatted strings ride along
 
     @Test("Distance, bearing label and elevation are pre-formatted")

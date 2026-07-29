@@ -81,6 +81,7 @@
 		741319258D41E6B3092142C3 /* UndoToastHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97FF90DE699466768C2D64AC /* UndoToastHost.swift */; };
 		DF36B13C2ABD67C4A8A487F5 /* ArrowLeaves.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE260C66CB7CA61F4907BB59 /* ArrowLeaves.swift */; };
 		997C31D1712763E3B15C5597 /* ArrowScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */; };
+		2283ABC729B119721135641D /* DialTilt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA40AACBF52712E59D63756 /* DialTilt.swift */; };
 		484EF7773C1B6FC5C09A980E /* MiniCompassStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B064F1FD5DA00DB9856D16F /* MiniCompassStrip.swift */; };
 		17E089FC51064AF6DF42CE77 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4BDF8889B8BE769FFCDE6F /* CameraController.swift */; };
 		673EB8B50043B1C47F96DCE4 /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3893AC3DDF94190614DD2398 /* CameraPreview.swift */; };
@@ -374,6 +375,7 @@
 		97FF90DE699466768C2D64AC /* UndoToastHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoToastHost.swift; sourceTree = "<group>"; };
 		FE260C66CB7CA61F4907BB59 /* ArrowLeaves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowLeaves.swift; sourceTree = "<group>"; };
 		29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowScreen.swift; sourceTree = "<group>"; };
+		0DA40AACBF52712E59D63756 /* DialTilt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialTilt.swift; sourceTree = "<group>"; };
 		5B064F1FD5DA00DB9856D16F /* MiniCompassStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniCompassStrip.swift; sourceTree = "<group>"; };
 		1D4BDF8889B8BE769FFCDE6F /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		3893AC3DDF94190614DD2398 /* CameraPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreview.swift; sourceTree = "<group>"; };
@@ -628,6 +630,7 @@
 			children = (
 				FE260C66CB7CA61F4907BB59 /* ArrowLeaves.swift */,
 				29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */,
+				0DA40AACBF52712E59D63756 /* DialTilt.swift */,
 				5B064F1FD5DA00DB9856D16F /* MiniCompassStrip.swift */,
 			);
 			path = Arrow;
@@ -1108,6 +1111,7 @@
 				741319258D41E6B3092142C3 /* UndoToastHost.swift in Sources */,
 				DF36B13C2ABD67C4A8A487F5 /* ArrowLeaves.swift in Sources */,
 				997C31D1712763E3B15C5597 /* ArrowScreen.swift in Sources */,
+				2283ABC729B119721135641D /* DialTilt.swift in Sources */,
 				484EF7773C1B6FC5C09A980E /* MiniCompassStrip.swift in Sources */,
 				17E089FC51064AF6DF42CE77 /* CameraController.swift in Sources */,
 				673EB8B50043B1C47F96DCE4 /* CameraPreview.swift in Sources */,

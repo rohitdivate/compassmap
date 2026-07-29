@@ -102,6 +102,8 @@ struct CompassCluster: View {
                 onPhoto: true
             )
 
+            DialTiltHighlight(diameter: 300)
+
             DirectionArrow(
                 theme: theme,
                 angle: dial.arrowAngle,
@@ -116,6 +118,14 @@ struct CompassCluster: View {
             }
         }
         .frame(height: 340)
+        // This view already moves at dial rate, so the bezel tick rides here rather than on
+        // the event bridge: the frame's whole-degree hints are too coarse to catch a cardinal
+        // sweep, and no other view is allowed to read the dial this often.
+        .onChange(of: dial.roseAngle) { previous, current in
+            if frame.headingIsUsable, CompassFrame.crossedCardinal(from: previous, to: current) {
+                FeedbackService.shared.cardinalTick()
+            }
+        }
         .accessibilityElement()
         .accessibilityLabel(frame.accessibilityDescription(spotName: destinationName))
         .accessibilityAddTraits(.updatesFrequently)
@@ -133,8 +143,12 @@ struct DistanceReadoutView: View {
     var body: some View {
         if let distance = solution.frame.distanceText {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
+                // The face grows with proximity (the curve lives in `CompassFrame`): each 2%
+                // band moves it well under a point, so the growth reads as continuous.
                 Text(distance.value)
-                    .font(theme.heroNumberFont(heroFontSize(for: distance.value)))
+                    .font(theme.heroNumberFont(
+                        heroFontSize(for: distance.value) * CGFloat(solution.frame.displayScale)
+                    ))
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .foregroundStyle(.white)
@@ -331,6 +345,7 @@ struct ArrowActionsView: View {
 /// observation dependencies never attach to the screen itself.
 struct EngineEventBridge: View {
     var solution: TargetSolution
+    var hapticsEnabled: Bool
     var onTargetLock: (Bool) -> Void
     var onProximityChange: (Double) -> Void
     var onFrameChange: () -> Void
@@ -350,6 +365,23 @@ struct EngineEventBridge: View {
             }
             .onChange(of: solution.frame.hasArrived) { _, arrived in
                 onArrivalChange(arrived)
+            }
+            // The escalation taps, in closure form so the system schedules them alongside its
+            // own. Coming onto the bearing is a crisp rigid tap (the chime stays with
+            // FeedbackService); each proximity boundary crossed on the way *in* — 400 m, then
+            // 100 m — lands one heavier than the last. Arrival's `.success` fires from
+            // `FeedbackService.arrived()`, so the last boundary is not doubled here.
+            .sensoryFeedback(trigger: solution.frame.onTarget) { _, locked in
+                guard hapticsEnabled, locked else { return nil }
+                return .impact(flexibility: .rigid, intensity: 0.85)
+            }
+            .sensoryFeedback(trigger: solution.frame.proximityBand) { old, new in
+                guard hapticsEnabled, let old, let new, new > old else { return nil }
+                switch new {
+                case .approaching: return .impact(weight: .light, intensity: 0.6)
+                case .near: return .impact(weight: .medium, intensity: 0.8)
+                case .far, .arrived: return nil
+                }
             }
     }
 }

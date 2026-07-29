@@ -14,6 +14,8 @@ struct CompassFrame: Equatable {
     static let onTargetTolerance: Double = 8
     /// Within this many metres counts as arrived.
     static let arrivalRadius: Double = 25
+    /// Inside this many metres the walk is nearly over — the middle escalation threshold.
+    static let nearRadius: Double = 100
     /// Hysteresis: once arrived, you stay arrived until this far away again, so the
     /// celebration cannot flicker on and off at the boundary.
     static let arrivalExitRadius: Double = arrivalRadius * 2.5
@@ -47,6 +49,46 @@ struct CompassFrame: Equatable {
     var crowMetres: Double?
 
     var proximity: Double { Double(proximityStep) / Double(Self.proximityStepCount) }
+
+    /// The walk's named chapters, for the escalation haptics: each boundary crossed on the
+    /// way in earns one tap. Ordered so "closer" compares greater.
+    enum ProximityBand: Int, Comparable {
+        case far, approaching, near, arrived
+
+        static func < (lhs: ProximityBand, rhs: ProximityBand) -> Bool {
+            lhs.rawValue < rhs.rawValue
+        }
+    }
+
+    /// Derived from the 5 m-quantized distance so GPS jitter cannot flap a band boundary.
+    var proximityBand: ProximityBand? {
+        crowMetres.map(Self.proximityBand(forMetres:))
+    }
+
+    static func proximityBand(forMetres metres: Double) -> ProximityBand {
+        if metres <= arrivalRadius { return .arrived }
+        if metres <= nearRadius { return .near }
+        if metres <= proximityRange { return .approaching }
+        return .far
+    }
+
+    /// How much the headline distance type grows as you close in — Precision Finding's move:
+    /// the number is the interface, so it gets physically bigger as it gets more important.
+    /// Eased so most of the growth happens inside the last hundred metres.
+    var displayScale: Double { Self.displayScale(forProximity: proximity) }
+
+    static func displayScale(forProximity proximity: Double) -> Double {
+        1 + 0.18 * pow(max(0, min(1, proximity)), 1.8)
+    }
+
+    /// True when a rose sweep from `previous` to `current` (unwrapped degrees, so multiples
+    /// of 90 are the cardinals) passed over a cardinal point. A jump wider than 45° is a
+    /// seed or a signal glitch, not the bezel turning, and earns no tick.
+    static func crossedCardinal(from previous: Double, to current: Double) -> Bool {
+        let delta = abs(current - previous)
+        guard delta > 0.01, delta <= 45 else { return false }
+        return (previous / 90).rounded(.down) != (current / 90).rounded(.down)
+    }
 
     /// "NW 312°" for the bearing pill.
     var bearingLabel: String? {

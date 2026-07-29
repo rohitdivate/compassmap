@@ -68,6 +68,7 @@ struct ArrowScreen: View {
     private var eventBridge: some View {
         EngineEventBridge(
             solution: engine.solution,
+            hapticsEnabled: settings.hapticsEnabled,
             onTargetLock: { isOnTarget in
                 if isOnTarget { FeedbackService.shared.onTarget() }
             },
@@ -124,6 +125,10 @@ struct ArrowScreen: View {
             .padding(.bottom, 22)
 
             if let celebrationStartedAt {
+                // Bloom under confetti: the wash of colour says "done" before the eye has
+                // resolved a single particle.
+                ArrivalBloom()
+                    .ignoresSafeArea()
                 CelebrationView(theme: theme, startedAt: celebrationStartedAt)
                     .ignoresSafeArea()
             }
@@ -155,19 +160,24 @@ struct ArrowScreen: View {
 
     // MARK: - Top bar
 
+    /// Both round controls share one `GlassEffectContainer`, so the system renders them as
+    /// one sheet of glass and can morph between them; `.interactive()` supplies the press
+    /// squish `PressableStyle` used to fake.
     private var topBar: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Button(action: onClose) {
-                circularGlyph("chevron.down")
-            }
-            .buttonStyle(PressableStyle())
-            .accessibilityLabel("Close")
+        GlassEffectContainer {
+            HStack(alignment: .top, spacing: 12) {
+                Button(action: onClose) {
+                    circularGlyph("chevron.down")
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close")
 
-            titleBlock
-                .frame(maxWidth: .infinity, alignment: .leading)
+                titleBlock
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            if let spot = destination.spot {
-                overflowMenu(for: spot)
+                if let spot = destination.spot {
+                    overflowMenu(for: spot)
+                }
             }
         }
         .padding(.top, 6)
@@ -241,13 +251,15 @@ struct ArrowScreen: View {
         .accessibilityLabel("More options")
     }
 
-    /// The frosted circular button shape used by both controls in the bar.
+    /// The circular glass button shape used by both controls in the bar. Real glass rather
+    /// than the old frosted fill: this chrome floats over a photograph, which is exactly
+    /// where glass pays for itself.
     private func circularGlyph(_ symbol: String) -> some View {
         Image(systemName: symbol)
             .font(.system(size: 15, weight: .bold))
             .foregroundStyle(.white)
             .frame(width: 40, height: 40)
-            .background { Circle().fill(.black.opacity(0.28)) }
+            .glassEffect(.regular.interactive(), in: .circle)
     }
 
     // MARK: - Readout
