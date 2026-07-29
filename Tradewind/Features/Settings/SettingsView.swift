@@ -417,7 +417,7 @@ private struct ThemeTile: View {
         ZStack {
             candidate.canvas
             if candidate.grainOpacity > 0 {
-                FilmGrain(opacity: candidate.grainOpacity, tint: candidate.text, density: 260)
+                FilmGrain(opacity: candidate.grainOpacity, tint: candidate.text)
             }
 
             HStack(spacing: 10) {

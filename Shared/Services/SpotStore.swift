@@ -228,29 +228,38 @@ final class SpotStore {
     // MARK: - Reading
 
     /// Living spots only — the trash is invisible to every caller except the trash screen.
+    /// The filter lives in the predicate, not in Swift: fetching the trash just to throw it
+    /// away is work the database can skip.
     func allSpots() -> [Spot] {
-        fetchEverySpot().filter { $0.deletedAt == nil }
+        let descriptor = FetchDescriptor<Spot>(
+            predicate: #Predicate { $0.deletedAt == nil },
+            sortBy: [SortDescriptor(\.capturedAt, order: .reverse)]
+        )
+        return (try? context.fetch(descriptor)) ?? []
     }
 
     /// The trash, newest deletion first.
     func deletedSpots() -> [Spot] {
-        fetchEverySpot()
-            .filter { $0.deletedAt != nil }
-            .sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
-    }
-
-    private func fetchEverySpot() -> [Spot] {
-        let descriptor = FetchDescriptor<Spot>(sortBy: [SortDescriptor(\.capturedAt, order: .reverse)])
+        let descriptor = FetchDescriptor<Spot>(
+            predicate: #Predicate { $0.deletedAt != nil },
+            sortBy: [SortDescriptor(\.deletedAt, order: .reverse)]
+        )
         return (try? context.fetch(descriptor)) ?? []
     }
 
     func spot(id: UUID) -> Spot? {
-        allSpots().first { $0.id == id }
+        var descriptor = FetchDescriptor<Spot>(
+            predicate: #Predicate { $0.id == id && $0.deletedAt == nil }
+        )
+        descriptor.fetchLimit = 1
+        return (try? context.fetch(descriptor))?.first
     }
 
     /// Looks in the trash too — the undo toast restores by id after the spot left every list.
     func anySpot(id: UUID) -> Spot? {
-        fetchEverySpot().first { $0.id == id }
+        var descriptor = FetchDescriptor<Spot>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        return (try? context.fetch(descriptor))?.first
     }
 
     func allTrips() -> [Trip] {

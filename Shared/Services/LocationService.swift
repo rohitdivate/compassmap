@@ -24,6 +24,16 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     private(set) var currentLocation: CLLocation?
     /// Last heading we were given, unsmoothed.
     private(set) var currentHeading: CLHeading?
+
+    /// The fix quantized to ~11 m, published only when the bucket changes. For consumers
+    /// that rank and label rather than draw — reading `currentLocation` in a view body means
+    /// re-rendering on every 3 m fix, which is how the gallery ended up re-sorting itself
+    /// several times a second.
+    private(set) var coarseCoordinate: Coordinate?
+    /// Headings quantized to 5°, same idea: a card's mini arrow does not need degree-level
+    /// updates, and the dial reads the raw heading through the engine, not through here.
+    private(set) var coarseMagneticHeading: Double?
+    private(set) var coarseTrueHeading: Double?
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
     /// Set when the device has no magnetometer, or heading is unavailable for any other
     /// reason, so the UI can fall back to a map instead of showing a dead arrow.
@@ -172,6 +182,12 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         return currentHeading.magneticHeading
     }
 
+    /// The 5°-quantized counterpart, for card arrows and other decorations.
+    func coarseHeadingDegrees(preferTrueNorth: Bool) -> Double? {
+        if preferTrueNorth, let coarseTrueHeading { return coarseTrueHeading }
+        return coarseMagneticHeading
+    }
+
     /// Whether the magnetometer is reporting enough interference to be worth mentioning.
     var needsCalibration: Bool {
         guard let currentHeading else { return false }
@@ -191,6 +207,11 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latest = locations.last, latest.horizontalAccuracy >= 0 else { return }
         currentLocation = latest
+        let coarse = Coordinate(
+            latitude: (latest.coordinate.latitude * 10_000).rounded() / 10_000,
+            longitude: (latest.coordinate.longitude * 10_000).rounded() / 10_000
+        )
+        if coarse != coarseCoordinate { coarseCoordinate = coarse }
         publishToSnapshotIfNeeded(latest)
         onLocationFix?(latest)
     }
@@ -199,6 +220,14 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         guard newHeading.headingAccuracy >= 0 || newHeading.magneticHeading >= 0 else { return }
         headingUnavailable = false
         currentHeading = newHeading
+
+        let quantize: (Double) -> Double? = { value in
+            value >= 0 ? (value / 5).rounded() * 5 : nil
+        }
+        let magnetic = quantize(newHeading.magneticHeading)
+        if magnetic != coarseMagneticHeading { coarseMagneticHeading = magnetic }
+        let true_ = quantize(newHeading.trueHeading)
+        if true_ != coarseTrueHeading { coarseTrueHeading = true_ }
     }
 
     func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {

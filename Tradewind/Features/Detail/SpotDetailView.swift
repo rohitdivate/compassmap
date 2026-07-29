@@ -162,12 +162,14 @@ struct SpotDetailView: View {
         .padding(.horizontal, 18)
     }
 
+    // Coarse (~11 m) coordinate on purpose: reading the raw fix here re-rendered the whole
+    // sheet every 3 m, and a static readout does not need that resolution.
     private var metresToSpot: Double? {
-        location.coordinate.map { BearingMath.distance(from: $0, to: spot.coordinate) }
+        location.coarseCoordinate.map { BearingMath.distance(from: $0, to: spot.coordinate) }
     }
 
     private var bearingToSpot: Double? {
-        location.coordinate.map { BearingMath.initialBearing(from: $0, to: spot.coordinate) }
+        location.coarseCoordinate.map { BearingMath.initialBearing(from: $0, to: spot.coordinate) }
     }
 
     @ViewBuilder

@@ -88,6 +88,10 @@ struct ArrowScreen: View {
         guard deleteWhenDetailCloses, let spot = destination.spot else { return }
         deleteWhenDetailCloses = false
         store.delete(spot)
+        // The shell no longer watches the whole spot table, so a deletion does not close this
+        // screen by side effect any more — close it deliberately. The undo toast lives above
+        // the shell and survives the collapse.
+        onClose()
     }
 
     private var layers: some View {

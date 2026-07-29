@@ -49,31 +49,43 @@ struct SpotsGalleryView: View {
         return result
     }
 
-    /// Kinds actually in use. The chips only appear once there are two to choose between —
-    /// a filter with one option is furniture.
-    private var kindsInUse: [PlaceKind] {
-        var seen: [PlaceKind] = []
-        for spot in spots where !seen.contains(spot.placeKind) {
-            seen.append(spot.placeKind)
+    /// Everything the screen derives from the spot list, computed exactly once per body
+    /// evaluation. As computed properties these were re-derived five or six times per pass —
+    /// and the pass itself ran at heading rate, because the body read the raw heading. Now the
+    /// body reads only the coarse (~11 m) coordinate, and the cards observe the heading
+    /// themselves in a leaf.
+    private struct GalleryModel {
+        var ranked: [RankedSpot]
+        var kindsInUse: [PlaceKind]
+        var featured: RankedSpot?
+        var gridItems: [RankedSpot]
+    }
+
+    private func makeModel() -> GalleryModel {
+        let ranked = SpotRanking.rank(filtered, from: location.coarseCoordinate)
+        var seen = Set<PlaceKind>()
+        for spot in spots { seen.insert(spot.placeKind) }
+        let kinds = PlaceKind.pickable.filter(seen.contains)
+        let featured = SpotRanking.featured(in: ranked)
+        // Everything except the spot already shown as the hero card — unless a further-away
+        // spot is pinned, in which case the hero is not the first item and nothing is dropped.
+        let gridItems: [RankedSpot]
+        if let featured, ranked.first?.id == featured.id {
+            gridItems = Array(ranked.dropFirst())
+        } else {
+            gridItems = ranked
         }
-        return PlaceKind.pickable.filter(seen.contains)
-    }
-
-    private var ranked: [RankedSpot] {
-        SpotRanking.rank(filtered, from: location.coordinate)
-    }
-
-    private var heading: Double? {
-        location.headingDegrees(preferTrueNorth: settings.usesTrueNorth)
+        return GalleryModel(ranked: ranked, kindsInUse: kinds, featured: featured, gridItems: gridItems)
     }
 
     var body: some View {
+        let model = makeModel()
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                heroHeader
+                heroHeader(model)
                 VStack(alignment: .leading, spacing: 22) {
                     if !location.isAuthorized { permissionPrompt }
-                    if spots.isEmpty { emptyState } else { content }
+                    if spots.isEmpty { emptyState } else { content(model) }
                 }
                 .padding(.top, 20)
                 .padding(.bottom, 24)
@@ -89,15 +101,14 @@ struct SpotsGalleryView: View {
     }
 
     @ViewBuilder
-    private var content: some View {
+    private func content(_ model: GalleryModel) -> some View {
         if isSearching { searchField }
         if !trips.isEmpty { tripFilter }
-        if kindsInUse.count > 1 { kindFilter }
-        if ranked.isEmpty, !spots.isEmpty { noMatches }
-        if let featured = SpotRanking.featured(in: ranked) {
+        if model.kindsInUse.count > 1 { kindFilter(model.kindsInUse) }
+        if model.ranked.isEmpty, !spots.isEmpty { noMatches }
+        if let featured = model.featured {
             FeaturedSpotCard(
                 ranked: featured,
-                heading: heading,
                 unitPreference: settings.unitPreference,
                 hero: hero,
                 onOpen: { open(featured.spot) }
@@ -105,21 +116,20 @@ struct SpotsGalleryView: View {
             .contextMenu { spotMenu(for: featured.spot) }
             .padding(.horizontal, 18)
         }
-        if ranked.count > 1 { grid }
+        if model.ranked.count > 1 { grid(model) }
     }
 
-    private var grid: some View {
+    private func grid(_ model: GalleryModel) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(
-                eyebrow: location.coordinate == nil ? "Most recent" : "Nearest first",
+                eyebrow: location.coarseCoordinate == nil ? "Most recent" : "Nearest first",
                 title: "All your spots"
             )
 
             LazyVGrid(columns: [GridItem(spacing: 14), GridItem(spacing: 14)], spacing: 14) {
-                ForEach(gridItems) { item in
+                ForEach(model.gridItems) { item in
                     SpotGridCard(
                         ranked: item,
-                        heading: heading,
                         unitPreference: settings.unitPreference,
                         hero: hero,
                         onOpen: { open(item.spot) }
@@ -129,14 +139,6 @@ struct SpotsGalleryView: View {
             }
         }
         .padding(.horizontal, 18)
-    }
-
-    /// Everything except the spot already shown as the hero card — unless a further-away spot is
-    /// pinned, in which case the hero is not the first item and nothing is dropped.
-    private var gridItems: [RankedSpot] {
-        guard let featured = SpotRanking.featured(in: ranked) else { return ranked }
-        guard ranked.first?.id == featured.id else { return ranked }
-        return Array(ranked.dropFirst())
     }
 
     private var permissionPrompt: some View {
@@ -178,10 +180,10 @@ struct SpotsGalleryView: View {
     /// same block resolves to a flat raised surface, because that mood permits no gradient.
     /// Solar-aware: the wash and the greeting both follow the actual sun at the actual place.
     private var skyPhase: TimeOfDay {
-        TimeOfDay.current(at: location.coordinate)
+        TimeOfDay.current(at: location.coarseCoordinate)
     }
 
-    private var heroHeader: some View {
+    private func heroHeader(_ model: GalleryModel) -> some View {
         HeroPanel(theme: theme, phase: skyPhase) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
@@ -218,7 +220,7 @@ struct SpotsGalleryView: View {
                 }
 
                 HStack(spacing: 8) {
-                    if !spots.isEmpty { statusPill }
+                    if !spots.isEmpty { statusPill(model) }
                     saveHereChip
                 }
                 .padding(.top, 14)
@@ -254,12 +256,12 @@ struct SpotsGalleryView: View {
 
     /// "Nearest 240 m away" — the reference screen's "Currently in Honolulu" chip, doing the job
     /// this app actually has.
-    private var statusPill: some View {
+    private func statusPill(_ model: GalleryModel) -> some View {
         HStack(spacing: 7) {
             Circle()
                 .fill(theme.highlight)
                 .frame(width: 7, height: 7)
-            Text(summaryLine)
+            Text(summaryLine(model))
                 .font(theme.sans(theme.scale.caption, weight: .medium))
                 .foregroundStyle(theme.onHero)
         }
@@ -270,10 +272,10 @@ struct SpotsGalleryView: View {
         }
     }
 
-    private var summaryLine: String {
+    private func summaryLine(_ model: GalleryModel) -> String {
         let count = spots.count
         let noun = count == 1 ? "spot" : "spots"
-        guard let nearest = ranked.first, let metres = nearest.metres else {
+        guard let nearest = model.ranked.first, let metres = nearest.metres else {
             return "\(count) \(noun) saved"
         }
         let distance = DistanceFormatting.string(metres: metres, preference: settings.unitPreference)
@@ -359,10 +361,10 @@ struct SpotsGalleryView: View {
         .accessibilityIdentifier("no-matches")
     }
 
-    private var kindFilter: some View {
+    private func kindFilter(_ kinds: [PlaceKind]) -> some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                ForEach(kindsInUse) { candidate in
+                ForEach(kinds) { candidate in
                     ChipButton(
                         title: candidate.pluralLabel,
                         symbol: candidate.symbol,
@@ -419,7 +421,6 @@ private struct FeaturedSpotCard: View {
     @Environment(\.theme) private var theme
 
     var ranked: RankedSpot
-    var heading: Double?
     var unitPreference: UnitPreference
     var hero: Namespace.ID
     var onOpen: () -> Void
@@ -485,7 +486,7 @@ private struct FeaturedSpotCard: View {
 
     private var distanceRow: some View {
         HStack(alignment: .center, spacing: 12) {
-            MiniArrow(theme: theme, angle: ranked.arrowAngle(heading: heading), size: 34)
+            CardArrow(theme: theme, ranked: ranked, size: 34)
             distanceBlock
             Spacer()
             Image(systemName: "arrow.up.right.circle.fill")
@@ -536,7 +537,6 @@ private struct SpotGridCard: View {
     @Environment(\.theme) private var theme
 
     var ranked: RankedSpot
-    var heading: Double?
     var unitPreference: UnitPreference
     var hero: Namespace.ID
     var onOpen: () -> Void
@@ -583,7 +583,7 @@ private struct SpotGridCard: View {
                 .lineLimit(1)
 
             HStack(spacing: 8) {
-                MiniArrow(theme: theme, angle: ranked.arrowAngle(heading: heading), size: 20)
+                CardArrow(theme: theme, ranked: ranked, size: 20)
                 distanceText
                 Spacer(minLength: 0)
             }
@@ -614,6 +614,31 @@ private struct SpotGridCard: View {
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous)
             .fill(theme.surface)
+    }
+}
+
+// MARK: - Card arrow
+
+/// A card's little arrow, reading the heading itself: a turn of the wrist redraws these
+/// twenty-point views and nothing else. Coarse (5°) heading — a decoration does not need
+/// degree-level updates.
+private struct CardArrow: View {
+    @Environment(AppSettings.self) private var settings
+
+    var theme: Theme
+    var ranked: RankedSpot
+    var size: CGFloat
+
+    @State private var location = LocationService.shared
+
+    var body: some View {
+        MiniArrow(
+            theme: theme,
+            angle: ranked.arrowAngle(
+                heading: location.coarseHeadingDegrees(preferTrueNorth: settings.usesTrueNorth)
+            ),
+            size: size
+        )
     }
 }
 

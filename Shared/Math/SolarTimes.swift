@@ -106,13 +106,24 @@ enum SolarTimes {
 
     // MARK: - Phrasing
 
+    /// Cached per time zone: `DateFormatter` construction costs real fractions of a
+    /// millisecond, and this used to run inside a view body.
+    private static var goldenHourFormatters: [String: DateFormatter] = [:]
+
     /// "Golden hour at 18:42" — in the time zone the caller hands us, which for a spot on the
     /// other side of the world should be that spot's, not ours.
     static func describeGoldenHour(_ events: Events, timeZone: TimeZone = .current) -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        formatter.dateStyle = .none
-        formatter.timeZone = timeZone
+        let formatter: DateFormatter
+        if let cached = goldenHourFormatters[timeZone.identifier] {
+            formatter = cached
+        } else {
+            let fresh = DateFormatter()
+            fresh.timeStyle = .short
+            fresh.dateStyle = .none
+            fresh.timeZone = timeZone
+            goldenHourFormatters[timeZone.identifier] = fresh
+            formatter = fresh
+        }
         return "Golden hour \(formatter.string(from: events.goldenHourStart))–\(formatter.string(from: events.sunset))"
     }
 }

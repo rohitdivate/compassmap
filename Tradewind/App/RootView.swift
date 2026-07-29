@@ -16,12 +16,6 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
 
-    @Query(
-        filter: #Predicate<Spot> { $0.deletedAt == nil },
-        sort: \Spot.capturedAt,
-        order: .reverse
-    ) private var spots: [Spot]
-
     @State private var engine = CompassEngine()
     @State private var location = LocationService.shared
     @Namespace private var hero
@@ -246,9 +240,22 @@ struct RootView: View {
 
     /// Resolves whatever the router has been asked to show into something the arrow screen can
     /// draw. A link to a deleted spot resolves to nothing rather than to an empty screen.
+    ///
+    /// A one-shot fetch, not a `@Query` over every spot: the shell used to observe the whole
+    /// table just to resolve one id, which meant every mutation anywhere — a glyph change, a
+    /// thumbnail backfill — redrew the backdrop, the bar and the current tab. The delete path
+    /// closes the arrow through the router now (`ArrowScreen.performPendingDelete`), which the
+    /// query's disappearance used to do implicitly.
     private var destination: ArrowDestination? {
-        if let id = router.activeSpotID, let spot = spots.first(where: { $0.id == id }) {
-            return .saved(spot)
+        if let id = router.activeSpotID {
+            var descriptor = FetchDescriptor<Spot>(
+                predicate: #Predicate { $0.id == id && $0.deletedAt == nil }
+            )
+            descriptor.fetchLimit = 1
+            if let spot = (try? modelContext.fetch(descriptor))?.first {
+                return .saved(spot)
+            }
+            return nil
         }
         if let guest = router.guestDestination {
             return .guest(guest)
