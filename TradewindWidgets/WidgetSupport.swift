@@ -273,10 +273,11 @@ struct WidgetPhoto: View {
                let image = UIImage(data: data) {
                 Image(uiImage: image)
                     .resizable()
-                    .scaledToFill()
                     // In the accented (tinted) home screen the system recolours images into the
-                    // tint. A photograph recoloured is a smear; it stays photographic.
+                    // tint. A photograph recoloured is a smear; it stays photographic. This is an
+                    // Image modifier, so it must precede the View-returning ones.
                     .widgetAccentedRenderingMode(.fullColor)
+                    .scaledToFill()
             } else if let glyph = spot?.glyph, !glyph.isEmpty {
                 Text(glyph).font(theme.sans(26))
             } else if let spot {
