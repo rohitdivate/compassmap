@@ -70,6 +70,7 @@ struct NearestSpotsView: View {
                 .textCase(.uppercase)
                 .tracking(1.4)
                 .foregroundStyle(entry.theme.accent)
+                .widgetAccentable()
             Spacer()
             if entry.isStale {
                 Text("last known")
@@ -144,6 +145,7 @@ struct SpotListRow: View {
             .frame(width: isFirst ? 12 : 10, height: isFirst ? 19 : 16)
             .rotationEffect(.degrees(bearing ?? 0))
             .opacity(bearing == nil ? 0.3 : 1)
+            .widgetAccentable()
     }
 
     private var labels: some View {

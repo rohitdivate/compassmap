@@ -222,6 +222,9 @@ struct WidgetArrow: View {
                 .rotationEffect(.degrees(bearing ?? 0))
                 .opacity(bearing == nil ? 0.35 : 1)
                 .shadow(color: theme.glow.opacity(0.5), radius: 5)
+                // The arrow is the widget's one live thing; in accented mode it takes the tint
+                // rather than washing out with the rest of the desaturated content.
+                .widgetAccentable()
             if showsCompassPoint, let bearing {
                 Text(BearingMath.compassPoint(forBearing: bearing))
                     .font(theme.mono(9, medium: true))
@@ -242,6 +245,7 @@ struct WidgetPlaceholder: View {
             Image(systemName: "location.north.line.fill")
                 .font(.system(size: compact ? 16 : 22, weight: .light))
                 .foregroundStyle(theme.accent)
+                .widgetAccentable()
             Text(message)
                 .font(theme.sans(compact ? 10 : 12, weight: .medium))
                 .foregroundStyle(theme.textMuted)
@@ -270,6 +274,9 @@ struct WidgetPhoto: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+                    // In the accented (tinted) home screen the system recolours images into the
+                    // tint. A photograph recoloured is a smear; it stays photographic.
+                    .widgetAccentedRenderingMode(.fullColor)
             } else if let glyph = spot?.glyph, !glyph.isEmpty {
                 Text(glyph).font(theme.sans(26))
             } else if let spot {
@@ -278,6 +285,7 @@ struct WidgetPhoto: View {
                 Image(systemName: PlaceKind.from(rawValue: spot.kindRaw).symbol)
                     .font(.system(size: 22, weight: .medium))
                     .foregroundStyle(theme.accent)
+                    .widgetAccentable()
             }
         }
     }
