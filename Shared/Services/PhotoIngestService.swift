@@ -79,7 +79,7 @@ final class PhotoIngestService {
         }
 
         if !chosen.isEmpty {
-            store.refreshSnapshot()
+            store.scheduleSnapshotRefresh()
         }
         settings.lastPhotoIngestAt = now
     }

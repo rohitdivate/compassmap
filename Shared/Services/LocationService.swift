@@ -240,10 +240,13 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             longitude: location.coordinate.longitude
         )
         let themeID = AppSettings.shared.themeID
-        SharedSnapshotStore.mutate(defaultThemeID: themeID) { snapshot in
+        // Async: this runs inside a CoreLocation delegate callback on the main thread, and
+        // blocking it on file I/O for a widget nicety is exactly backwards.
+        SharedSnapshotStore.mutateAsync(defaultThemeID: themeID) { snapshot in
             snapshot.lastKnownLocation = coordinate
             snapshot.lastKnownLocationDate = Date()
+        } completion: { _ in
+            WidgetCenter.shared.reloadAllTimelines()
         }
-        WidgetCenter.shared.reloadAllTimelines()
     }
 }

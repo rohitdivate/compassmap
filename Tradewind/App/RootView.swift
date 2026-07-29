@@ -196,18 +196,15 @@ struct RootView: View {
 
     /// Picks up anything that happened while the app was closed: a pin moved by a widget button,
     /// and an intent from Siri, Shortcuts or a widget tap asking for a particular screen.
+    ///
+    /// Only the two steps that gate first paint run synchronously — the adopted pin (which the
+    /// snapshot rewrite would otherwise overwrite) and the pending deep-link action. The rest
+    /// is housekeeping, and housekeeping used to be the jank: six full-table fetches, a
+    /// snapshot rewrite per geocode, and once a week a full photo archive, all inside the
+    /// activation frame.
     private func syncWithOutsideWorld() {
         let store = self.store
         store.adoptPinFromSnapshot()
-        store.refreshSnapshot()
-        // Geofences drift while the app is closed — spots deleted from a widget flow, the person
-        // now on the other side of town — so every activation recomputes the armed set. Names for
-        // spots that never got one trickle in a few at a time, inside the geocoder's rate limit.
-        store.rearmGeofences()
-        store.resolveMissingPlaceNames()
-        store.purgeExpired()
-        BackupService.shared.autoSnapshotIfDue(store: store)
-        PhotoIngestService.shared.ingestIfDue(store: store)
 
         switch PendingAction.take() {
         case .openSpot(let id):
@@ -216,6 +213,20 @@ struct RootView: View {
             router.isShowingCapture = true
         case nil:
             break
+        }
+
+        Task(priority: .utility) {
+            store.scheduleSnapshotRefresh()
+            await store.migrateThumbnailsIfNeeded()
+            // Geofences drift while the app is closed — spots deleted from a widget flow, the
+            // person now on the other side of town — so every activation recomputes the armed
+            // set. Names for spots that never got one trickle in a few at a time, inside the
+            // geocoder's rate limit.
+            store.rearmGeofences()
+            store.resolveMissingPlaceNames()
+            store.purgeExpired()
+            BackupService.shared.autoSnapshotIfDue(store: store)
+            PhotoIngestService.shared.ingestIfDue(store: store)
         }
     }
 

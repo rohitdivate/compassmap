@@ -258,26 +258,16 @@ struct SpotDetailView: View {
         .padding(.horizontal, 18)
     }
 
+    /// A rendered snapshot, not a live `MKMapView`: booting a whole map engine was the most
+    /// expensive single part of opening this sheet, for 600 m of non-interactive context.
     private var mapInset: some View {
-        Map(initialPosition: .region(region), interactionModes: []) {
-            Marker(spot.displayName, coordinate: coordinate)
-                .tint(theme.accent)
-        }
-        .mapStyle(.standard(pointsOfInterest: .excludingAll))
-        .frame(height: 160)
-        .allowsHitTesting(false)
-    }
-
-    private var coordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: spot.latitude, longitude: spot.longitude)
-    }
-
-    private var region: MKCoordinateRegion {
-        MKCoordinateRegion(
-            center: coordinate,
-            latitudinalMeters: 600,
-            longitudinalMeters: 600
+        SpotMapInset(
+            spotID: spot.id,
+            latitude: spot.latitude,
+            longitude: spot.longitude,
+            theme: theme
         )
+        .frame(height: 160)
     }
 
     @ViewBuilder
@@ -398,13 +388,27 @@ struct SpotDetailView: View {
                 .font(theme.bodyTextFont)
                 .foregroundStyle(theme.text)
                 .lineLimit(3...6)
-                .onSubmit { store.update(spot, note: draftNote) }
+                .onSubmit { saveNoteIfChanged() }
             }
         }
         .padding(.horizontal, 18)
-        .onChange(of: draftNote) { _, newValue in
-            store.update(spot, note: newValue.isEmpty ? nil : newValue)
+        // Debounced, not per keystroke: `store.update` is a SwiftData save, and typing a
+        // forty-character note used to mean forty disk commits. The id-task restarts on every
+        // edit, so the save lands one second after the typing stops...
+        .task(id: draftNote) {
+            guard draftNote != (spot.note ?? "") else { return }
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            saveNoteIfChanged()
         }
+        // ...and closing the sheet mid-debounce must not eat the note.
+        .onDisappear { saveNoteIfChanged() }
+    }
+
+    private func saveNoteIfChanged() {
+        let note = draftNote.isEmpty ? nil : draftNote
+        guard note != spot.note else { return }
+        store.update(spot, note: note)
     }
 
     // MARK: - Kind and reminder
@@ -619,6 +623,66 @@ private struct FactRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+}
+
+// MARK: - Map inset
+
+/// The 600 m context map as a cached image, with the pin drawn on top in SwiftUI so it stays
+/// themable. The snapshot resolves async; until it does, the raised surface holds the space.
+private struct SpotMapInset: View {
+    var spotID: UUID
+    var latitude: Double
+    var longitude: Double
+    var theme: Theme
+
+    @Environment(\.displayScale) private var displayScale
+    @State private var image: UIImage?
+
+    var body: some View {
+        GeometryReader { proxy in
+            let key = MapSnapshotKey(
+                spotID: spotID,
+                latitude: latitude,
+                longitude: longitude,
+                pointWidth: proxy.size.width,
+                pointHeight: proxy.size.height,
+                scale: displayScale,
+                themeID: theme.id
+            )
+            ZStack {
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Rectangle().fill(theme.surfaceRaised)
+                }
+                pin
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
+            .task(id: key) {
+                guard proxy.size.width > 0 else { return }
+                image = await MapSnapshotCache.shared.image(
+                    for: key,
+                    isDark: theme.colorScheme == .dark
+                )
+            }
+        }
+    }
+
+    /// The region is centred on the spot, so the pin is simply centred.
+    private var pin: some View {
+        ZStack {
+            Circle()
+                .fill(theme.accent)
+                .frame(width: 14, height: 14)
+            Circle()
+                .strokeBorder(.white, lineWidth: 2)
+                .frame(width: 14, height: 14)
+        }
+        .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
     }
 }
 

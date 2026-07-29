@@ -38,10 +38,42 @@ final class BackupService {
 
     // MARK: - Export
 
+    /// Everything an archive needs, read out of the models up front. Model access is
+    /// main-thread; compression is not — this is the hand-off between the two.
+    struct ExportPayload {
+        let records: [BackupArchive.SpotRecord]
+        let trips: [BackupArchive.TripRecord]
+        let photos: [(id: UUID, data: Data)]
+
+        var isEmpty: Bool { records.isEmpty }
+    }
+
+    /// Reads the models into a payload. Includes the trash: a backup that silently dropped
+    /// deleted spots would betray the thirty-day promise.
+    func exportPayload(spots: [Spot], trips: [Trip]) -> ExportPayload {
+        ExportPayload(
+            records: spots.map(\.backupRecord),
+            trips: trips.map {
+                BackupArchive.TripRecord(
+                    id: $0.id, name: $0.name, subtitle: $0.subtitle,
+                    themeID: $0.themeID, createdAt: $0.createdAt
+                )
+            },
+            photos: spots.compactMap { spot in
+                guard let data = spot.photoData, !data.isEmpty else { return nil }
+                return (spot.id, data)
+            }
+        )
+    }
+
     /// Writes a complete backup to a temporary file and returns its URL, ready for the share
-    /// sheet or the Files exporter. Includes the trash: a backup that silently dropped deleted
-    /// spots would betray the thirty-day promise.
+    /// sheet or the Files exporter.
     func exportArchive(spots: [Spot], trips: [Trip]) throws -> URL {
+        try writeArchive(exportPayload(spots: spots, trips: trips))
+    }
+
+    /// Stages and compresses a payload. No model access — safe on any thread.
+    func writeArchive(_ payload: ExportPayload) throws -> URL {
         let staging = FileManager.default.temporaryDirectory
             .appendingPathComponent("backup-staging-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: staging) }
@@ -49,30 +81,22 @@ final class BackupService {
         let photosDir = staging.appendingPathComponent(BackupArchive.photosDirectory, isDirectory: true)
         try FileManager.default.createDirectory(at: photosDir, withIntermediateDirectories: true)
 
-        let records = spots.map(\.backupRecord)
-        let tripRecords = trips.map {
-            BackupArchive.TripRecord(
-                id: $0.id, name: $0.name, subtitle: $0.subtitle,
-                themeID: $0.themeID, createdAt: $0.createdAt
-            )
-        }
         let manifest = BackupArchive.Manifest(
             exportedAt: Date(),
-            spotCount: records.count,
-            tripCount: tripRecords.count,
+            spotCount: payload.records.count,
+            tripCount: payload.trips.count,
             appVersion: BuildInfo.current.summary()
         )
 
         try BackupArchive.encode(manifest)
             .write(to: staging.appendingPathComponent(BackupArchive.manifestFilename))
-        try BackupArchive.encode(records)
+        try BackupArchive.encode(payload.records)
             .write(to: staging.appendingPathComponent(BackupArchive.spotsFilename))
-        try BackupArchive.encode(tripRecords)
+        try BackupArchive.encode(payload.trips)
             .write(to: staging.appendingPathComponent(BackupArchive.tripsFilename))
 
-        for spot in spots {
-            guard let data = spot.photoData, !data.isEmpty else { continue }
-            try data.write(to: photosDir.appendingPathComponent(BackupArchive.photoFilename(spotID: spot.id)))
+        for photo in payload.photos {
+            try photo.data.write(to: photosDir.appendingPathComponent(BackupArchive.photoFilename(spotID: photo.id)))
         }
 
         let name = "Tradewind Backup \(Self.filenameDateFormatter.string(from: Date()))"
@@ -177,7 +201,7 @@ final class BackupService {
             added += 1
         }
 
-        store.refreshSnapshot()
+        store.scheduleSnapshotRefresh()
         try? FileManager.default.removeItem(at: plan.contents)
         return added
     }
@@ -194,17 +218,24 @@ final class BackupService {
         }
         let spots = store.allSpots() + store.deletedSpots()
         guard !spots.isEmpty else { return }
-        do {
-            let archive = try exportArchive(spots: spots, trips: store.allTrips())
-            let documents = try FileManager.default.url(
-                for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true
-            )
-            let destination = documents.appendingPathComponent("Automatic Backup.\(Self.fileExtension)")
-            try? FileManager.default.removeItem(at: destination)
-            try FileManager.default.moveItem(at: archive, to: destination)
-            settings.lastAutoSnapshotAt = now
-        } catch {
-            print("[Tradewind] auto snapshot failed: \(error)")
+        // Model reads happen here on the main thread; the compression — the multi-second part,
+        // once the library has photos in it — moves off. It used to freeze the first frame of
+        // every seventh-day foreground.
+        let payload = exportPayload(spots: spots, trips: store.allTrips())
+        Task.detached(priority: .background) { [weak self] in
+            guard let self else { return }
+            do {
+                let archive = try self.writeArchive(payload)
+                let documents = try FileManager.default.url(
+                    for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true
+                )
+                let destination = documents.appendingPathComponent("Automatic Backup.\(Self.fileExtension)")
+                try? FileManager.default.removeItem(at: destination)
+                try FileManager.default.moveItem(at: archive, to: destination)
+                await MainActor.run { AppSettings.shared.lastAutoSnapshotAt = now }
+            } catch {
+                print("[Tradewind] auto snapshot failed: \(error)")
+            }
         }
     }
 
