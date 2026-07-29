@@ -38,7 +38,17 @@ final class AppSettings {
         let defaults = defaults
             ?? (Self.isUITesting ? Self.ephemeralDefaults() : AppGroup.defaults)
         self.defaults = defaults
-        themeID = defaults.string(forKey: Key.theme) ?? ThemeCatalog.fallback.id
+        // The screenshot suite photographs both moods; "-theme nomadMoney" alongside
+        // "-ui-testing" starts the run already switched, without walking the settings UI first.
+        let arguments = ProcessInfo.processInfo.arguments
+        let themeOverride: String? = {
+            guard Self.isUITesting,
+                  let index = arguments.firstIndex(of: "-theme"),
+                  arguments.indices.contains(index + 1)
+            else { return nil }
+            return arguments[index + 1]
+        }()
+        themeID = themeOverride ?? defaults.string(forKey: Key.theme) ?? ThemeCatalog.fallback.id
         unitPreference = UnitPreference(rawValue: defaults.string(forKey: Key.units) ?? "")
             ?? .automatic
         hapticsEnabled = defaults.object(forKey: Key.haptics) as? Bool ?? true
