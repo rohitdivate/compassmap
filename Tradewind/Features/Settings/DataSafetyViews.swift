@@ -313,7 +313,7 @@ struct RecentlyDeletedView: View {
     private func row(for spot: Spot) -> some View {
         Surface(padding: 12) {
             HStack(spacing: 12) {
-                PhotoView(data: spot.photoData, maxDimension: 200, glyph: spot.glyph, fallbackSymbol: spot.placeKind.symbol)
+                SpotPhotoView(spot: spot, sizeClass: .pin)
                     .frame(width: 52, height: 52)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 

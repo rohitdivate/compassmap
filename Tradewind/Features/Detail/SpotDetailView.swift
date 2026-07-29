@@ -110,13 +110,8 @@ struct SpotDetailView: View {
 
     private var photo: some View {
         ZStack(alignment: .bottomLeading) {
-            PhotoView(
-                data: spot.photoData,
-                maxDimension: 1_600,
-                glyph: spot.glyph,
-                fallbackSymbol: spot.placeKind.symbol
-            )
-            .frame(height: 340)
+            SpotPhotoView(spot: spot, sizeClass: .hero)
+                .frame(height: 340)
                 .overlay {
                     LinearGradient(
                         colors: [.clear, .black.opacity(0.15), .black.opacity(0.8)],

@@ -445,7 +445,7 @@ private struct FeaturedSpotCard: View {
     }
 
     private var photo: some View {
-        PhotoView(data: ranked.spot.photoData, maxDimension: 1_400, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
+        SpotPhotoView(spot: ranked.spot, sizeClass: .hero)
             .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
             .frame(height: 300)
             .overlay {
@@ -560,7 +560,7 @@ private struct SpotGridCard: View {
 
     private var photo: some View {
         ZStack(alignment: .topTrailing) {
-            PhotoView(data: ranked.spot.photoData, maxDimension: 700, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
+            SpotPhotoView(spot: ranked.spot, sizeClass: .card)
                 .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
                 .frame(height: 132)
 

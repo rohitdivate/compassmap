@@ -64,6 +64,7 @@
 		5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		DFFAAC049497792BAD331AAC /* PhotoClusters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9505B53E38B753E35F0658A1 /* PhotoClusters.swift */; };
 		476D5EE34AE1F9CCD87C81C0 /* PhotoIngestPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D450CAC20965363386CC0341 /* PhotoIngestPolicy.swift */; };
+		C7A3091767F7D63AFF3230BF /* PhotoSizeClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C139C8467A2A494C80D04B /* PhotoSizeClass.swift */; };
 		A5ED56E5B5A25E72291B4371 /* PlaceKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CF42C471690B411FFFCDDD /* PlaceKind.swift */; };
 		E329450525FEA58CD0E3CE14 /* RoutePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C741E4B71B32D8ECDF804199 /* RoutePolicy.swift */; };
 		AEF17A23956928DE882ED870 /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
@@ -171,6 +172,7 @@
 		D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		DD2859B789795FA2E169122D /* PhotoClusters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9505B53E38B753E35F0658A1 /* PhotoClusters.swift */; };
 		47DEBF96B201BC8116E17581 /* PhotoIngestPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D450CAC20965363386CC0341 /* PhotoIngestPolicy.swift */; };
+		8B37571D06B96C67CD078DBE /* PhotoSizeClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C139C8467A2A494C80D04B /* PhotoSizeClass.swift */; };
 		9E0303612469AF3429FD133A /* PlaceKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CF42C471690B411FFFCDDD /* PlaceKind.swift */; };
 		960E0606D1A7A5650473FE98 /* RoutePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C741E4B71B32D8ECDF804199 /* RoutePolicy.swift */; };
 		C1A85BF6D29E0E2E8D1DB0AA /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
@@ -225,6 +227,7 @@
 		205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */; };
 		DA534C22FFC5D3B7A06F67E4 /* PhotoClusters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9505B53E38B753E35F0658A1 /* PhotoClusters.swift */; };
 		8FFC82D3A7768B87D97EDC16 /* PhotoIngestPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D450CAC20965363386CC0341 /* PhotoIngestPolicy.swift */; };
+		B91AE65BF208BE34CF870A6C /* PhotoSizeClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C139C8467A2A494C80D04B /* PhotoSizeClass.swift */; };
 		CC76C43C067D73D86A0C2E11 /* PlaceKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CF42C471690B411FFFCDDD /* PlaceKind.swift */; };
 		11C82CDE1FE4EFB98DFE7D6B /* RoutePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C741E4B71B32D8ECDF804199 /* RoutePolicy.swift */; };
 		864284B0766E066F2F7DAC7A /* SharedSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */; };
@@ -349,6 +352,7 @@
 		6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistencePlan.swift; sourceTree = "<group>"; };
 		9505B53E38B753E35F0658A1 /* PhotoClusters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoClusters.swift; sourceTree = "<group>"; };
 		D450CAC20965363386CC0341 /* PhotoIngestPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoIngestPolicy.swift; sourceTree = "<group>"; };
+		46C139C8467A2A494C80D04B /* PhotoSizeClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSizeClass.swift; sourceTree = "<group>"; };
 		F1CF42C471690B411FFFCDDD /* PlaceKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceKind.swift; sourceTree = "<group>"; };
 		C741E4B71B32D8ECDF804199 /* RoutePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePolicy.swift; sourceTree = "<group>"; };
 		CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSnapshot.swift; sourceTree = "<group>"; };
@@ -571,6 +575,7 @@
 				6575A8A0D2C170166F5DB3EB /* PersistencePlan.swift */,
 				9505B53E38B753E35F0658A1 /* PhotoClusters.swift */,
 				D450CAC20965363386CC0341 /* PhotoIngestPolicy.swift */,
+				46C139C8467A2A494C80D04B /* PhotoSizeClass.swift */,
 				F1CF42C471690B411FFFCDDD /* PlaceKind.swift */,
 				C741E4B71B32D8ECDF804199 /* RoutePolicy.swift */,
 				CDC8E26181B793E532EEBF9D /* SharedSnapshot.swift */,
@@ -1075,6 +1080,7 @@
 				5193F67C1AF8534569E3BE71 /* PersistencePlan.swift in Sources */,
 				DFFAAC049497792BAD331AAC /* PhotoClusters.swift in Sources */,
 				476D5EE34AE1F9CCD87C81C0 /* PhotoIngestPolicy.swift in Sources */,
+				C7A3091767F7D63AFF3230BF /* PhotoSizeClass.swift in Sources */,
 				A5ED56E5B5A25E72291B4371 /* PlaceKind.swift in Sources */,
 				E329450525FEA58CD0E3CE14 /* RoutePolicy.swift in Sources */,
 				AEF17A23956928DE882ED870 /* SharedSnapshot.swift in Sources */,
@@ -1170,6 +1176,7 @@
 				D32ADE5AFC4AF89E27D0250F /* PersistencePlan.swift in Sources */,
 				DD2859B789795FA2E169122D /* PhotoClusters.swift in Sources */,
 				47DEBF96B201BC8116E17581 /* PhotoIngestPolicy.swift in Sources */,
+				8B37571D06B96C67CD078DBE /* PhotoSizeClass.swift in Sources */,
 				9E0303612469AF3429FD133A /* PlaceKind.swift in Sources */,
 				960E0606D1A7A5650473FE98 /* RoutePolicy.swift in Sources */,
 				C1A85BF6D29E0E2E8D1DB0AA /* SharedSnapshot.swift in Sources */,
@@ -1213,6 +1220,7 @@
 				205B71B5FD709F230FC0F68C /* PersistencePlan.swift in Sources */,
 				DA534C22FFC5D3B7A06F67E4 /* PhotoClusters.swift in Sources */,
 				8FFC82D3A7768B87D97EDC16 /* PhotoIngestPolicy.swift in Sources */,
+				B91AE65BF208BE34CF870A6C /* PhotoSizeClass.swift in Sources */,
 				CC76C43C067D73D86A0C2E11 /* PlaceKind.swift in Sources */,
 				11C82CDE1FE4EFB98DFE7D6B /* RoutePolicy.swift in Sources */,
 				864284B0766E066F2F7DAC7A /* SharedSnapshot.swift in Sources */,

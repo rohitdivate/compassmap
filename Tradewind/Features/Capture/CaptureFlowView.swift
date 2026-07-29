@@ -76,7 +76,7 @@ struct CaptureFlowView: View {
         .onChange(of: camera.capturedImageData) { _, data in
             guard let data else { return }
             camera.stop()
-            handleCaptured(data)
+            Task { await handleCaptured(data) }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("capture-screen")
@@ -326,8 +326,12 @@ struct CaptureFlowView: View {
 
     // MARK: - Handling photos
 
-    private func handleCaptured(_ data: Data) {
-        let prepared = PhotoService.prepare(imageData: data)
+    private func handleCaptured(_ data: Data) async {
+        // Two ImageIO downsamples and two JPEG encodes — off the main thread, so the shutter
+        // button releases the moment it is pressed instead of after the encode.
+        let prepared = await Task.detached(priority: .userInitiated) {
+            PhotoService.prepare(imageData: data)
+        }.value
         let fix = camera.captureLocation
 
         // A negative vertical accuracy means the altitude in the fix is meaningless.
@@ -379,7 +383,9 @@ struct CaptureFlowView: View {
             return
         }
 
-        let prepared = PhotoService.prepare(imageData: raw)
+        let prepared = await Task.detached(priority: .userInitiated) {
+            PhotoService.prepare(imageData: raw)
+        }.value
 
         // The picker sometimes strips GPS depending on library permissions, so fall back to the
         // Photos database before giving up on the location.

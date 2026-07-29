@@ -18,9 +18,6 @@ struct ArrowBackdrop: View {
     var hero: Namespace.ID
     var dial: DialState
 
-    /// Faulted from SwiftData exactly once — `destination.photoData` is a computed property
-    /// that hits the store's external blob on every access.
-    @State private var photoData: Data?
     @State private var timeOfDay = TimeOfDay.current(at: nil)
 
     var body: some View {
@@ -31,8 +28,8 @@ struct ArrowBackdrop: View {
                 .fill(theme.heroFill(for: timeOfDay))
                 .ignoresSafeArea()
 
-            if let photoData {
-                blurredPhoto(photoData)
+            if let spot = destination.spot, spot.thumbnailFilename != nil {
+                blurredPhoto(spot)
             }
 
             // The photo is the hero here, so the scrim is dark and the text on top is white —
@@ -46,17 +43,17 @@ struct ArrowBackdrop: View {
             .ignoresSafeArea()
         }
         .onAppear {
-            photoData = destination.photoData
             timeOfDay = TimeOfDay.current(at: LocationService.shared.coordinate)
         }
     }
 
     /// The destination photo, out of focus and drifting a little with the arrow. The parallax
     /// angle is quantized to 3° in `DialState` — enough to feel physical, coarse enough that
-    /// the blur is not re-composited thirty times a second.
-    private func blurredPhoto(_ data: Data) -> some View {
+    /// the blur is not re-composited thirty times a second. `.hero` shares its decode with the
+    /// gallery's featured card and the detail sheet, so opening the arrow from either is free.
+    private func blurredPhoto(_ spot: Spot) -> some View {
         let radians = dial.parallaxAngle * .pi / 180
-        return PhotoView(data: data, maxDimension: 1_200)
+        return SpotPhotoView(spot: spot, sizeClass: .hero)
             .matchedGeometryEffect(id: "photo-\(destination.id)", in: hero)
             .scaleEffect(1.25)
             .blur(radius: 44, opaque: false)

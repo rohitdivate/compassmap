@@ -244,7 +244,7 @@ private struct SpotMapPin: View {
                     .frame(width: isSelected ? 56 : 44, height: isSelected ? 56 : 44)
                     .shadow(color: theme.glow.opacity(0.6), radius: isSelected ? 12 : 5)
 
-                PhotoView(data: spot.photoData, maxDimension: 200, glyph: spot.glyph, fallbackSymbol: spot.placeKind.symbol)
+                SpotPhotoView(spot: spot, sizeClass: .pin)
                     .frame(width: isSelected ? 50 : 38, height: isSelected ? 50 : 38)
                     .clipShape(Circle())
 
@@ -292,7 +292,7 @@ private struct SelectedSpotBar: View {
         Button(action: onOpen) {
             Surface(cornerRadius: 22, padding: 14) {
                 HStack(spacing: 14) {
-                    PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
+                    SpotPhotoView(spot: ranked.spot, sizeClass: .pin)
                         .frame(width: 52, height: 52)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
