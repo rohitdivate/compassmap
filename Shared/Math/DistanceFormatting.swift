@@ -120,15 +120,17 @@ enum DistanceFormatting {
     // MARK: - Private
 
     /// Formatters are expensive to build and this runs on every compass tick, so they are
-    /// cached per (decimals, locale). Main-thread only, like everything else in this type.
+    /// cached per (decimals, locale). The dictionary is lock-guarded: this type is called
+    /// from the app, the widgets and parallel test suites, and `NumberFormatter` is only
+    /// thread-safe for *formatting*, not for a shared mutable cache around it.
     private static var formatterCache: [String: NumberFormatter] = [:]
+    private static let cacheLock = NSLock()
 
     private static func number(_ value: Double, decimals: Int, locale: Locale) -> String {
         let key = "\(decimals)-\(locale.identifier)"
-        let formatter: NumberFormatter
-        if let cached = formatterCache[key] {
-            formatter = cached
-        } else {
+        cacheLock.lock()
+        var formatter = formatterCache[key]
+        if formatter == nil {
             let fresh = NumberFormatter()
             fresh.locale = locale
             fresh.numberStyle = .decimal
@@ -138,6 +140,8 @@ enum DistanceFormatting {
             formatterCache[key] = fresh
             formatter = fresh
         }
+        cacheLock.unlock()
+        guard let formatter else { return String(format: "%.\(decimals)f", value) }
         return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.\(decimals)f", value)
     }
 }
