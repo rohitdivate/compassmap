@@ -95,6 +95,28 @@ struct RootView: View {
     }
 
     private var tabs: some View {
+        accessorizedTabs
+            .fullScreenCover(isPresented: showingCapture) {
+                CaptureFlowView()
+                    .environment(settings)
+                    .environment(router)
+                    .environment(\.theme, theme)
+            }
+    }
+
+    /// The accessory modifier comes and goes with the walk. Attaching it permanently and
+    /// emptying the builder is not enough: the system still draws a blank glass capsule
+    /// above the bar when the builder produces nothing.
+    @ViewBuilder
+    private var accessorizedTabs: some View {
+        if liveActivity.activeSpotID != nil {
+            tabCore.tabViewBottomAccessory { trackingAccessory }
+        } else {
+            tabCore
+        }
+    }
+
+    private var tabCore: some View {
         TabView(selection: tabSelection) {
             Tab(AppRouter.Tab.spots.title, systemImage: AppRouter.Tab.spots.symbol, value: .spots) {
                 surface { SpotsGalleryView(hero: hero) }
@@ -107,13 +129,6 @@ struct RootView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .tabViewBottomAccessory { trackingAccessory }
-        .fullScreenCover(isPresented: showingCapture) {
-            CaptureFlowView()
-                .environment(settings)
-                .environment(router)
-                .environment(\.theme, theme)
-        }
     }
 
     private func surface(@ViewBuilder _ content: () -> some View) -> some View {
@@ -154,7 +169,8 @@ struct RootView: View {
             }
         }
         .padding(.trailing, 20)
-        .padding(.bottom, 104)
+        .padding(.bottom, shutterClearance)
+        .animation(.spring(response: 0.32, dampingFraction: 0.8), value: shutterClearance)
         .ignoresSafeArea(.keyboard)
         // Its own host, per the presentation-conflict lesson: nothing else presents here.
         .sheet(isPresented: showingSaveHere) {
@@ -162,6 +178,16 @@ struct RootView: View {
                 .environment(settings)
                 .environment(\.theme, theme)
         }
+    }
+
+    /// How far the shutter floats above the bottom edge. The base value clears the tab bar;
+    /// the map adds the height of its selected-spot bar, which otherwise puts "Point me
+    /// there" directly under the button; a tracked walk adds the accessory strip's height.
+    private var shutterClearance: CGFloat {
+        var clearance: CGFloat = 104
+        if router.tab == .map { clearance += 76 }
+        if liveActivity.activeSpotID != nil { clearance += 60 }
+        return clearance
     }
 
     private func arrowScreen(for destination: ArrowDestination) -> some View {
