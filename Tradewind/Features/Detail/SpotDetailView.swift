@@ -141,7 +141,9 @@ struct SpotDetailView: View {
             .padding(18)
         }
         .frame(height: 340)
-        .clipShape(RoundedRectangle(cornerRadius: 0))
+        // The photo lends its colour to the bar region above rather than stopping at a hard
+        // edge: the system mirrors and blurs it outward, and the Done capsule floats on it.
+        .backgroundExtensionEffect()
     }
 
     // MARK: - Distance
@@ -544,23 +546,46 @@ struct SpotDetailView: View {
 
     // MARK: - Actions
 
+    /// System glass buttons rather than the design system's flat ones — this row is the
+    /// sheet's chrome, the one place on it where glass belongs. The prominent style carries
+    /// the accent; delete keeps its destructive role so the system colours it.
     private var actions: some View {
         VStack(spacing: 10) {
-            PrimaryButton(
-                title: spot.isPinned ? "Unpin from widgets" : "Pin to widgets",
-                symbol: spot.isPinned ? "pin.slash.fill" : "pin.fill"
-            ) {
+            Button {
                 store.setPinned(spot.isPinned ? nil : spot)
                 FeedbackService.shared.lightTap()
+            } label: {
+                Label(
+                    spot.isPinned ? "Unpin from widgets" : "Pin to widgets",
+                    systemImage: spot.isPinned ? "pin.slash.fill" : "pin.fill"
+                )
+                .font(theme.sans(15, weight: .bold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
             }
+            .buttonStyle(.glassProminent)
+            .tint(theme.accent)
 
-            SecondaryButton(title: "Share as a postcard", symbol: "square.and.arrow.up") {
+            Button {
                 makePostcard()
+            } label: {
+                Label("Share as a postcard", systemImage: "square.and.arrow.up")
+                    .font(theme.sans(14, weight: .medium))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 5)
             }
+            .buttonStyle(.glass)
+            .tint(theme.text)
 
-            SecondaryButton(title: "Delete spot", symbol: "trash") {
+            Button(role: .destructive) {
                 isConfirmingDelete = true
+            } label: {
+                Label("Delete spot", systemImage: "trash")
+                    .font(theme.sans(14, weight: .medium))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 5)
             }
+            .buttonStyle(.glass)
             .accessibilityIdentifier("detail-delete")
         }
         .padding(.horizontal, 18)

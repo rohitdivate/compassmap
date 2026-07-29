@@ -138,6 +138,15 @@ struct SpotsGalleryView: View {
                         onOpen: { open(item.spot) }
                     )
                     .contextMenu { spotMenu(for: item.spot) }
+                    // Cards ease in at the fold: scroll-driven, so it costs nothing at rest,
+                    // never blocks XCUITest's idle wait, and Reduce Motion still gets its
+                    // content — the resting state is identity.
+                    .scrollTransition(axis: .vertical) { content, phase in
+                        content
+                            .scaleEffect(phase.isIdentity ? 1 : 0.96)
+                            .opacity(phase.isIdentity ? 1 : 0.75)
+                            .offset(y: phase.value * 10)
+                    }
                 }
             }
         }
@@ -451,14 +460,26 @@ private struct FeaturedSpotCard: View {
         .accessibilityHint("Opens the compass for this spot")
     }
 
+    /// The scrim is a mesh, not a linear ramp: weighted toward the bottom-left corner where
+    /// the caption sits, so the title gets its contrast without flattening the whole lower
+    /// half of the photograph.
     private var photo: some View {
         SpotPhotoView(spot: ranked.spot, sizeClass: .hero)
             .frame(height: 300)
             .overlay {
-                LinearGradient(
-                    colors: [.clear, .black.opacity(0.25), .black.opacity(0.78)],
-                    startPoint: .top,
-                    endPoint: .bottom
+                MeshGradient(
+                    width: 3,
+                    height: 3,
+                    points: [
+                        [0, 0], [0.5, 0], [1, 0],
+                        [0, 0.55], [0.5, 0.6], [1, 0.55],
+                        [0, 1], [0.5, 1], [1, 1]
+                    ],
+                    colors: [
+                        .clear, .clear, .clear,
+                        .black.opacity(0.18), .black.opacity(0.12), .black.opacity(0.06),
+                        .black.opacity(0.86), .black.opacity(0.74), .black.opacity(0.58)
+                    ]
                 )
             }
     }

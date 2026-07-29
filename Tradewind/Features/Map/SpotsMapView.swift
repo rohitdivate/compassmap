@@ -127,6 +127,9 @@ struct SpotsMapView: View {
         }
     }
 
+    /// All four controls share one `GlassEffectContainer` over the edge-to-edge map — one
+    /// cluster of glass, not four separate discs, so the system can blend and morph them as
+    /// a unit. Active states carry the accent as a glass tint.
     private var header: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
@@ -137,51 +140,48 @@ struct SpotsMapView: View {
                     .accessibilityIdentifier("map-screen")
             }
             Spacer()
-            CircularButton(symbol: "slider.horizontal.3") {
-                router.isShowingSettings = true
+            GlassEffectContainer {
+                HStack(spacing: 10) {
+                    glassControl("slider.horizontal.3", label: "Settings") {
+                        router.isShowingSettings = true
+                    }
+                    .accessibilityIdentifier("settings-button")
+                    glassControl("mappin.and.ellipse", tinted: true, label: "Save this location") {
+                        router.isShowingSaveHere = true
+                    }
+                    glassControl(
+                        showsRangeRings ? "dot.circle.and.hand.point.up.left.fill" : "dot.circle",
+                        tinted: showsRangeRings,
+                        label: showsRangeRings ? "Hide range rings" : "Show range rings"
+                    ) {
+                        withAnimation(.easeInOut(duration: 0.2)) { showsRangeRings.toggle() }
+                    }
+                    glassControl("scope", label: "Centre on me", action: recentre)
+                }
             }
-            .accessibilityIdentifier("settings-button")
-            .accessibilityLabel("Settings")
-            CircularButton(symbol: "mappin.and.ellipse", isActive: true) {
-                router.isShowingSaveHere = true
-            }
-            .accessibilityLabel("Save this location")
-            ringsButton
-            recentreButton
         }
         .padding(.horizontal, 18)
         .padding(.top, 6)
         .background { headerScrim }
     }
 
-    private var ringsButton: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.2)) { showsRangeRings.toggle() }
-        } label: {
-            Image(systemName: showsRangeRings ? "dot.circle.and.hand.point.up.left.fill" : "dot.circle")
+    private func glassControl(
+        _ symbol: String,
+        tinted: Bool = false,
+        label: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(showsRangeRings ? theme.canvas : theme.text)
+                .foregroundStyle(tinted ? theme.onAccent : theme.text)
                 .frame(width: 40, height: 40)
-                .background { circleFill(active: showsRangeRings) }
         }
-        .buttonStyle(PressableStyle())
-        .accessibilityLabel(showsRangeRings ? "Hide range rings" : "Show range rings")
-    }
-
-    private var recentreButton: some View {
-        Button(action: recentre) {
-            Image(systemName: "scope")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(theme.text)
-                .frame(width: 40, height: 40)
-                .background { circleFill(active: false) }
-        }
-        .buttonStyle(PressableStyle())
-        .accessibilityLabel("Centre on me")
-    }
-
-    private func circleFill(active: Bool) -> some View {
-        Circle().fill(active ? theme.accent : theme.surface)
+        .glassEffect(
+            tinted ? .regular.tint(theme.accent).interactive() : .regular.interactive(),
+            in: .circle
+        )
+        .accessibilityLabel(label)
     }
 
     /// Keeps the title legible over whatever geography happens to be underneath it.

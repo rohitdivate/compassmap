@@ -128,6 +128,12 @@ struct ChipButton: View {
             }
         }
         .buttonStyle(PressableStyle())
+        // Selection feedback rides on the state, not the tap, so a chip deselected by its
+        // neighbour stays silent and only the choice itself clicks.
+        .sensoryFeedback(trigger: isSelected) { _, selected in
+            guard AppSettings.shared.hapticsEnabled, selected else { return nil }
+            return .selection
+        }
     }
 
     /// Spritz selects with the ink colour, as the reference screens do; Nomad selects with a raised
