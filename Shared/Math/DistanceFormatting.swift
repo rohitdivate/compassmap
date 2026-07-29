@@ -119,13 +119,25 @@ enum DistanceFormatting {
 
     // MARK: - Private
 
+    /// Formatters are expensive to build and this runs on every compass tick, so they are
+    /// cached per (decimals, locale). Main-thread only, like everything else in this type.
+    private static var formatterCache: [String: NumberFormatter] = [:]
+
     private static func number(_ value: Double, decimals: Int, locale: Locale) -> String {
-        let formatter = NumberFormatter()
-        formatter.locale = locale
-        formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = decimals
-        formatter.maximumFractionDigits = decimals
-        formatter.usesGroupingSeparator = true
+        let key = "\(decimals)-\(locale.identifier)"
+        let formatter: NumberFormatter
+        if let cached = formatterCache[key] {
+            formatter = cached
+        } else {
+            let fresh = NumberFormatter()
+            fresh.locale = locale
+            fresh.numberStyle = .decimal
+            fresh.minimumFractionDigits = decimals
+            fresh.maximumFractionDigits = decimals
+            fresh.usesGroupingSeparator = true
+            formatterCache[key] = fresh
+            formatter = fresh
+        }
         return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.\(decimals)f", value)
     }
 }

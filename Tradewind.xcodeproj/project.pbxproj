@@ -54,6 +54,7 @@
 		1596C55B8965DC107BA34141 /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		193E3730F5558A5B8CB4448D /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
+		D7A16B0FD014990FF2EE29C1 /* CompassFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62FEE5F4CA62C08E7BF3FF4 /* CompassFrame.swift */; };
 		5647BFD08776D6AA6A52744D /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		42BCD588CBC6756227257BAC /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		59B679A7FD58F339FF1C21F6 /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
@@ -73,6 +74,7 @@
 		B23AB94CE1A99674619B58DB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127FF2ED17335A850D36EA5C /* RootView.swift */; };
 		8B0DCC9391F53CD9D7534764 /* TradewindApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C5C8FBF5162236684DD8F8 /* TradewindApp.swift */; };
 		741319258D41E6B3092142C3 /* UndoToastHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97FF90DE699466768C2D64AC /* UndoToastHost.swift */; };
+		DF36B13C2ABD67C4A8A487F5 /* ArrowLeaves.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE260C66CB7CA61F4907BB59 /* ArrowLeaves.swift */; };
 		997C31D1712763E3B15C5597 /* ArrowScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */; };
 		17E089FC51064AF6DF42CE77 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4BDF8889B8BE769FFCDE6F /* CameraController.swift */; };
 		673EB8B50043B1C47F96DCE4 /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3893AC3DDF94190614DD2398 /* CameraPreview.swift */; };
@@ -156,6 +158,7 @@
 		43E6586B69FDA319FAE191AC /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		2E07A9353740D9F26301525D /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
+		317AAF76FA3D39AAB3ABC2C9 /* CompassFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62FEE5F4CA62C08E7BF3FF4 /* CompassFrame.swift */; };
 		B9CF77EE08C5F9627B1262E5 /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		3A6B989B3406218449564642 /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		C646DAAD3ACEDBAE4CEECDC7 /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
@@ -207,6 +210,7 @@
 		DD4774E37BBE553470C48CB5 /* ActivityPushPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */; };
 		EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C07064A66E87DD3F7B94CB72 /* AppGroup.swift */; };
 		13109515F2A891109F680B42 /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */; };
+		4916291014850E62CC650BC8 /* CompassFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62FEE5F4CA62C08E7BF3FF4 /* CompassFrame.swift */; };
 		76161908CA6A46322959813E /* GeofencePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */; };
 		FCA1B42A629ECA891D6C09F8 /* LivingPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E948A2A123EC65C18AA252D /* LivingPalette.swift */; };
 		38D4A3B87FDA0AB4F761F44C /* MeterReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3FB534A816D801FFB6A44D /* MeterReminder.swift */; };
@@ -225,6 +229,7 @@
 		A8C59349DB0F0F033B269E2D /* ActivityPushPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27514C430B9CC6F894B26C4E /* ActivityPushPolicyTests.swift */; };
 		743DA49B0898AD146EF71370 /* BearingMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */; };
 		4E63D30C84F0F47F4FAD21EF /* BuildInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F892ECF97D4E6E3BA3687210 /* BuildInfoTests.swift */; };
+		0D205EAEF19318C243E9D602 /* CompassFrameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93170BEAF5BF80C8B0182197 /* CompassFrameTests.swift */; };
 		04FDB5ACCDF8A8C72AB6C432 /* DataSafetyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF53A9BD8F03F8998819112 /* DataSafetyTests.swift */; };
 		BCE705FECEDC38EF7F1B7C5E /* DistanceFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */; };
 		B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */; };
@@ -325,6 +330,7 @@
 		CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityPushPolicy.swift; sourceTree = "<group>"; };
 		C07064A66E87DD3F7B94CB72 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfo.swift; sourceTree = "<group>"; };
+		E62FEE5F4CA62C08E7BF3FF4 /* CompassFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompassFrame.swift; sourceTree = "<group>"; };
 		D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofencePlan.swift; sourceTree = "<group>"; };
 		6E948A2A123EC65C18AA252D /* LivingPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivingPalette.swift; sourceTree = "<group>"; };
 		4F3FB534A816D801FFB6A44D /* MeterReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeterReminder.swift; sourceTree = "<group>"; };
@@ -344,6 +350,7 @@
 		127FF2ED17335A850D36EA5C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		B3C5C8FBF5162236684DD8F8 /* TradewindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradewindApp.swift; sourceTree = "<group>"; };
 		97FF90DE699466768C2D64AC /* UndoToastHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoToastHost.swift; sourceTree = "<group>"; };
+		FE260C66CB7CA61F4907BB59 /* ArrowLeaves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowLeaves.swift; sourceTree = "<group>"; };
 		29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrowScreen.swift; sourceTree = "<group>"; };
 		1D4BDF8889B8BE769FFCDE6F /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		3893AC3DDF94190614DD2398 /* CameraPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreview.swift; sourceTree = "<group>"; };
@@ -384,6 +391,7 @@
 		27514C430B9CC6F894B26C4E /* ActivityPushPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityPushPolicyTests.swift; sourceTree = "<group>"; };
 		6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BearingMathTests.swift; sourceTree = "<group>"; };
 		F892ECF97D4E6E3BA3687210 /* BuildInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoTests.swift; sourceTree = "<group>"; };
+		93170BEAF5BF80C8B0182197 /* CompassFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompassFrameTests.swift; sourceTree = "<group>"; };
 		ECF53A9BD8F03F8998819112 /* DataSafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSafetyTests.swift; sourceTree = "<group>"; };
 		1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceFormattingTests.swift; sourceTree = "<group>"; };
 		1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSMetadataTests.swift; sourceTree = "<group>"; };
@@ -540,6 +548,7 @@
 				CACA3C88B5245A627536DB0A /* ActivityPushPolicy.swift */,
 				C07064A66E87DD3F7B94CB72 /* AppGroup.swift */,
 				6A0D84647BBCA5E9FF1A0D7F /* BuildInfo.swift */,
+				E62FEE5F4CA62C08E7BF3FF4 /* CompassFrame.swift */,
 				D4FF9060A1D2BB5AB63610A1 /* GeofencePlan.swift */,
 				6E948A2A123EC65C18AA252D /* LivingPalette.swift */,
 				4F3FB534A816D801FFB6A44D /* MeterReminder.swift */,
@@ -587,6 +596,7 @@
 		31A8BDC27CA1E31F8781A370 /* Arrow */ = {
 			isa = PBXGroup;
 			children = (
+				FE260C66CB7CA61F4907BB59 /* ArrowLeaves.swift */,
 				29FA59E5D6BD439830FFCA82 /* ArrowScreen.swift */,
 			);
 			path = Arrow;
@@ -731,6 +741,7 @@
 				27514C430B9CC6F894B26C4E /* ActivityPushPolicyTests.swift */,
 				6C5D12B1F57984D42FB7E1D5 /* BearingMathTests.swift */,
 				F892ECF97D4E6E3BA3687210 /* BuildInfoTests.swift */,
+				93170BEAF5BF80C8B0182197 /* CompassFrameTests.swift */,
 				ECF53A9BD8F03F8998819112 /* DataSafetyTests.swift */,
 				1A94E18439ACB753F05D930F /* DistanceFormattingTests.swift */,
 				1F1E92C2ADA93C0CAFE6526F /* GPSMetadataTests.swift */,
@@ -1037,6 +1048,7 @@
 				1596C55B8965DC107BA34141 /* ActivityPushPolicy.swift in Sources */,
 				DEBFA795976D79FAE3F8DBCB /* AppGroup.swift in Sources */,
 				193E3730F5558A5B8CB4448D /* BuildInfo.swift in Sources */,
+				D7A16B0FD014990FF2EE29C1 /* CompassFrame.swift in Sources */,
 				5647BFD08776D6AA6A52744D /* GeofencePlan.swift in Sources */,
 				42BCD588CBC6756227257BAC /* LivingPalette.swift in Sources */,
 				59B679A7FD58F339FF1C21F6 /* MeterReminder.swift in Sources */,
@@ -1056,6 +1068,7 @@
 				B23AB94CE1A99674619B58DB /* RootView.swift in Sources */,
 				8B0DCC9391F53CD9D7534764 /* TradewindApp.swift in Sources */,
 				741319258D41E6B3092142C3 /* UndoToastHost.swift in Sources */,
+				DF36B13C2ABD67C4A8A487F5 /* ArrowLeaves.swift in Sources */,
 				997C31D1712763E3B15C5597 /* ArrowScreen.swift in Sources */,
 				17E089FC51064AF6DF42CE77 /* CameraController.swift in Sources */,
 				673EB8B50043B1C47F96DCE4 /* CameraPreview.swift in Sources */,
@@ -1127,6 +1140,7 @@
 				43E6586B69FDA319FAE191AC /* ActivityPushPolicy.swift in Sources */,
 				607BF19F50F2E3500BDCD8B3 /* AppGroup.swift in Sources */,
 				2E07A9353740D9F26301525D /* BuildInfo.swift in Sources */,
+				317AAF76FA3D39AAB3ABC2C9 /* CompassFrame.swift in Sources */,
 				B9CF77EE08C5F9627B1262E5 /* GeofencePlan.swift in Sources */,
 				3A6B989B3406218449564642 /* LivingPalette.swift in Sources */,
 				C646DAAD3ACEDBAE4CEECDC7 /* MeterReminder.swift in Sources */,
@@ -1167,6 +1181,7 @@
 				DD4774E37BBE553470C48CB5 /* ActivityPushPolicy.swift in Sources */,
 				EB6287426608BDD57F2E513B /* AppGroup.swift in Sources */,
 				13109515F2A891109F680B42 /* BuildInfo.swift in Sources */,
+				4916291014850E62CC650BC8 /* CompassFrame.swift in Sources */,
 				76161908CA6A46322959813E /* GeofencePlan.swift in Sources */,
 				FCA1B42A629ECA891D6C09F8 /* LivingPalette.swift in Sources */,
 				38D4A3B87FDA0AB4F761F44C /* MeterReminder.swift in Sources */,
@@ -1185,6 +1200,7 @@
 				A8C59349DB0F0F033B269E2D /* ActivityPushPolicyTests.swift in Sources */,
 				743DA49B0898AD146EF71370 /* BearingMathTests.swift in Sources */,
 				4E63D30C84F0F47F4FAD21EF /* BuildInfoTests.swift in Sources */,
+				0D205EAEF19318C243E9D602 /* CompassFrameTests.swift in Sources */,
 				04FDB5ACCDF8A8C72AB6C432 /* DataSafetyTests.swift in Sources */,
 				BCE705FECEDC38EF7F1B7C5E /* DistanceFormattingTests.swift in Sources */,
 				B083FFAF7FF8407BB0CBE5B0 /* GPSMetadataTests.swift in Sources */,
