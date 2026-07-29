@@ -65,10 +65,9 @@ struct SpotsMapView: View {
             pins
         }
         .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
-        .mapControls {
-            MapUserLocationButton()
-            MapCompass()
-        }
+        // Empty on purpose: the header's glass cluster already carries locate, and the
+        // system compass lands under the status bar on an edge-to-edge map.
+        .mapControls {}
         .overlay {
             // Pulls the map into the app's palette without hiding the geography.
             theme.canvas.opacity(0.18)
@@ -294,7 +293,7 @@ private struct SelectedSpotBar: View {
                 HStack(spacing: 14) {
                     SpotPhotoView(spot: ranked.spot, sizeClass: .pin)
                         .frame(width: 52, height: 52)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: theme.radii.avatar, style: .continuous))
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(ranked.spot.displayName)

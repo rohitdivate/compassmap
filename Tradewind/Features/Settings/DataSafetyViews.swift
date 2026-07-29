@@ -315,7 +315,7 @@ struct RecentlyDeletedView: View {
             HStack(spacing: 12) {
                 SpotPhotoView(spot: spot, sizeClass: .pin)
                     .frame(width: 52, height: 52)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.radii.avatar, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(spot.displayName)
@@ -368,22 +368,8 @@ struct SettingsActionRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: symbol)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(theme.accent)
-                    .frame(width: 26)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(theme.cardTitleFont)
-                        .foregroundStyle(theme.text)
-                    Text(detail)
-                        .font(theme.captionFont)
-                        .foregroundStyle(theme.textMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
-                }
-                Spacer()
+            IconRow(symbol: symbol, title: title, detail: detail, prominent: true) {
+                EmptyView()
             }
         }
         .buttonStyle(PressableStyle(scale: 0.99))

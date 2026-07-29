@@ -31,8 +31,6 @@ struct SpotDetailView: View {
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
-    private static let glyphs = ["📍", "🌊", "🏝️", "🌴", "🍹", "🛺", "⛩️", "🐘", "☕️", "🏛️", "🌅", "🥥"]
-
     var body: some View {
         content
             .alert("Rename spot", isPresented: $isEditingName) {
@@ -311,38 +309,10 @@ struct SpotDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(eyebrow: "For when there's no photo", title: "Mark")
                 .padding(.horizontal, 18)
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
-                    ForEach(Self.glyphs, id: \.self) { glyph in
-                        glyphButton(glyph)
-                    }
-                }
-                .padding(.horizontal, 18)
+            GlyphPicker(selected: spot.glyph, contentPadding: 18) { glyph in
+                store.update(spot, glyph: glyph)
             }
-            .scrollIndicators(.hidden)
         }
-    }
-
-    private func glyphButton(_ glyph: String) -> some View {
-        let isSelected = spot.glyph == glyph
-        return Button {
-            store.update(spot, glyph: isSelected ? nil : glyph)
-            FeedbackService.shared.lightTap()
-        } label: {
-            Text(glyph)
-                .font(.system(size: 22))
-                .frame(width: 46, height: 46)
-                .background {
-                    Circle().fill(isSelected ? theme.accent.opacity(0.28) : theme.surfaceRaised)
-                }
-                .overlay {
-                    Circle().strokeBorder(
-                        isSelected ? theme.accent : .white.opacity(0.12),
-                        lineWidth: 1
-                    )
-                }
-        }
-        .buttonStyle(PressableStyle())
     }
 
     // MARK: - Trip

@@ -398,6 +398,96 @@ struct EmptyStateView: View {
     }
 }
 
+/// The row of marks a spot can carry instead of a photo — one picker for every place a mark is
+/// chosen, so the save form and the detail sheet cannot drift apart on the set of marks.
+struct GlyphPicker: View {
+    @Environment(\.theme) private var theme
+
+    /// Every mark the app offers, in display order.
+    static let glyphs = ["📍", "🌊", "🏝️", "🌴", "🍹", "🛺", "⛩️", "🐘", "☕️", "🏛️", "🌅", "🥥"]
+
+    var selected: String?
+    /// Inset applied inside the scroller so edge glyphs can still bleed past a full-width screen.
+    var contentPadding: CGFloat = 0
+    /// Called with the tapped mark, or nil when the current mark is tapped again to clear it.
+    var onSelect: (String?) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                ForEach(Self.glyphs, id: \.self) { glyph in
+                    button(glyph)
+                }
+            }
+            .padding(.horizontal, contentPadding)
+        }
+        .scrollIndicators(.hidden)
+        // Keyed on the choice, not the tap, like ChipButton: clearing a mark stays silent.
+        .sensoryFeedback(trigger: selected) { _, chosen in
+            guard AppSettings.shared.hapticsEnabled, chosen != nil else { return nil }
+            return .selection
+        }
+    }
+
+    private func button(_ glyph: String) -> some View {
+        let isSelected = selected == glyph
+        return Button {
+            onSelect(isSelected ? nil : glyph)
+        } label: {
+            Text(glyph)
+                .font(.system(size: 21))
+                .frame(width: 44, height: 44)
+                .background {
+                    Circle().fill(isSelected ? theme.accent.opacity(0.28) : theme.surfaceRaised)
+                }
+                .overlay {
+                    Circle().strokeBorder(
+                        isSelected ? theme.accent : .white.opacity(0.12),
+                        lineWidth: 1
+                    )
+                }
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel("Mark \(glyph)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+/// The settings-style row skeleton: an accent symbol, a title over an explanation, and whatever
+/// accessory the row needs on the trailing edge. The settings rows are this one skeleton with
+/// different accessories, so their icon column and type never drift apart.
+struct IconRow<Trailing: View>: View {
+    @Environment(\.theme) private var theme
+
+    var symbol: String
+    var title: String
+    var detail: String
+    /// Action rows lead with the card title and a slightly larger, centred icon.
+    var prominent: Bool = false
+    @ViewBuilder var trailing: Trailing
+
+    var body: some View {
+        HStack(alignment: prominent ? .center : .top, spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: prominent ? 15 : 14, weight: .semibold))
+                .foregroundStyle(theme.accent)
+                .frame(width: prominent ? 26 : 22, height: 22)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(prominent ? theme.cardTitleFont : theme.bodyTextFont)
+                    .foregroundStyle(theme.text)
+                Text(detail)
+                    .font(prominent ? theme.captionFont : theme.labelFont)
+                    .foregroundStyle(theme.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
+            }
+            Spacer(minLength: 8)
+            trailing
+        }
+    }
+}
+
 /// A round icon button — close, settings, the map controls.
 struct CircularButton: View {
     @Environment(\.theme) private var theme

@@ -266,7 +266,7 @@ private struct LooseSpotChip: View {
         VStack(alignment: .leading, spacing: 8) {
             SpotPhotoView(spot: ranked.spot, sizeClass: .card)
                 .frame(width: 128, height: 96)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: theme.radii.row, style: .continuous))
 
             Text(ranked.spot.displayName)
                 .font(theme.captionFont)
@@ -406,11 +406,11 @@ private struct TripSpotRow: View {
     var unitPreference: UnitPreference
 
     var body: some View {
-        Surface(cornerRadius: 20, padding: 12) {
+        Surface(padding: 12) {
             HStack(spacing: 14) {
                 SpotPhotoView(spot: ranked.spot, sizeClass: .pin)
                     .frame(width: 56, height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.radii.avatar, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(ranked.spot.displayName)

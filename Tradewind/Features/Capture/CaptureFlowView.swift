@@ -482,8 +482,6 @@ private struct ReviewView: View {
 
     @FocusState private var isNameFocused: Bool
 
-    private static let glyphs = ["📍", "🌊", "🏝️", "🌴", "🍹", "🛺", "⛩️", "🐘", "☕️", "🌅"]
-
     // Split into small typed pieces on purpose: as one expression this screen was more than
     // the Swift type-checker would accept.
     var body: some View {
@@ -586,34 +584,12 @@ private struct ReviewView: View {
     private var glyphPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Mark").eyebrowStyle(theme: theme)
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
-                    ForEach(Self.glyphs, id: \.self) { glyph in
-                        glyphButton(glyph)
-                    }
-                }
+            GlyphPicker(selected: pending.glyph) { glyph in
+                var copy = pending
+                copy.glyph = glyph
+                onChange(copy)
             }
-            .scrollIndicators(.hidden)
         }
-    }
-
-    private func glyphButton(_ glyph: String) -> some View {
-        let isSelected = pending.glyph == glyph
-        return Button {
-            var copy = pending
-            copy.glyph = isSelected ? nil : glyph
-            onChange(copy)
-        } label: {
-            Text(glyph)
-                .font(.system(size: 20))
-                .frame(width: 42, height: 42)
-                .background { glyphBackground(isSelected: isSelected) }
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    private func glyphBackground(isSelected: Bool) -> some View {
-        Circle().fill(isSelected ? theme.accent.opacity(0.28) : theme.surfaceRaised)
     }
 
     private var tripPicker: some View {

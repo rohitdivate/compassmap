@@ -499,21 +499,7 @@ private struct SettingsToggleRow: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 22, height: 22)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(theme.bodyTextFont)
-                    .foregroundStyle(theme.text)
-                Text(detail)
-                    .font(theme.labelFont)
-                    .foregroundStyle(theme.textMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 8)
+        IconRow(symbol: symbol, title: title, detail: detail) {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .tint(theme.accent)
@@ -563,21 +549,7 @@ private struct SettingsInfoRow: View {
     var action: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 22, height: 22)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(theme.bodyTextFont)
-                    .foregroundStyle(theme.text)
-                Text(detail)
-                    .font(theme.labelFont)
-                    .foregroundStyle(theme.textMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 8)
+        IconRow(symbol: symbol, title: title, detail: detail) {
             if let actionTitle {
                 Button(actionTitle, action: action)
                     .font(theme.labelFont)
