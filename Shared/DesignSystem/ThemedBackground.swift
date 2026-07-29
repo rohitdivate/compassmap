@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The backdrop every screen sits on: a flat canvas, and in Tropical Spritz a little grain.
 ///
@@ -63,27 +64,52 @@ struct HeroPanel<Content: View>: View {
 /// Generated from a fixed seed so it never shimmers between redraws. The tint follows the theme's
 /// ink rather than always being white: on cream paper, white noise is invisible and dark noise is
 /// what reads as texture.
+///
+/// Rasterized once per tint into a small tile and tiled. As a `Canvas` this was 1,400 ellipse
+/// paths re-rasterized on every backdrop invalidation — texture should cost once, not always.
 struct FilmGrain: View {
     var opacity: Double
     var tint: Color = .white
-    var density: Int = 1400
 
     var body: some View {
-        Canvas { context, size in
+        Image(uiImage: Self.tile(for: tint))
+            .resizable(resizingMode: .tile)
+            .opacity(opacity)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    // MARK: - Tile rendering
+
+    private static let tileSize: CGFloat = 256
+    /// Dot count matched to the old full-screen density (1,400 dots over a phone screen).
+    private static let dotsPerTile = 280
+
+    private static var tiles: [String: UIImage] = [:]
+
+    private static func tile(for tint: Color) -> UIImage {
+        let uiTint = UIColor(tint)
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        uiTint.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        let key = String(format: "%.3f-%.3f-%.3f-%.3f", red, green, blue, alpha)
+        if let cached = tiles[key] { return cached }
+
+        let bounds = CGRect(x: 0, y: 0, width: tileSize, height: tileSize)
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        let image = UIGraphicsImageRenderer(bounds: bounds, format: format).image { context in
             var rng = SplitMix64(seed: 0x5EED_1234)
-            for _ in 0..<density {
-                let x = rng.nextUnit() * size.width
-                let y = rng.nextUnit() * size.height
+            for _ in 0..<dotsPerTile {
+                let x = rng.nextUnit() * tileSize
+                let y = rng.nextUnit() * tileSize
                 let r = 0.4 + rng.nextUnit() * 1.1
                 let shade = 0.5 + rng.nextUnit() * 0.5
-                context.fill(
-                    Path(ellipseIn: CGRect(x: x, y: y, width: r, height: r)),
-                    with: .color(tint.opacity(shade))
-                )
+                context.cgContext.setFillColor(uiTint.withAlphaComponent(shade).cgColor)
+                context.cgContext.fillEllipse(in: CGRect(x: x, y: y, width: r, height: r))
             }
         }
-        .opacity(opacity)
-        .drawingGroup()
+        tiles[key] = image
+        return image
     }
 }
 

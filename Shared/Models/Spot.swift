@@ -10,6 +10,11 @@ import SwiftData
 @Model
 final class Spot {
 
+    /// Local indexes for the three predicates every fetch runs on: alive-vs-trash, the
+    /// newest-first sort, and id lookup. Indexes are store metadata, not schema — CloudKit
+    /// never sees them, so the sync rules above are untouched.
+    #Index<Spot>([\.deletedAt], [\.capturedAt], [\.id])
+
     /// Stable identity used by widgets, deep links and App Intents. Not a unique attribute
     /// (CloudKit forbids those) — uniqueness is maintained by only ever creating one.
     var id: UUID = UUID()
@@ -61,6 +66,11 @@ final class Spot {
     /// the end of a memory. Nil means alive. Optional, so CloudKit's rules hold.
     var deletedAt: Date?
 
+    /// Where the spot came from, when it was not made by hand — `"photoLibrary"` for places the
+    /// automatic ingest found. Nil for captures and imports. Optional string, not an enum, for
+    /// the same CloudKit and forward-compatibility reasons as `kindRaw`.
+    var sourceRaw: String?
+
     /// Full-size JPEG. External storage keeps the database small and lets CloudKit move the
     /// bytes as an asset rather than inline.
     @Attribute(.externalStorage) var photoData: Data?
@@ -86,6 +96,7 @@ final class Spot {
         photoData: Data? = nil,
         thumbnailFilename: String? = nil,
         kind: PlaceKind = .place,
+        sourceRaw: String? = nil,
         trip: Trip? = nil
     ) {
         self.id = id
@@ -103,6 +114,7 @@ final class Spot {
         self.photoData = photoData
         self.thumbnailFilename = thumbnailFilename
         self.kindRaw = kind.rawValue
+        self.sourceRaw = sourceRaw
         self.trip = trip
     }
 }
@@ -126,10 +138,18 @@ extension Spot {
         return !photoData.isEmpty
     }
 
-    /// Never blank: falls back to the place name, then to a date.
+    /// The `sourceRaw` value for spots the automatic photo-library ingest created.
+    static let photoLibrarySource = "photoLibrary"
+
+    /// True when the automatic photo-library ingest created this spot.
+    var isFromPhotoLibrary: Bool { sourceRaw == Self.photoLibrarySource }
+
+    /// Never blank: falls back to the place name, then — for an ingested place still waiting on
+    /// the geocoder — to "Somewhere you've been", then to a date.
     var displayName: String {
         if !name.trimmingCharacters(in: .whitespaces).isEmpty { return name }
         if let placeName, !placeName.isEmpty { return placeName }
+        if isFromPhotoLibrary { return "Somewhere you've been" }
         return Self.fallbackNameFormatter.string(from: capturedAt)
     }
 
@@ -173,6 +193,7 @@ extension Spot {
             alertsEnabled: alertsEnabled,
             deletedAt: deletedAt,
             reminderAt: reminderAt,
+            sourceRaw: sourceRaw,
             tripID: trip?.id,
             photoFilename: hasPhoto ? BackupArchive.photoFilename(spotID: id) : nil
         )

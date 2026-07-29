@@ -55,6 +55,44 @@ struct CelebrationView: View {
     }
 }
 
+/// The colour flood under the confetti: a green wash that blooms out from the compass and
+/// fades, so arrival reads at a glance — green means made it, in every culture the App Store
+/// ships to — before a single particle has registered.
+///
+/// State-driven rather than clock-driven on purpose: the celebration layer stays mounted
+/// after the moment passes, and a `TimelineView` there would tick for as long as the screen
+/// is up. Two `withAnimation`s run to completion and then this view costs nothing.
+struct ArrivalBloom: View {
+
+    /// Success green, deliberately outside both moods' palettes: arrival is a system moment,
+    /// not a themed one.
+    private static let green = Color(red: 0.24, green: 0.78, blue: 0.42)
+
+    @State private var bloomed = false
+    @State private var faded = false
+
+    var body: some View {
+        Circle()
+            .fill(
+                RadialGradient(
+                    colors: [Self.green.opacity(0.5), Self.green.opacity(0.22), .clear],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 420
+                )
+            )
+            .frame(width: 840, height: 840)
+            .scaleEffect(bloomed ? 1 : 0.1)
+            .opacity(faded ? 0 : (bloomed ? 1 : 0))
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .onAppear {
+                withAnimation(.easeOut(duration: 0.6)) { bloomed = true }
+                withAnimation(.easeIn(duration: 1.1).delay(0.8)) { faded = true }
+            }
+    }
+}
+
 /// The stamp that lands on the photo when you arrive: rotated, letterpressed, slightly
 /// off-centre, like something inked onto a postcard.
 struct ArrivalStamp: View {

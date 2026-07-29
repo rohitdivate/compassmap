@@ -50,8 +50,10 @@ extension Trip {
         name.trimmingCharacters(in: .whitespaces).isEmpty ? "Untitled trip" : name
     }
 
-    /// The photo used for the trip's cover: the most recent spot that has one.
-    var coverPhotoData: Data? {
-        orderedSpots.first(where: { $0.photoData != nil })?.photoData
+    /// The spot whose photo fronts the trip: the most recent one with a thumbnail on disk.
+    /// Chosen by thumbnail rather than by photo so answering never faults a blob — the old
+    /// `coverPhotoData` walked every spot in the trip pulling photos out of the database.
+    var coverSpot: Spot? {
+        orderedSpots.first { $0.thumbnailFilename != nil }
     }
 }

@@ -190,8 +190,17 @@ private struct TripCard: View {
         .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
     }
 
+    @ViewBuilder
+    private var coverPhoto: some View {
+        if let coverSpot = trip.coverSpot {
+            SpotPhotoView(spot: coverSpot, sizeClass: .card)
+        } else {
+            PhotoView(data: nil)
+        }
+    }
+
     private var cover: some View {
-        PhotoView(data: trip.coverPhotoData, maxDimension: 1_000)
+        coverPhoto
             .frame(height: 168)
             .overlay {
                 LinearGradient(
@@ -255,9 +264,9 @@ private struct LooseSpotChip: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            PhotoView(data: ranked.spot.photoData, maxDimension: 400, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
+            SpotPhotoView(spot: ranked.spot, sizeClass: .card)
                 .frame(width: 128, height: 96)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: theme.radii.row, style: .continuous))
 
             Text(ranked.spot.displayName)
                 .font(theme.captionFont)
@@ -397,11 +406,11 @@ private struct TripSpotRow: View {
     var unitPreference: UnitPreference
 
     var body: some View {
-        Surface(cornerRadius: 20, padding: 12) {
+        Surface(padding: 12) {
             HStack(spacing: 14) {
-                PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
+                SpotPhotoView(spot: ranked.spot, sizeClass: .pin)
                     .frame(width: 56, height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.radii.avatar, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(ranked.spot.displayName)

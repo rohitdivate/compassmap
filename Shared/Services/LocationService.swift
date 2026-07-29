@@ -24,6 +24,16 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     private(set) var currentLocation: CLLocation?
     /// Last heading we were given, unsmoothed.
     private(set) var currentHeading: CLHeading?
+
+    /// The fix quantized to ~11 m, published only when the bucket changes. For consumers
+    /// that rank and label rather than draw — reading `currentLocation` in a view body means
+    /// re-rendering on every 3 m fix, which is how the gallery ended up re-sorting itself
+    /// several times a second.
+    private(set) var coarseCoordinate: Coordinate?
+    /// Headings quantized to 5°, same idea: a card's mini arrow does not need degree-level
+    /// updates, and the dial reads the raw heading through the engine, not through here.
+    private(set) var coarseMagneticHeading: Double?
+    private(set) var coarseTrueHeading: Double?
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
     /// Set when the device has no magnetometer, or heading is unavailable for any other
     /// reason, so the UI can fall back to a map instead of showing a dead arrow.
@@ -38,6 +48,10 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
 
     @ObservationIgnored private var lastPublishedLocation: CLLocation?
     @ObservationIgnored private var lastPublishedAt: Date?
+
+    /// Called with every accepted fix, view lifecycle be damned — this is what keeps the Live
+    /// Activity honest while the phone is locked. One consumer: `ActivityUpdateDriver`.
+    @ObservationIgnored var onLocationFix: ((CLLocation) -> Void)?
 
     override init() {
         super.init()
@@ -110,6 +124,25 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    /// Keeps fixes flowing after the phone locks, for as long as a walk is being tracked.
+    ///
+    /// `UIBackgroundModes` includes `location`, but that entitlement does nothing until
+    /// `allowsBackgroundLocationUpdates` is set — which is why the Live Activity used to freeze
+    /// the moment the screen turned off. Scoped strictly to an active tracked spot: the blue
+    /// indicator makes the cost visible, and `endBackgroundTracking` restores every default.
+    func beginBackgroundTracking() {
+        manager.allowsBackgroundLocationUpdates = true
+        manager.showsBackgroundLocationIndicator = true
+        manager.pausesLocationUpdatesAutomatically = false
+        startUpdating()
+    }
+
+    func endBackgroundTracking() {
+        manager.allowsBackgroundLocationUpdates = false
+        manager.showsBackgroundLocationIndicator = false
+        manager.pausesLocationUpdatesAutomatically = true
+    }
+
     /// Coarse background monitoring: enough to keep widgets roughly honest without holding
     /// GPS open. Requires "always" authorization to do anything useful.
     func startMonitoringSignificantChanges() {
@@ -149,6 +182,12 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         return currentHeading.magneticHeading
     }
 
+    /// The 5°-quantized counterpart, for card arrows and other decorations.
+    func coarseHeadingDegrees(preferTrueNorth: Bool) -> Double? {
+        if preferTrueNorth, let coarseTrueHeading { return coarseTrueHeading }
+        return coarseMagneticHeading
+    }
+
     /// Whether the magnetometer is reporting enough interference to be worth mentioning.
     var needsCalibration: Bool {
         guard let currentHeading else { return false }
@@ -168,13 +207,27 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latest = locations.last, latest.horizontalAccuracy >= 0 else { return }
         currentLocation = latest
+        let coarse = Coordinate(
+            latitude: (latest.coordinate.latitude * 10_000).rounded() / 10_000,
+            longitude: (latest.coordinate.longitude * 10_000).rounded() / 10_000
+        )
+        if coarse != coarseCoordinate { coarseCoordinate = coarse }
         publishToSnapshotIfNeeded(latest)
+        onLocationFix?(latest)
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         guard newHeading.headingAccuracy >= 0 || newHeading.magneticHeading >= 0 else { return }
         headingUnavailable = false
         currentHeading = newHeading
+
+        let quantize: (Double) -> Double? = { value in
+            value >= 0 ? (value / 5).rounded() * 5 : nil
+        }
+        let magnetic = quantize(newHeading.magneticHeading)
+        if magnetic != coarseMagneticHeading { coarseMagneticHeading = magnetic }
+        let true_ = quantize(newHeading.trueHeading)
+        if true_ != coarseTrueHeading { coarseTrueHeading = true_ }
     }
 
     func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {
@@ -216,10 +269,13 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             longitude: location.coordinate.longitude
         )
         let themeID = AppSettings.shared.themeID
-        SharedSnapshotStore.mutate(defaultThemeID: themeID) { snapshot in
+        // Async: this runs inside a CoreLocation delegate callback on the main thread, and
+        // blocking it on file I/O for a widget nicety is exactly backwards.
+        SharedSnapshotStore.mutateAsync(defaultThemeID: themeID) { snapshot in
             snapshot.lastKnownLocation = coordinate
             snapshot.lastKnownLocationDate = Date()
+        } completion: { _ in
+            WidgetCenter.shared.reloadAllTimelines()
         }
-        WidgetCenter.shared.reloadAllTimelines()
     }
 }

@@ -38,15 +38,21 @@ struct DirectionArrow: View {
 
     // Split into typed sub-views rather than one long chain: as a single expression this body
     // exceeded the type-checker's budget and failed to compile.
+    //
+    // One smoother, not two: the engine already runs an exponential filter per tick, and a
+    // spring that is re-targeted every 33 ms on top of it never settles. `drawingGroup`
+    // flattens the blur-glow and the dart into one Metal layer, so rotating the arrow is a
+    // free transform of a rasterized texture rather than a re-composite of a live blur.
     var body: some View {
         ZStack {
             glow
             dart
         }
+        .compositingGroup()
+        .drawingGroup()
         .rotationEffect(.degrees(angle))
         .scaleEffect(onTarget ? 1.06 : 1.0)
         .animation(.spring(response: 0.45, dampingFraction: 0.62), value: onTarget)
-        .animation(.interpolatingSpring(stiffness: 90, damping: 14), value: angle)
         .accessibilityHidden(true)
     }
 
@@ -104,18 +110,23 @@ struct CompassRose: View {
 
     // As with the arrow, this is deliberately split: the whole rose in one expression exceeds
     // the type-checker's budget.
+    //
+    // The face — 72 ticks and four letters — is an `EquatableView` child keyed on mood alone,
+    // so its canvas rasterizes once and the per-frame rotation is a pure transform. Only the
+    // target pip redraws as the bearing crawls. The heading spring is gone on purpose: the
+    // engine's exponential filter is the one smoother (see `DirectionArrow`).
     var body: some View {
         ZStack {
             basePlate
             halo
-            Canvas(rendersAsynchronously: false) { context, size in
-                draw(in: &context, size: size)
-            }
-            .padding(2)
+            RoseFace(theme: theme, onPhoto: onPhoto)
+                .equatable()
+                .padding(2)
+            TargetPip(theme: theme, bearing: targetBearing)
+                .padding(2)
         }
         .frame(width: diameter, height: diameter)
         .rotationEffect(.degrees(-heading))
-        .animation(.interpolatingSpring(stiffness: 70, damping: 13), value: heading)
         .accessibilityHidden(true)
     }
 
@@ -142,15 +153,26 @@ struct CompassRose: View {
             .animation(.easeInOut(duration: 0.25), value: onTarget)
     }
 
-    // MARK: - Drawing
+}
 
-    private func draw(in context: inout GraphicsContext, size: CGSize) {
-        let centre = CGPoint(x: size.width / 2, y: size.height / 2)
-        let radius = min(size.width, size.height) / 2
+/// The static face of the rose: 72 ticks and four cardinal letters. Equatable on the two
+/// things that can actually change its pixels, so SwiftUI skips it entirely while the rose
+/// spins.
+private struct RoseFace: View, Equatable {
+    var theme: Theme
+    var onPhoto: Bool
 
-        drawTicks(in: &context, centre: centre, radius: radius)
-        drawCardinals(in: &context, centre: centre, radius: radius)
-        drawTargetPip(in: &context, centre: centre, radius: radius)
+    static func == (lhs: RoseFace, rhs: RoseFace) -> Bool {
+        lhs.theme.id == rhs.theme.id && lhs.onPhoto == rhs.onPhoto
+    }
+
+    var body: some View {
+        Canvas(rendersAsynchronously: false) { context, size in
+            let centre = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = min(size.width, size.height) / 2
+            drawTicks(in: &context, centre: centre, radius: radius)
+            drawCardinals(in: &context, centre: centre, radius: radius)
+        }
     }
 
     /// A tick every five degrees, longer at the thirties and longer again at the cardinals.
@@ -162,8 +184,8 @@ struct CompassRose: View {
             let lineWidth: CGFloat = isCardinal ? 2.4 : (isMajor ? 1.6 : 1)
             let opacity: Double = isCardinal ? 0.95 : (isMajor ? 0.6 : 0.3)
 
-            let outer = point(on: centre, radius: radius - 12, degrees: Double(degrees))
-            let inner = point(on: centre, radius: radius - 12 - length, degrees: Double(degrees))
+            let outer = RosePoints.point(on: centre, radius: radius - 12, degrees: Double(degrees))
+            let inner = RosePoints.point(on: centre, radius: radius - 12 - length, degrees: Double(degrees))
 
             var tick = Path()
             tick.move(to: inner)
@@ -181,7 +203,7 @@ struct CompassRose: View {
     private func drawCardinals(in context: inout GraphicsContext, centre: CGPoint, radius: CGFloat) {
         let cardinals: [(Double, String)] = [(0, "N"), (90, "E"), (180, "S"), (270, "W")]
         for (degrees, letter) in cardinals {
-            let position = point(on: centre, radius: radius - 42, degrees: degrees)
+            let position = RosePoints.point(on: centre, radius: radius - 42, degrees: degrees)
             let colour = degrees == 0 ? theme.accent : (onPhoto ? Color.white.opacity(0.7) : theme.textMuted)
             context.draw(
                 Text(letter).font(theme.tickFont).foregroundColor(colour),
@@ -189,22 +211,34 @@ struct CompassRose: View {
             )
         }
     }
+}
 
-    /// Where the spot actually is, marked on the ring.
-    private func drawTargetPip(in context: inout GraphicsContext, centre: CGPoint, radius: CGFloat) {
-        guard let targetBearing else { return }
-        let position = point(on: centre, radius: radius - 6, degrees: targetBearing)
-        let box = CGRect(x: position.x - 5, y: position.y - 5, width: 10, height: 10)
-        let pip = Path(ellipseIn: box)
-        context.fill(pip, with: .color(theme.accent))
-        context.stroke(pip, with: .color(.white.opacity(0.7)), lineWidth: 1)
+/// Where the spot actually is, marked on the ring. Its own layer so the ring face never
+/// redraws just because the bearing crawled a degree.
+private struct TargetPip: View {
+    var theme: Theme
+    var bearing: Double?
+
+    var body: some View {
+        Canvas(rendersAsynchronously: false) { context, size in
+            guard let bearing else { return }
+            let centre = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = min(size.width, size.height) / 2
+            let position = RosePoints.point(on: centre, radius: radius - 6, degrees: bearing)
+            let box = CGRect(x: position.x - 5, y: position.y - 5, width: 10, height: 10)
+            let pip = Path(ellipseIn: box)
+            context.fill(pip, with: .color(theme.accent))
+            context.stroke(pip, with: .color(.white.opacity(0.7)), lineWidth: 1)
+        }
     }
+}
 
-    /// Compass degrees to a point on the ring, with zero at the top rather than at three o'clock.
-    ///
-    /// The trigonometry is done in `Double` and converted once at the end: mixing `Double` and
-    /// `CGFloat` in the same expression leaves `cos` and `sin` genuinely ambiguous.
-    private func point(on centre: CGPoint, radius: CGFloat, degrees: Double) -> CGPoint {
+/// Compass degrees to a point on the ring, with zero at the top rather than at three o'clock.
+///
+/// The trigonometry is done in `Double` and converted once at the end: mixing `Double` and
+/// `CGFloat` in the same expression leaves `cos` and `sin` genuinely ambiguous.
+private enum RosePoints {
+    static func point(on centre: CGPoint, radius: CGFloat, degrees: Double) -> CGPoint {
         let radians = (degrees - 90) * .pi / 180
         let distance = Double(radius)
         return CGPoint(
@@ -253,7 +287,9 @@ struct RadarRings: View {
                 // Driven from the clock rather than from an animated `@State`: the rings wrap
                 // around continuously, and a wrapping value is exactly what SwiftUI's
                 // interpolation cannot animate sensibly.
-                TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+                // 20 fps is indistinguishable for rings this soft, and this clock runs the
+                // whole time the arrow screen is up.
+                TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { context in
                     rings(at: context.date.timeIntervalSinceReferenceDate / period)
                 }
             }

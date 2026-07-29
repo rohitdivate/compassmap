@@ -31,8 +31,6 @@ struct SpotDetailView: View {
 
     private var store: SpotStore { SpotStore(context: modelContext) }
 
-    private static let glyphs = ["📍", "🌊", "🏝️", "🌴", "🍹", "🛺", "⛩️", "🐘", "☕️", "🏛️", "🌅", "🥥"]
-
     var body: some View {
         content
             .alert("Rename spot", isPresented: $isEditingName) {
@@ -110,13 +108,8 @@ struct SpotDetailView: View {
 
     private var photo: some View {
         ZStack(alignment: .bottomLeading) {
-            PhotoView(
-                data: spot.photoData,
-                maxDimension: 1_600,
-                glyph: spot.glyph,
-                fallbackSymbol: spot.placeKind.symbol
-            )
-            .frame(height: 340)
+            SpotPhotoView(spot: spot, sizeClass: .hero)
+                .frame(height: 340)
                 .overlay {
                     LinearGradient(
                         colors: [.clear, .black.opacity(0.15), .black.opacity(0.8)],
@@ -146,7 +139,9 @@ struct SpotDetailView: View {
             .padding(18)
         }
         .frame(height: 340)
-        .clipShape(RoundedRectangle(cornerRadius: 0))
+        // The photo lends its colour to the bar region above rather than stopping at a hard
+        // edge: the system mirrors and blurs it outward, and the Done capsule floats on it.
+        .backgroundExtensionEffect()
     }
 
     // MARK: - Distance
@@ -167,12 +162,14 @@ struct SpotDetailView: View {
         .padding(.horizontal, 18)
     }
 
+    // Coarse (~11 m) coordinate on purpose: reading the raw fix here re-rendered the whole
+    // sheet every 3 m, and a static readout does not need that resolution.
     private var metresToSpot: Double? {
-        location.coordinate.map { BearingMath.distance(from: $0, to: spot.coordinate) }
+        location.coarseCoordinate.map { BearingMath.distance(from: $0, to: spot.coordinate) }
     }
 
     private var bearingToSpot: Double? {
-        location.coordinate.map { BearingMath.initialBearing(from: $0, to: spot.coordinate) }
+        location.coarseCoordinate.map { BearingMath.initialBearing(from: $0, to: spot.coordinate) }
     }
 
     @ViewBuilder
@@ -258,26 +255,16 @@ struct SpotDetailView: View {
         .padding(.horizontal, 18)
     }
 
+    /// A rendered snapshot, not a live `MKMapView`: booting a whole map engine was the most
+    /// expensive single part of opening this sheet, for 600 m of non-interactive context.
     private var mapInset: some View {
-        Map(initialPosition: .region(region), interactionModes: []) {
-            Marker(spot.displayName, coordinate: coordinate)
-                .tint(theme.accent)
-        }
-        .mapStyle(.standard(pointsOfInterest: .excludingAll))
-        .frame(height: 160)
-        .allowsHitTesting(false)
-    }
-
-    private var coordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: spot.latitude, longitude: spot.longitude)
-    }
-
-    private var region: MKCoordinateRegion {
-        MKCoordinateRegion(
-            center: coordinate,
-            latitudinalMeters: 600,
-            longitudinalMeters: 600
+        SpotMapInset(
+            spotID: spot.id,
+            latitude: spot.latitude,
+            longitude: spot.longitude,
+            theme: theme
         )
+        .frame(height: 160)
     }
 
     @ViewBuilder
@@ -322,38 +309,10 @@ struct SpotDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(eyebrow: "For when there's no photo", title: "Mark")
                 .padding(.horizontal, 18)
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
-                    ForEach(Self.glyphs, id: \.self) { glyph in
-                        glyphButton(glyph)
-                    }
-                }
-                .padding(.horizontal, 18)
+            GlyphPicker(selected: spot.glyph, contentPadding: 18) { glyph in
+                store.update(spot, glyph: glyph)
             }
-            .scrollIndicators(.hidden)
         }
-    }
-
-    private func glyphButton(_ glyph: String) -> some View {
-        let isSelected = spot.glyph == glyph
-        return Button {
-            store.update(spot, glyph: isSelected ? nil : glyph)
-            FeedbackService.shared.lightTap()
-        } label: {
-            Text(glyph)
-                .font(.system(size: 22))
-                .frame(width: 46, height: 46)
-                .background {
-                    Circle().fill(isSelected ? theme.accent.opacity(0.28) : theme.surfaceRaised)
-                }
-                .overlay {
-                    Circle().strokeBorder(
-                        isSelected ? theme.accent : .white.opacity(0.12),
-                        lineWidth: 1
-                    )
-                }
-        }
-        .buttonStyle(PressableStyle())
     }
 
     // MARK: - Trip
@@ -398,13 +357,27 @@ struct SpotDetailView: View {
                 .font(theme.bodyTextFont)
                 .foregroundStyle(theme.text)
                 .lineLimit(3...6)
-                .onSubmit { store.update(spot, note: draftNote) }
+                .onSubmit { saveNoteIfChanged() }
             }
         }
         .padding(.horizontal, 18)
-        .onChange(of: draftNote) { _, newValue in
-            store.update(spot, note: newValue.isEmpty ? nil : newValue)
+        // Debounced, not per keystroke: `store.update` is a SwiftData save, and typing a
+        // forty-character note used to mean forty disk commits. The id-task restarts on every
+        // edit, so the save lands one second after the typing stops...
+        .task(id: draftNote) {
+            guard draftNote != (spot.note ?? "") else { return }
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            saveNoteIfChanged()
         }
+        // ...and closing the sheet mid-debounce must not eat the note.
+        .onDisappear { saveNoteIfChanged() }
+    }
+
+    private func saveNoteIfChanged() {
+        let note = draftNote.isEmpty ? nil : draftNote
+        guard note != spot.note else { return }
+        store.update(spot, note: note)
     }
 
     // MARK: - Kind and reminder
@@ -543,23 +516,46 @@ struct SpotDetailView: View {
 
     // MARK: - Actions
 
+    /// System glass buttons rather than the design system's flat ones — this row is the
+    /// sheet's chrome, the one place on it where glass belongs. The prominent style carries
+    /// the accent; delete keeps its destructive role so the system colours it.
     private var actions: some View {
         VStack(spacing: 10) {
-            PrimaryButton(
-                title: spot.isPinned ? "Unpin from widgets" : "Pin to widgets",
-                symbol: spot.isPinned ? "pin.slash.fill" : "pin.fill"
-            ) {
+            Button {
                 store.setPinned(spot.isPinned ? nil : spot)
                 FeedbackService.shared.lightTap()
+            } label: {
+                Label(
+                    spot.isPinned ? "Unpin from widgets" : "Pin to widgets",
+                    systemImage: spot.isPinned ? "pin.slash.fill" : "pin.fill"
+                )
+                .font(theme.sans(15, weight: .bold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
             }
+            .buttonStyle(.glassProminent)
+            .tint(theme.accent)
 
-            SecondaryButton(title: "Share as a postcard", symbol: "square.and.arrow.up") {
+            Button {
                 makePostcard()
+            } label: {
+                Label("Share as a postcard", systemImage: "square.and.arrow.up")
+                    .font(theme.sans(14, weight: .medium))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 5)
             }
+            .buttonStyle(.glass)
+            .tint(theme.text)
 
-            SecondaryButton(title: "Delete spot", symbol: "trash") {
+            Button(role: .destructive) {
                 isConfirmingDelete = true
+            } label: {
+                Label("Delete spot", systemImage: "trash")
+                    .font(theme.sans(14, weight: .medium))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 5)
             }
+            .buttonStyle(.glass)
             .accessibilityIdentifier("detail-delete")
         }
         .padding(.horizontal, 18)
@@ -619,6 +615,66 @@ private struct FactRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+}
+
+// MARK: - Map inset
+
+/// The 600 m context map as a cached image, with the pin drawn on top in SwiftUI so it stays
+/// themable. The snapshot resolves async; until it does, the raised surface holds the space.
+private struct SpotMapInset: View {
+    var spotID: UUID
+    var latitude: Double
+    var longitude: Double
+    var theme: Theme
+
+    @Environment(\.displayScale) private var displayScale
+    @State private var image: UIImage?
+
+    var body: some View {
+        GeometryReader { proxy in
+            let key = MapSnapshotKey(
+                spotID: spotID,
+                latitude: latitude,
+                longitude: longitude,
+                pointWidth: proxy.size.width,
+                pointHeight: proxy.size.height,
+                scale: displayScale,
+                themeID: theme.id
+            )
+            ZStack {
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Rectangle().fill(theme.surfaceRaised)
+                }
+                pin
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
+            .task(id: key) {
+                guard proxy.size.width > 0 else { return }
+                image = await MapSnapshotCache.shared.image(
+                    for: key,
+                    isDark: theme.colorScheme == .dark
+                )
+            }
+        }
+    }
+
+    /// The region is centred on the spot, so the pin is simply centred.
+    private var pin: some View {
+        ZStack {
+            Circle()
+                .fill(theme.accent)
+                .frame(width: 14, height: 14)
+            Circle()
+                .strokeBorder(.white, lineWidth: 2)
+                .frame(width: 14, height: 14)
+        }
+        .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
     }
 }
 

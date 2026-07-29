@@ -66,6 +66,24 @@ enum SharedSnapshotStore {
         }
     }
 
+    /// Fire-and-forget variant for callers on the main thread. Same serialisation, no
+    /// blocking: `queue.sync` from main onto a utility queue is a priority inversion, and no
+    /// caller of this actually needs the result. `completion` runs on the snapshot queue.
+    static func mutateAsync(
+        defaultThemeID: String,
+        _ body: @escaping (inout SharedSnapshot) -> Void,
+        completion: (@Sendable (SharedSnapshot) -> Void)? = nil
+    ) {
+        queue.async {
+            var snapshot = loadUnsynchronized() ?? .empty(themeID: defaultThemeID)
+            body(&snapshot)
+            snapshot.version = SharedSnapshot.currentVersion
+            snapshot.updatedAt = Date()
+            saveUnsynchronized(snapshot)
+            completion?(snapshot)
+        }
+    }
+
     // MARK: - Thumbnails
 
     /// Writes a widget-sized JPEG into the shared container. Returns the filename to store

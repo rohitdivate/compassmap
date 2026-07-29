@@ -14,6 +14,7 @@ final class FeedbackService {
 
     private var pulseTimer: Timer?
     private var lastPulseAt: Date?
+    private var lastCardinalTickAt: Date?
     private let impact = UIImpactFeedbackGenerator(style: .soft)
     private let notice = UINotificationFeedbackGenerator()
 
@@ -26,12 +27,21 @@ final class FeedbackService {
 
     // MARK: - Discrete events
 
-    /// Fires when the phone comes onto the bearing. Deliberately crisp and short.
+    /// Fires when the phone comes onto the bearing. The tap itself moved to SwiftUI's
+    /// `.sensoryFeedback` on the engine event bridge; this keeps only the chime — gated by
+    /// the sound switch alone (inside `playTone`), so the Settings preview works with
+    /// haptics off, and so the sound and the haptic cannot double up.
     func onTarget() {
-        guard settings.hapticsEnabled else { return }
-        impact.prepare()
-        impact.impactOccurred(intensity: 0.85)
         playTone(frequency: 987.77, duration: 0.16)  // B5
+    }
+
+    /// The bezel passing a cardinal point: the softest tap the hardware will do, throttled
+    /// so a fast spin reads as a purr rather than a rattle.
+    func cardinalTick() {
+        guard settings.hapticsEnabled else { return }
+        if let lastCardinalTickAt, Date().timeIntervalSince(lastCardinalTickAt) < 0.15 { return }
+        lastCardinalTickAt = Date()
+        impact.impactOccurred(intensity: 0.3)
     }
 
     /// Fires on arrival, with two ascending notes so it sounds like an ending.

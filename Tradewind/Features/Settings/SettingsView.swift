@@ -19,6 +19,7 @@ struct SettingsView: View {
                     measurements
                     compassSection
                     feedbackSection
+                    photoPlacesSection
                     DataSection()
                     syncSection
                     widgetHelp
@@ -102,6 +103,26 @@ struct SettingsView: View {
 
     private var cloudSync: Binding<Bool> {
         Binding(get: { settings.cloudSyncEnabled }, set: { settings.cloudSyncEnabled = $0 })
+    }
+
+    private var photoIngest: Binding<Bool> {
+        Binding(get: { settings.photoIngestEnabled }, set: { settings.photoIngestEnabled = $0 })
+    }
+
+    // MARK: - Photo places
+
+    private var photoPlacesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Your photos")
+            Surface(padding: 14) {
+                SettingsToggleRow(
+                    symbol: "photo.on.rectangle.angled",
+                    title: "Add places from your photos",
+                    detail: "Places your library already knows appear as spots by themselves. The scan reads locations only, on this phone.",
+                    isOn: photoIngest
+                )
+            }
+        }
     }
 
     // MARK: - Compass
@@ -396,7 +417,7 @@ private struct ThemeTile: View {
         ZStack {
             candidate.canvas
             if candidate.grainOpacity > 0 {
-                FilmGrain(opacity: candidate.grainOpacity, tint: candidate.text, density: 260)
+                FilmGrain(opacity: candidate.grainOpacity, tint: candidate.text)
             }
 
             HStack(spacing: 10) {
@@ -478,21 +499,7 @@ private struct SettingsToggleRow: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 22, height: 22)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(theme.bodyTextFont)
-                    .foregroundStyle(theme.text)
-                Text(detail)
-                    .font(theme.labelFont)
-                    .foregroundStyle(theme.textMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 8)
+        IconRow(symbol: symbol, title: title, detail: detail) {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .tint(theme.accent)
@@ -542,21 +549,7 @@ private struct SettingsInfoRow: View {
     var action: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 22, height: 22)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(theme.bodyTextFont)
-                    .foregroundStyle(theme.text)
-                Text(detail)
-                    .font(theme.labelFont)
-                    .foregroundStyle(theme.textMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 8)
+        IconRow(symbol: symbol, title: title, detail: detail) {
             if let actionTitle {
                 Button(actionTitle, action: action)
                     .font(theme.labelFont)

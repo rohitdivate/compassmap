@@ -51,24 +51,19 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 5))
         app.buttons["Close"].firstMatch.tap()
 
-        XCTAssertTrue(app.buttons["tab-Map"].waitForExistence(timeout: 5))
-        app.buttons["tab-Map"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Map"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Map"].tap()
         XCTAssertTrue(screen("map-screen").waitForExistence(timeout: 5), "No map")
         snap("05-map")
 
-        app.buttons["tab-Trips"].tap()
+        app.tabBars.buttons["Trips"].tap()
         XCTAssertTrue(screen("trips-screen").waitForExistence(timeout: 5), "No trips")
         snap("06-trips")
 
-        app.buttons["tab-Nearby"].tap()
-        XCTAssertTrue(screen("nearby-screen").waitForExistence(timeout: 5), "No nearby")
-        if app.buttons["scan-photos"].waitForExistence(timeout: 3) {
-            app.buttons["scan-photos"].tap()
-            _ = app.buttons["save-suggestion"].firstMatch.waitForExistence(timeout: 8)
-        }
-        snap("06b-nearby")
-
-        app.buttons["tab-Spots"].tap()
+        // No Nearby screenshot any more: photo-library places ingest themselves into the gallery.
+        // (The canned scan's clusters share coordinates with the demo data here, so de-dupe
+        // suppresses them — expected.)
+        app.tabBars.buttons["Spots"].tap()
         XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["settings-button"].waitForExistence(timeout: 5))
         app.buttons["settings-button"].tap()
@@ -84,6 +79,53 @@ final class ScreenshotTests: XCTestCase {
         app.buttons["save-here-button"].tap()
         XCTAssertTrue(app.buttons["save-here-confirm"].waitForExistence(timeout: 5), "No save-here sheet")
         snap("09-save-here")
+    }
+
+    /// The same walk in the other mood.
+    ///
+    /// Nomad Money is not a palette swap — it is hairlines instead of shadows, raised surfaces
+    /// instead of lifted cards — so the review material has to include both, or the second mood
+    /// only ever gets looked at by accident.
+    func testPhotographNomadMoney() throws {
+        app.terminate()
+        app.launchArguments += ["-theme", "nomadMoney"]
+        app.launch()
+
+        let skip = app.buttons["Skip"]
+        if skip.waitForExistence(timeout: 5) { skip.tap() }
+
+        XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 10), "No gallery")
+        snap("10-nomad-gallery")
+
+        let hotel = app.staticTexts["Harbour Hotel"].firstMatch
+        XCTAssertTrue(hotel.waitForExistence(timeout: 5), "Demo data did not seed")
+        hotel.tap()
+        let title = app.buttons["spot-title-button"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "No arrow screen")
+        snap("11-nomad-arrow")
+
+        title.tap()
+        XCTAssertTrue(app.buttons["detail-done"].waitForExistence(timeout: 5), "No detail sheet")
+        snap("12-nomad-detail")
+        app.buttons["detail-done"].tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        app.buttons["Close"].firstMatch.tap()
+
+        XCTAssertTrue(app.tabBars.buttons["Map"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Map"].tap()
+        XCTAssertTrue(screen("map-screen").waitForExistence(timeout: 5), "No map")
+        snap("13-nomad-map")
+
+        app.tabBars.buttons["Trips"].tap()
+        XCTAssertTrue(screen("trips-screen").waitForExistence(timeout: 5), "No trips")
+        snap("14-nomad-trips")
+
+        app.tabBars.buttons["Spots"].tap()
+        XCTAssertTrue(screen("gallery-screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["settings-button"].waitForExistence(timeout: 5))
+        app.buttons["settings-button"].tap()
+        XCTAssertTrue(screen("settings-screen").waitForExistence(timeout: 5), "No settings")
+        snap("15-nomad-settings")
     }
 
     // MARK: - Helpers

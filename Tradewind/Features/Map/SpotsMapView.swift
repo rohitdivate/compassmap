@@ -65,10 +65,9 @@ struct SpotsMapView: View {
             pins
         }
         .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
-        .mapControls {
-            MapUserLocationButton()
-            MapCompass()
-        }
+        // Empty on purpose: the header's glass cluster already carries locate, and the
+        // system compass lands under the status bar on an edge-to-edge map.
+        .mapControls {}
         .overlay {
             // Pulls the map into the app's palette without hiding the geography.
             theme.canvas.opacity(0.18)
@@ -127,6 +126,9 @@ struct SpotsMapView: View {
         }
     }
 
+    /// All four controls share one `GlassEffectContainer` over the edge-to-edge map — one
+    /// cluster of glass, not four separate discs, so the system can blend and morph them as
+    /// a unit. Active states carry the accent as a glass tint.
     private var header: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
@@ -137,51 +139,48 @@ struct SpotsMapView: View {
                     .accessibilityIdentifier("map-screen")
             }
             Spacer()
-            CircularButton(symbol: "slider.horizontal.3") {
-                router.isShowingSettings = true
+            GlassEffectContainer {
+                HStack(spacing: 10) {
+                    glassControl("slider.horizontal.3", label: "Settings") {
+                        router.isShowingSettings = true
+                    }
+                    .accessibilityIdentifier("settings-button")
+                    glassControl("mappin.and.ellipse", tinted: true, label: "Save this location") {
+                        router.isShowingSaveHere = true
+                    }
+                    glassControl(
+                        showsRangeRings ? "dot.circle.and.hand.point.up.left.fill" : "dot.circle",
+                        tinted: showsRangeRings,
+                        label: showsRangeRings ? "Hide range rings" : "Show range rings"
+                    ) {
+                        withAnimation(.easeInOut(duration: 0.2)) { showsRangeRings.toggle() }
+                    }
+                    glassControl("scope", label: "Centre on me", action: recentre)
+                }
             }
-            .accessibilityIdentifier("settings-button")
-            .accessibilityLabel("Settings")
-            CircularButton(symbol: "mappin.and.ellipse", isActive: true) {
-                router.isShowingSaveHere = true
-            }
-            .accessibilityLabel("Save this location")
-            ringsButton
-            recentreButton
         }
         .padding(.horizontal, 18)
         .padding(.top, 6)
         .background { headerScrim }
     }
 
-    private var ringsButton: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.2)) { showsRangeRings.toggle() }
-        } label: {
-            Image(systemName: showsRangeRings ? "dot.circle.and.hand.point.up.left.fill" : "dot.circle")
+    private func glassControl(
+        _ symbol: String,
+        tinted: Bool = false,
+        label: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(showsRangeRings ? theme.canvas : theme.text)
+                .foregroundStyle(tinted ? theme.onAccent : theme.text)
                 .frame(width: 40, height: 40)
-                .background { circleFill(active: showsRangeRings) }
         }
-        .buttonStyle(PressableStyle())
-        .accessibilityLabel(showsRangeRings ? "Hide range rings" : "Show range rings")
-    }
-
-    private var recentreButton: some View {
-        Button(action: recentre) {
-            Image(systemName: "scope")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(theme.text)
-                .frame(width: 40, height: 40)
-                .background { circleFill(active: false) }
-        }
-        .buttonStyle(PressableStyle())
-        .accessibilityLabel("Centre on me")
-    }
-
-    private func circleFill(active: Bool) -> some View {
-        Circle().fill(active ? theme.accent : theme.surface)
+        .glassEffect(
+            tinted ? .regular.tint(theme.accent).interactive() : .regular.interactive(),
+            in: .circle
+        )
+        .accessibilityLabel(label)
     }
 
     /// Keeps the title legible over whatever geography happens to be underneath it.
@@ -244,7 +243,7 @@ private struct SpotMapPin: View {
                     .frame(width: isSelected ? 56 : 44, height: isSelected ? 56 : 44)
                     .shadow(color: theme.glow.opacity(0.6), radius: isSelected ? 12 : 5)
 
-                PhotoView(data: spot.photoData, maxDimension: 200, glyph: spot.glyph, fallbackSymbol: spot.placeKind.symbol)
+                SpotPhotoView(spot: spot, sizeClass: .pin)
                     .frame(width: isSelected ? 50 : 38, height: isSelected ? 50 : 38)
                     .clipShape(Circle())
 
@@ -292,9 +291,9 @@ private struct SelectedSpotBar: View {
         Button(action: onOpen) {
             Surface(cornerRadius: 22, padding: 14) {
                 HStack(spacing: 14) {
-                    PhotoView(data: ranked.spot.photoData, maxDimension: 300, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
+                    SpotPhotoView(spot: ranked.spot, sizeClass: .pin)
                         .frame(width: 52, height: 52)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: theme.radii.avatar, style: .continuous))
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(ranked.spot.displayName)

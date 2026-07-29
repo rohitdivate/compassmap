@@ -7,15 +7,25 @@ import Observation
 /// Updates are throttled: ActivityKit will quietly start dropping them if an app pushes on
 /// every location fix, and a distance that refreshes every twenty metres is indistinguishable
 /// from one that refreshes every metre when it is living in the Dynamic Island.
+///
+/// The activity owns its own update source: starting one starts an `ActivityUpdateDriver`,
+/// which holds background location open for the walk and pushes on every fix. Ending the
+/// activity — arrival or by hand — tears the driver down with it, so background GPS can never
+/// outlive the card that justified it.
 @Observable
+@MainActor
 final class LiveActivityService {
 
     static let shared = LiveActivityService()
 
     @ObservationIgnored private var activity: Activity<HeadingActivityAttributes>?
     @ObservationIgnored private var lastPush: ActivityPushPolicy.LastPush?
+    @ObservationIgnored private var driver: ActivityUpdateDriver?
 
     private(set) var activeSpotID: UUID?
+    /// Name of the spot being tracked, for surfaces (the tab accessory strip) that outlive
+    /// the arrow screen the walk started from.
+    private(set) var activeSpotName: String?
 
     var isSupported: Bool {
         ActivityAuthorizationInfo().areActivitiesEnabled
@@ -32,6 +42,7 @@ final class LiveActivityService {
         spotID: UUID,
         spotName: String,
         placeName: String?,
+        coordinate: Coordinate,
         distanceMetres: Double,
         bearing: Double,
         themeID: String,
@@ -63,11 +74,15 @@ final class LiveActivityService {
                 pushType: nil
             )
             activeSpotID = spotID
+            activeSpotName = spotName
             lastPush = ActivityPushPolicy.LastPush(
                 at: Date(),
                 distanceMetres: distanceMetres,
                 bearingDegrees: bearing
             )
+            let driver = ActivityUpdateDriver(target: coordinate, service: self)
+            self.driver = driver
+            driver.start()
             return true
         } catch {
             print("[Tradewind] could not start Live Activity: \(error)")
@@ -107,17 +122,33 @@ final class LiveActivityService {
 
     /// Ends with a final state, so the last thing shown on the Lock Screen is the arrival
     /// rather than a stale distance.
+    ///
+    /// The arrival goes through one last `update` with an alert before the end: the alert is
+    /// what lights the Lock Screen up at the moment that matters. A phone that has been in a
+    /// pocket for the whole walk should not keep "you made it" to itself.
     func finish(distanceMetres: Double, bearing: Double) {
         guard let activity else { return }
+        driver?.stop()
+        driver = nil
         let state = HeadingActivityAttributes.ContentState(
             distanceMetres: distanceMetres,
             bearing: bearing,
             isArrived: true
         )
+        let spotName = activity.attributes.spotName
         self.activity = nil
         activeSpotID = nil
+        activeSpotName = nil
         lastPush = nil
         Task {
+            await activity.update(
+                ActivityContent(state: state, staleDate: nil),
+                alertConfiguration: AlertConfiguration(
+                    title: "You made it",
+                    body: "\(spotName) is right here.",
+                    sound: .default
+                )
+            )
             await activity.end(
                 ActivityContent(state: state, staleDate: nil),
                 dismissalPolicy: .after(Date().addingTimeInterval(30))
@@ -126,9 +157,12 @@ final class LiveActivityService {
     }
 
     func end() {
+        driver?.stop()
+        driver = nil
         guard let activity else { return }
         self.activity = nil
         activeSpotID = nil
+        activeSpotName = nil
         lastPush = nil
         Task { await activity.end(nil, dismissalPolicy: .immediate) }
     }

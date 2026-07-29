@@ -132,8 +132,11 @@ Re-skinning removed features rather than restyling them, because the moods' own 
 - **Widgets show a bearing, not a live compass.** WidgetKit cannot stream sensor updates, so the
   widget arrow points at the spot's compass bearing with north up. Where the distance came from a
   cached fix rather than a fresh one, the widget says "last known position".
-- **The Live Activity does not follow your heading** either, for the same reason plus ActivityKit's
-  update throttling. It counts the distance down, which is the useful part.
+- **The Live Activity does not follow your heading** — ActivityKit cannot stream the magnetometer.
+  It does stay live while the phone is locked: tracking a spot holds background location open for
+  the walk (the blue indicator makes the cost visible), so the distance counts down and the pointer
+  swings as you *move*, just not as you turn on the spot. Arrival or stopping the walk releases the
+  GPS with it.
 - **Golden hour is computed, not fetched.** Accurate to a minute or two, which is far better than the
   decision it informs. There is no weather.
 - **Each mood forces its own scheme**, so the app does not follow the system appearance. Picking the

@@ -32,7 +32,7 @@ UITESTS_BUNDLE_ID = "com.tradewind.app.uitests"
 # Empty means "whatever Xcode picks", which is right for CI and for a simulator build. Set it with
 # `python3 Tools/setup_signing.py --team ABCDE12345` so a device build does not need a UI visit.
 DEVELOPMENT_TEAM = ""
-DEPLOYMENT_TARGET = "17.0"
+DEPLOYMENT_TARGET = "26.0"
 MARKETING_VERSION = "1.0"
 BUILD_VERSION = "1"
 

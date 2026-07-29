@@ -49,31 +49,59 @@ struct SpotsGalleryView: View {
         return result
     }
 
-    /// Kinds actually in use. The chips only appear once there are two to choose between —
-    /// a filter with one option is furniture.
-    private var kindsInUse: [PlaceKind] {
-        var seen: [PlaceKind] = []
-        for spot in spots where !seen.contains(spot.placeKind) {
-            seen.append(spot.placeKind)
+    /// Everything the screen derives from the spot list, computed exactly once per body
+    /// evaluation. As computed properties these were re-derived five or six times per pass —
+    /// and the pass itself ran at heading rate, because the body read the raw heading. Now the
+    /// body reads only the coarse (~11 m) coordinate, and the cards observe the heading
+    /// themselves in a leaf.
+    private struct GalleryModel {
+        var ranked: [RankedSpot]
+        var kindsInUse: [PlaceKind]
+        var featured: RankedSpot?
+        var gridItems: [RankedSpot]
+        var memory: (spot: Spot, yearsAgo: Int)?
+    }
+
+    private func makeModel() -> GalleryModel {
+        let ranked = SpotRanking.rank(filtered, from: location.coarseCoordinate)
+        var seen = Set<PlaceKind>()
+        for spot in spots { seen.insert(spot.placeKind) }
+        let kinds = PlaceKind.pickable.filter(seen.contains)
+        let featured = SpotRanking.featured(in: ranked)
+        // Everything except the spot already shown as the hero card — unless a further-away
+        // spot is pinned, in which case the hero is not the first item and nothing is dropped.
+        let gridItems: [RankedSpot]
+        if let featured, ranked.first?.id == featured.id {
+            gridItems = Array(ranked.dropFirst())
+        } else {
+            gridItems = ranked
         }
-        return PlaceKind.pickable.filter(seen.contains)
-    }
-
-    private var ranked: [RankedSpot] {
-        SpotRanking.rank(filtered, from: location.coordinate)
-    }
-
-    private var heading: Double? {
-        location.headingDegrees(preferTrueNorth: settings.usesTrueNorth)
+        // Memories come from the whole library, not the filtered view — the card just stays
+        // hidden while a filter or search is narrowing the screen.
+        let memory: (spot: Spot, yearsAgo: Int)? = {
+            guard let match = MemoryPolicy.memory(
+                in: spots.map { (id: $0.id, capturedAt: $0.capturedAt) },
+                today: Date()
+            ), let spot = spots.first(where: { $0.id == match.spotID }) else { return nil }
+            return (spot, match.yearsAgo)
+        }()
+        return GalleryModel(
+            ranked: ranked,
+            kindsInUse: kinds,
+            featured: featured,
+            gridItems: gridItems,
+            memory: memory
+        )
     }
 
     var body: some View {
+        let model = makeModel()
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                heroHeader
+                heroHeader(model)
                 VStack(alignment: .leading, spacing: 22) {
                     if !location.isAuthorized { permissionPrompt }
-                    if spots.isEmpty { emptyState } else { content }
+                    if spots.isEmpty { emptyState } else { content(model) }
                 }
                 .padding(.top, 20)
                 .padding(.bottom, 24)
@@ -89,15 +117,14 @@ struct SpotsGalleryView: View {
     }
 
     @ViewBuilder
-    private var content: some View {
+    private func content(_ model: GalleryModel) -> some View {
         if isSearching { searchField }
         if !trips.isEmpty { tripFilter }
-        if kindsInUse.count > 1 { kindFilter }
-        if ranked.isEmpty, !spots.isEmpty { noMatches }
-        if let featured = SpotRanking.featured(in: ranked) {
+        if model.kindsInUse.count > 1 { kindFilter(model.kindsInUse) }
+        if model.ranked.isEmpty, !spots.isEmpty { noMatches }
+        if let featured = model.featured {
             FeaturedSpotCard(
                 ranked: featured,
-                heading: heading,
                 unitPreference: settings.unitPreference,
                 hero: hero,
                 onOpen: { open(featured.spot) }
@@ -105,38 +132,49 @@ struct SpotsGalleryView: View {
             .contextMenu { spotMenu(for: featured.spot) }
             .padding(.horizontal, 18)
         }
-        if ranked.count > 1 { grid }
+        if let memory = model.memory, !isSearching, selectedTripID == nil, selectedKind == nil {
+            MemoryCard(
+                spot: memory.spot,
+                yearsAgo: memory.yearsAgo,
+                onOpen: { open(memory.spot) }
+            )
+            .padding(.horizontal, 18)
+        }
+        if model.ranked.count > 1 { grid(model) }
     }
 
-    private var grid: some View {
+    private func grid(_ model: GalleryModel) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(
-                eyebrow: location.coordinate == nil ? "Most recent" : "Nearest first",
+                eyebrow: location.coarseCoordinate == nil ? "Most recent" : "Nearest first",
                 title: "All your spots"
             )
 
             LazyVGrid(columns: [GridItem(spacing: 14), GridItem(spacing: 14)], spacing: 14) {
-                ForEach(gridItems) { item in
+                ForEach(model.gridItems) { item in
                     SpotGridCard(
                         ranked: item,
-                        heading: heading,
                         unitPreference: settings.unitPreference,
                         hero: hero,
+                        // The featured card can duplicate a pinned spot into the grid; only
+                        // one view per id may be a zoom source.
+                        isZoomSource: item.id != model.featured?.id,
                         onOpen: { open(item.spot) }
                     )
                     .contextMenu { spotMenu(for: item.spot) }
+                    // Cards ease in at the fold: scroll-driven, so it costs nothing at rest,
+                    // never blocks XCUITest's idle wait, and Reduce Motion still gets its
+                    // content — the resting state is identity.
+                    .scrollTransition(axis: .vertical) { content, phase in
+                        content
+                            .scaleEffect(phase.isIdentity ? 1 : 0.96)
+                            .opacity(phase.isIdentity ? 1 : 0.75)
+                            .offset(y: phase.value * 10)
+                    }
                 }
             }
         }
         .padding(.horizontal, 18)
-    }
-
-    /// Everything except the spot already shown as the hero card — unless a further-away spot is
-    /// pinned, in which case the hero is not the first item and nothing is dropped.
-    private var gridItems: [RankedSpot] {
-        guard let featured = SpotRanking.featured(in: ranked) else { return ranked }
-        guard ranked.first?.id == featured.id else { return ranked }
-        return Array(ranked.dropFirst())
     }
 
     private var permissionPrompt: some View {
@@ -178,10 +216,10 @@ struct SpotsGalleryView: View {
     /// same block resolves to a flat raised surface, because that mood permits no gradient.
     /// Solar-aware: the wash and the greeting both follow the actual sun at the actual place.
     private var skyPhase: TimeOfDay {
-        TimeOfDay.current(at: location.coordinate)
+        TimeOfDay.current(at: location.coarseCoordinate)
     }
 
-    private var heroHeader: some View {
+    private func heroHeader(_ model: GalleryModel) -> some View {
         HeroPanel(theme: theme, phase: skyPhase) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
@@ -218,7 +256,7 @@ struct SpotsGalleryView: View {
                 }
 
                 HStack(spacing: 8) {
-                    if !spots.isEmpty { statusPill }
+                    if !spots.isEmpty { statusPill(model) }
                     saveHereChip
                 }
                 .padding(.top, 14)
@@ -254,12 +292,12 @@ struct SpotsGalleryView: View {
 
     /// "Nearest 240 m away" — the reference screen's "Currently in Honolulu" chip, doing the job
     /// this app actually has.
-    private var statusPill: some View {
+    private func statusPill(_ model: GalleryModel) -> some View {
         HStack(spacing: 7) {
             Circle()
                 .fill(theme.highlight)
                 .frame(width: 7, height: 7)
-            Text(summaryLine)
+            Text(summaryLine(model))
                 .font(theme.sans(theme.scale.caption, weight: .medium))
                 .foregroundStyle(theme.onHero)
         }
@@ -270,10 +308,10 @@ struct SpotsGalleryView: View {
         }
     }
 
-    private var summaryLine: String {
+    private func summaryLine(_ model: GalleryModel) -> String {
         let count = spots.count
         let noun = count == 1 ? "spot" : "spots"
-        guard let nearest = ranked.first, let metres = nearest.metres else {
+        guard let nearest = model.ranked.first, let metres = nearest.metres else {
             return "\(count) \(noun) saved"
         }
         let distance = DistanceFormatting.string(metres: metres, preference: settings.unitPreference)
@@ -359,10 +397,10 @@ struct SpotsGalleryView: View {
         .accessibilityIdentifier("no-matches")
     }
 
-    private var kindFilter: some View {
+    private func kindFilter(_ kinds: [PlaceKind]) -> some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                ForEach(kindsInUse) { candidate in
+                ForEach(kinds) { candidate in
                     ChipButton(
                         title: candidate.pluralLabel,
                         symbol: candidate.symbol,
@@ -412,6 +450,57 @@ struct SpotsGalleryView: View {
     }
 }
 
+// MARK: - Memory card
+
+/// "One year ago today" — the resurfacing card, shown only on an exact anniversary.
+///
+/// Deliberately quieter than the featured card: a memory is an aside, not the reason the
+/// screen exists, so it reads as one row you can tap or scroll past.
+private struct MemoryCard: View {
+    @Environment(\.theme) private var theme
+
+    var spot: Spot
+    var yearsAgo: Int
+    var onOpen: () -> Void
+
+    var body: some View {
+        Button(action: onOpen) {
+            Surface(padding: 12) {
+                HStack(spacing: 14) {
+                    SpotPhotoView(spot: spot, sizeClass: .pin)
+                        .frame(width: 56, height: 56)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.radii.avatar, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(MemoryPolicy.label(yearsAgo: yearsAgo))
+                            .eyebrowStyle(theme: theme)
+                        Text(spot.displayName)
+                            .font(theme.cardTitleFont)
+                            .foregroundStyle(theme.text)
+                            .lineLimit(1)
+                        if let place = spot.placeName, !place.isEmpty {
+                            Text(place)
+                                .font(theme.captionFont)
+                                .foregroundStyle(theme.textMuted)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer(minLength: 8)
+
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(theme.accent)
+                }
+            }
+        }
+        .buttonStyle(PressableStyle(scale: 0.98))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(MemoryPolicy.label(yearsAgo: yearsAgo)): \(spot.displayName)")
+        .accessibilityHint("Opens the compass for this spot")
+    }
+}
+
 // MARK: - Featured card
 
 /// The hero: the spot you are most likely to want, big enough to tap without looking.
@@ -419,7 +508,6 @@ private struct FeaturedSpotCard: View {
     @Environment(\.theme) private var theme
 
     var ranked: RankedSpot
-    var heading: Double?
     var unitPreference: UnitPreference
     var hero: Namespace.ID
     var onOpen: () -> Void
@@ -439,20 +527,34 @@ private struct FeaturedSpotCard: View {
             .shadow(color: .black.opacity(0.35), radius: 22, y: 12)
         }
         .buttonStyle(PressableStyle(scale: 0.98))
+        // The whole card is the zoom source: tapping it grows this card into the arrow
+        // screen, which is the moment the app either feels made-for-this or does not.
+        .matchedTransitionSource(id: ranked.spot.id, in: hero)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
         .accessibilityHint("Opens the compass for this spot")
     }
 
+    /// The scrim is a mesh, not a linear ramp: weighted toward the bottom-left corner where
+    /// the caption sits, so the title gets its contrast without flattening the whole lower
+    /// half of the photograph.
     private var photo: some View {
-        PhotoView(data: ranked.spot.photoData, maxDimension: 1_400, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
-            .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
+        SpotPhotoView(spot: ranked.spot, sizeClass: .hero)
             .frame(height: 300)
             .overlay {
-                LinearGradient(
-                    colors: [.clear, .black.opacity(0.25), .black.opacity(0.78)],
-                    startPoint: .top,
-                    endPoint: .bottom
+                MeshGradient(
+                    width: 3,
+                    height: 3,
+                    points: [
+                        [0, 0], [0.5, 0], [1, 0],
+                        [0, 0.55], [0.5, 0.6], [1, 0.55],
+                        [0, 1], [0.5, 1], [1, 1]
+                    ],
+                    colors: [
+                        .clear, .clear, .clear,
+                        .black.opacity(0.18), .black.opacity(0.12), .black.opacity(0.06),
+                        .black.opacity(0.86), .black.opacity(0.74), .black.opacity(0.58)
+                    ]
                 )
             }
     }
@@ -485,7 +587,7 @@ private struct FeaturedSpotCard: View {
 
     private var distanceRow: some View {
         HStack(alignment: .center, spacing: 12) {
-            MiniArrow(theme: theme, angle: ranked.arrowAngle(heading: heading), size: 34)
+            CardArrow(theme: theme, ranked: ranked, size: 34)
             distanceBlock
             Spacer()
             Image(systemName: "arrow.up.right.circle.fill")
@@ -536,9 +638,9 @@ private struct SpotGridCard: View {
     @Environment(\.theme) private var theme
 
     var ranked: RankedSpot
-    var heading: Double?
     var unitPreference: UnitPreference
     var hero: Namespace.ID
+    var isZoomSource: Bool = true
     var onOpen: () -> Void
 
     var body: some View {
@@ -555,13 +657,13 @@ private struct SpotGridCard: View {
             }
         }
         .buttonStyle(PressableStyle(scale: 0.97))
+        .modifier(ZoomSourceIfEnabled(enabled: isZoomSource, id: ranked.spot.id, namespace: hero))
         .accessibilityElement(children: .combine)
     }
 
     private var photo: some View {
         ZStack(alignment: .topTrailing) {
-            PhotoView(data: ranked.spot.photoData, maxDimension: 700, glyph: ranked.spot.glyph, fallbackSymbol: ranked.spot.placeKind.symbol)
-                .matchedGeometryEffect(id: "photo-\(ranked.spot.id)", in: hero)
+            SpotPhotoView(spot: ranked.spot, sizeClass: .card)
                 .frame(height: 132)
 
             if ranked.spot.isPinned {
@@ -583,7 +685,7 @@ private struct SpotGridCard: View {
                 .lineLimit(1)
 
             HStack(spacing: 8) {
-                MiniArrow(theme: theme, angle: ranked.arrowAngle(heading: heading), size: 20)
+                CardArrow(theme: theme, ranked: ranked, size: 20)
                 distanceText
                 Spacer(minLength: 0)
             }
@@ -614,6 +716,49 @@ private struct SpotGridCard: View {
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous)
             .fill(theme.surface)
+    }
+}
+
+// MARK: - Zoom source
+
+/// `matchedTransitionSource` cannot be applied conditionally inline, and two live sources
+/// with one id in the same namespace is a runtime complaint — this wraps the choice.
+private struct ZoomSourceIfEnabled: ViewModifier {
+    var enabled: Bool
+    var id: UUID
+    var namespace: Namespace.ID
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.matchedTransitionSource(id: id, in: namespace)
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - Card arrow
+
+/// A card's little arrow, reading the heading itself: a turn of the wrist redraws these
+/// twenty-point views and nothing else. Coarse (5°) heading — a decoration does not need
+/// degree-level updates.
+private struct CardArrow: View {
+    @Environment(AppSettings.self) private var settings
+
+    var theme: Theme
+    var ranked: RankedSpot
+    var size: CGFloat
+
+    @State private var location = LocationService.shared
+
+    var body: some View {
+        MiniArrow(
+            theme: theme,
+            angle: ranked.arrowAngle(
+                heading: location.coarseHeadingDegrees(preferTrueNorth: settings.usesTrueNorth)
+            ),
+            size: size
+        )
     }
 }
 

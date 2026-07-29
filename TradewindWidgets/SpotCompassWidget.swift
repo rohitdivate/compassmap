@@ -193,6 +193,7 @@ struct SpotCompassView: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(entry.theme.accent)
+        .widgetAccentable()
         .padding(.top, 8)
     }
 
@@ -313,6 +314,7 @@ struct NearbyRow: View {
                 .frame(width: 10, height: 16)
                 .rotationEffect(.degrees(bearing ?? 0))
                 .opacity(bearing == nil ? 0.3 : 1)
+                .widgetAccentable()
 
             Text(spot.name)
                 .font(theme.sans(11, weight: .medium))

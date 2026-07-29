@@ -76,7 +76,7 @@ struct CaptureFlowView: View {
         .onChange(of: camera.capturedImageData) { _, data in
             guard let data else { return }
             camera.stop()
-            handleCaptured(data)
+            Task { await handleCaptured(data) }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("capture-screen")
@@ -326,8 +326,12 @@ struct CaptureFlowView: View {
 
     // MARK: - Handling photos
 
-    private func handleCaptured(_ data: Data) {
-        let prepared = PhotoService.prepare(imageData: data)
+    private func handleCaptured(_ data: Data) async {
+        // Two ImageIO downsamples and two JPEG encodes — off the main thread, so the shutter
+        // button releases the moment it is pressed instead of after the encode.
+        let prepared = await Task.detached(priority: .userInitiated) {
+            PhotoService.prepare(imageData: data)
+        }.value
         let fix = camera.captureLocation
 
         // A negative vertical accuracy means the altitude in the fix is meaningless.
@@ -379,7 +383,9 @@ struct CaptureFlowView: View {
             return
         }
 
-        let prepared = PhotoService.prepare(imageData: raw)
+        let prepared = await Task.detached(priority: .userInitiated) {
+            PhotoService.prepare(imageData: raw)
+        }.value
 
         // The picker sometimes strips GPS depending on library permissions, so fall back to the
         // Photos database before giving up on the location.
@@ -475,8 +481,6 @@ private struct ReviewView: View {
     var onSave: (PendingSpot) -> Void
 
     @FocusState private var isNameFocused: Bool
-
-    private static let glyphs = ["📍", "🌊", "🏝️", "🌴", "🍹", "🛺", "⛩️", "🐘", "☕️", "🌅"]
 
     // Split into small typed pieces on purpose: as one expression this screen was more than
     // the Swift type-checker would accept.
@@ -580,34 +584,12 @@ private struct ReviewView: View {
     private var glyphPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Mark").eyebrowStyle(theme: theme)
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
-                    ForEach(Self.glyphs, id: \.self) { glyph in
-                        glyphButton(glyph)
-                    }
-                }
+            GlyphPicker(selected: pending.glyph) { glyph in
+                var copy = pending
+                copy.glyph = glyph
+                onChange(copy)
             }
-            .scrollIndicators(.hidden)
         }
-    }
-
-    private func glyphButton(_ glyph: String) -> some View {
-        let isSelected = pending.glyph == glyph
-        return Button {
-            var copy = pending
-            copy.glyph = isSelected ? nil : glyph
-            onChange(copy)
-        } label: {
-            Text(glyph)
-                .font(.system(size: 20))
-                .frame(width: 42, height: 42)
-                .background { glyphBackground(isSelected: isSelected) }
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    private func glyphBackground(isSelected: Bool) -> some View {
-        Circle().fill(isSelected ? theme.accent.opacity(0.28) : theme.surfaceRaised)
     }
 
     private var tripPicker: some View {

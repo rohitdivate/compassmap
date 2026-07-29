@@ -6,25 +6,28 @@ import WidgetKit
 ///
 /// Two things about this surface are worth stating, because both were got wrong here before.
 ///
-/// **It is not an app screen.** The Lock Screen draws this over a wallpaper, and the Dynamic Island
-/// is always black whatever the app looks like. So the app's ink is the wrong ink: Tropical Spritz's
-/// cream canvas rendered as a bright slab across the Lock Screen, and its near-black `textMuted` was
-/// invisible inside the island. Everything here uses `theme.activityTint` as its ground and light
-/// values on top of it, with the accent carrying the mood.
+/// **It is not an app screen.** The Lock Screen draws this on the system's glass over a wallpaper,
+/// and the Dynamic Island is always black whatever the app looks like. So the app's ink is the
+/// wrong ink: Tropical Spritz's cream canvas rendered as a bright slab across the Lock Screen, and
+/// its near-black `textMuted` was invisible inside the island. The background stays the system's —
+/// a custom tint opts out of Liquid Glass and reads as a legacy card — and the content uses
+/// `.primary`/`.secondary`, which the glass keeps legible over any wallpaper and which resolve to
+/// light values inside the always-dark island. The accent carries the mood.
 ///
 /// **The pointer is a bearing, not a compass.** It rotates as you *move*, because moving changes the
-/// bearing, and the push policy now reacts to that. It will not rotate as you turn the phone on the
-/// spot — ActivityKit cannot stream sensor data, and pretending otherwise would be a lie most of the
-/// time. What does update continuously, for free and without any push, is the ETA: `Text(timerInterval:)`
-/// ticks on-device.
+/// bearing, and `ActivityUpdateDriver` pushes on every fix — locked phone included, now that the
+/// walk holds background location open. It will not rotate as you turn the phone on the spot —
+/// ActivityKit cannot stream sensor data, and pretending otherwise would be a lie most of the time.
+/// The ETA updates continuously for free besides: `Text(timerInterval:)` ticks on-device, and the
+/// distances roll between pushes with `.contentTransition(.numericText)` instead of hard-cutting.
 struct HeadingLiveActivity: Widget {
 
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: HeadingActivityAttributes.self) { context in
             LockScreenView(context: context)
-                // Solid, not 0.95. Letting 5% of an unknown wallpaper through makes the contrast of
-                // everything above it unpredictable, which is half of why this read badly.
-                .activityBackgroundTint(theme(for: context).activityTint)
+                // Nil on purpose: any colour here replaces the system's Liquid Glass with an
+                // opaque card. The glass manages its own contrast against the wallpaper.
+                .activityBackgroundTint(nil)
                 .activitySystemActionForegroundColor(theme(for: context).accent)
         } dynamicIsland: { context in
             island(for: context)
@@ -57,6 +60,7 @@ struct HeadingLiveActivity: Widget {
             Text(distanceText(state, attributes))
                 .font(theme.mono(13, medium: true))
                 .monospacedDigit()
+                .contentTransition(.numericText(countsDown: true))
                 .foregroundStyle(theme.accent)
         } minimal: {
             arrowGlyph(colour: theme.accent, bearing: state.bearing, width: 8, height: 13)
@@ -79,6 +83,7 @@ struct HeadingLiveActivity: Widget {
             Text(distanceText(state, attributes))
                 .font(theme.mono(20, medium: true))
                 .monospacedDigit()
+                .contentTransition(.numericText(countsDown: true))
                 .foregroundStyle(theme.accent)
             // The island is always black, so this must be light regardless of mood.
             if let walk = DistanceFormatting.walkingTime(metres: state.distanceMetres) {
@@ -158,8 +163,10 @@ private struct BearingDial: View {
 
     var body: some View {
         ZStack {
-            Circle().fill(.white.opacity(0.07))
-            Circle().strokeBorder(.white.opacity(0.18), lineWidth: 1)
+            // Primary, not white: it adapts on the Lock Screen's glass and still resolves light
+            // inside the always-dark island.
+            Circle().fill(.primary.opacity(0.07))
+            Circle().strokeBorder(.primary.opacity(0.18), lineWidth: 1)
             northTick
             ArrowShape()
                 .fill(theme.arrowGradient)
@@ -175,7 +182,7 @@ private struct BearingDial: View {
         VStack(spacing: 0) {
             Text("N")
                 .font(.system(size: diameter * 0.16, weight: .bold))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(.secondary)
             Spacer(minLength: 0)
         }
         .padding(.top, diameter * 0.045)
@@ -202,18 +209,8 @@ private struct LockScreenView: View {
             ActivityProgress(theme: theme, state: state, attributes: context.attributes)
         }
         .padding(16)
-        // Nomad separates with a hairline and nothing else, and on a Lock Screen its own dark surface
-        // sits close enough to a photographic wallpaper that an edge is what makes the card a card.
-        // Spritz's tint is distinct enough on its own, and that mood does not draw borders.
-        .overlay(alignment: .top) { hairlineEdge }
-    }
-
-    @ViewBuilder
-    private var hairlineEdge: some View {
-        if theme.usesHairlines {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(.white.opacity(0.14), lineWidth: 1)
-        }
+        // No hairline edge any more: the system glass draws its own rim light, and a second
+        // border inside it read as a picture frame.
     }
 
     private var labels: some View {
@@ -226,14 +223,15 @@ private struct LockScreenView: View {
 
             Text(context.attributes.spotName)
                 .font(theme.sans(17, weight: .bold))
-                // On activityTint, not on the app canvas — theme.text would be near-black here.
-                .foregroundStyle(.white)
+                // On the system glass, not on the app canvas — the vibrant primary stays legible
+                // over any wallpaper, where theme.text would not.
+                .foregroundStyle(.primary)
                 .lineLimit(1)
 
             if let place = context.attributes.placeName, !place.isEmpty {
                 Text(place)
                     .font(theme.sans(11))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
         }
@@ -249,11 +247,12 @@ private struct LockScreenView: View {
                 Text(readout.value)
                     .font(theme.mono(28, medium: true))
                     .monospacedDigit()
+                    .contentTransition(.numericText(countsDown: true))
                 Text(readout.unit)
                     .font(theme.mono(13, medium: true))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(.secondary)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(.primary)
 
             Text(BearingMath.compassPoint(forBearing: state.bearing))
                 .font(theme.mono(11, medium: true))
@@ -304,7 +303,7 @@ private struct ActivityProgress: View {
     private func bar(_ fraction: Double) -> some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                Capsule().fill(.white.opacity(0.18))
+                Capsule().fill(.primary.opacity(0.18))
                 Capsule()
                     .fill(theme.accent)
                     .frame(width: max(4, geometry.size.width * fraction))
@@ -317,7 +316,7 @@ private struct ActivityProgress: View {
         HStack(spacing: 6) {
             Text(state.isArrived ? "You made it" : (walkLabel ?? "On your way"))
                 .font(theme.sans(10, weight: .medium))
-                .foregroundStyle(.white.opacity(0.62))
+                .foregroundStyle(.secondary)
             Spacer(minLength: 0)
             eta
         }

@@ -185,15 +185,25 @@ membership — see the table above.
    above the shutter should say "Good fix" with an accuracy in metres before you press it.
 2. **The arrow** — open the spot. Turn on the spot; the ring should glow and the phone should tap
    you once. Turn away; the arrow should swing the *short* way round, not spin through north.
-3. **Distance** — walk 50 m toward it. The number should fall smoothly, and the haptic pulses should
-   speed up.
+   Tilt the phone: the pool of light on the bezel should slide with the tilt, and the bezel should
+   tick softly as it sweeps a cardinal point. Both stay still with Reduce Motion on.
+3. **Distance** — walk 50 m toward it. The number should fall smoothly and grow as you close in,
+   and the haptic pulses should speed up. Crossing 400 m and then 100 m should each land one tap
+   heavier than the last.
 4. **Arrival** — get within 25 m. Confetti, a stamp on the photo, two ascending notes if sound is on.
 5. **Widgets** — add each size from the home screen gallery. Long-press the small one and pick a
    specific spot. Check the medium one lists your three nearest. Add the Lock Screen accessories.
+   Then long-press the wallpaper → *Customise* and tint the home screen: the arrows and accents
+   should take the tint while the photos stay photographic, not recoloured smears.
 6. **Interactive widgets** — tap *Next* on the large widget. The pinned spot should move on without
    the app opening, and the app should agree next time you open it.
-7. **Live Activity** — tap *Track on Lock Screen* on the arrow screen. Lock the phone; the distance
-   should appear and update as you move. Check the Dynamic Island while another app is foreground.
+7. **Live Activity** — tap *Track on Lock Screen* on the arrow screen. The Lock Screen card should
+   sit on the system's glass — wallpaper blurring through it — not an opaque dark slab. Lock the
+   phone and walk; the distance should count down and the pointer swing as you move, with the blue
+   location indicator showing while the walk is tracked. Check the Dynamic Island while another app
+   is foreground. Back in the app, a strip above the tab bar should show the walk from every tab
+   and return to the arrow when tapped. The arrow screen should not dim while you hold it. Arrival
+   or *Stop tracking* should end the card, the strip and the indicator together.
 8. **Siri** — "How far to \<spot name\> in Tradewind". It answers without opening the app.
 9. **Spotlight** — swipe down, type a spot name; it should appear and open onto its arrow.
 10. **Save here, no photo** — from the gallery, tap *Save here*, pick *Stay*, add a note like
@@ -216,6 +226,10 @@ membership — see the table above.
     *Recently Deleted* with a days-left label, restore it. Then *Restore from a backup* with the
     file you saved — it should report "already here" and add nothing. GPX export should open in
     any maps app that takes waypoints.
+15. **Memories** — Settings › General › Date & Time: turn off automatic and set the date to exactly
+    one year after a spot's capture date. The gallery should show a quiet "One year ago today" row
+    between the featured card and the grid, opening that spot's arrow; a day either side shows
+    nothing. Put the date back afterwards.
 
 ## Regenerating the project
 

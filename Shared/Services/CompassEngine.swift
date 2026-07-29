@@ -2,36 +2,93 @@ import CoreLocation
 import Foundation
 import Observation
 
+/// The rotating parts of the compass, published on their own so only the dial redraws at
+/// dial rate. Angles are unwrapped (continuous) so SwiftUI rotates the short way round,
+/// and guarded to a tenth of a degree — a phone lying still publishes nothing.
+@Observable
+final class DialState {
+    private(set) var roseAngle: Double = 0
+    private(set) var arrowAngle: Double = 0
+    /// The arrow angle quantized to 3°, for the backdrop parallax: close enough to feel
+    /// physical, coarse enough that the blurred photo is not re-composited every tick.
+    private(set) var parallaxAngle: Double = 0
+
+    func seed(rose: Double) {
+        roseAngle = rose
+    }
+
+    func update(rose: Double, arrow: Double) {
+        if abs(rose - roseAngle) >= 0.1 { roseAngle = rose }
+        if abs(arrow - arrowAngle) >= 0.1 { arrowAngle = arrow }
+        let quantized = (arrow / 3).rounded() * 3
+        if quantized != parallaxAngle { parallaxAngle = quantized }
+    }
+}
+
+/// The slow half of the compass: everything that is *about* the target rather than about
+/// which way the phone is facing right now. Publishes a new `CompassFrame` only when the
+/// frame actually differs, so the views reading it — readout, pills, hints, actions —
+/// update a few times a minute, not thirty times a second.
+@Observable
+final class TargetSolution {
+    private(set) var frame: CompassFrame = .empty
+    private(set) var arrivedAt: Date?
+    /// Horizontal accuracy rounded up to the nearest 10 m, nil when unknown. Bucketed so
+    /// GPS jitter does not republish; the status note only cares about "roughly how bad".
+    private(set) var accuracyBucket: Int?
+
+    func publish(frame: CompassFrame, accuracy: Double?) {
+        if frame != self.frame {
+            if frame.hasArrived, !self.frame.hasArrived { arrivedAt = Date() }
+            if !frame.hasArrived, arrivedAt != nil { arrivedAt = nil }
+            self.frame = frame
+        }
+        let bucket = accuracy.map { Int((($0 / 10).rounded(.up)) * 10) }
+        if bucket != accuracyBucket { accuracyBucket = bucket }
+    }
+
+    func reset() {
+        if frame != .empty { frame = .empty }
+        if arrivedAt != nil { arrivedAt = nil }
+        if accuracyBucket != nil { accuracyBucket = nil }
+    }
+}
+
 /// Turns "where am I / which way am I facing / where is the spot" into the handful of numbers
 /// the compass screen draws.
 ///
 /// It runs its own 30 Hz tick rather than reacting to every magnetometer sample. Heading
 /// arrives faster than a screen can usefully show, and a fixed tick makes the smoothing
 /// behave predictably: one exponential step per frame, along the shortest arc.
-@Observable
+///
+/// Deliberately not `@Observable`. The engine publishes through exactly two channels —
+/// `dial` (high rate, read only by the rotating leaves) and `solution` (low rate, read by
+/// everything else) — so no view can accidentally couple itself to the 30 Hz tick. The raw
+/// properties below are for imperative code (event handlers, the Live Activity); reading
+/// them outside a view body costs nothing.
 final class CompassEngine {
 
     /// How much of the gap to close each tick. 0.18 at 30 Hz settles in about a fifth of a
     /// second — fast enough to feel direct, slow enough to kill the jitter.
     private let smoothingFactor: Double = 0.18
 
-    /// Within this many degrees counts as pointing at it.
-    static let onTargetTolerance: Double = 8
-    /// Within this many metres counts as arrived.
-    static let arrivalRadius: Double = 25
-    /// Distance at which the glow starts to warm up.
-    static let proximityRange: Double = 400
+    static let onTargetTolerance = CompassFrame.onTargetTolerance
+    static let arrivalRadius = CompassFrame.arrivalRadius
+    static let proximityRange = CompassFrame.proximityRange
 
-    @ObservationIgnored private let location: LocationService
-    @ObservationIgnored private let settings: AppSettings
-    @ObservationIgnored private var timer: Timer?
+    let dial = DialState()
+    let solution = TargetSolution()
+
+    private let location: LocationService
+    private let settings: AppSettings
+    private var timer: Timer?
 
     /// Where we are heading. Set to nil to idle.
     var target: Coordinate? {
         didSet {
             guard target != oldValue else { return }
-            hasEverBeenOnTarget = false
-            arrivedAt = nil
+            wasArrived = false
+            solution.reset()
             recompute()
         }
     }
@@ -39,22 +96,16 @@ final class CompassEngine {
     /// Altitude of the target, when known, so the readout can say "48 m above you".
     var targetAltitude: Double?
 
-    // MARK: - Outputs
+    // MARK: - Raw values, for imperative consumers only
 
-    /// Smoothed heading, unwrapped so SwiftUI rotates the rose the short way round.
-    private(set) var roseAngle: Double = 0
-    /// Smoothed angle from "straight up on screen" to the target, unwrapped.
-    private(set) var arrowAngle: Double = 0
-    /// Absolute bearing to the target, degrees from north.
+    /// Continuous rose angle; the smoothing filter's own state.
+    private var roseAngle: Double = 0
+    private var arrowAngle: Double = 0
+    private var wasArrived = false
     private(set) var bearing: Double?
     private(set) var distanceMetres: Double?
-    /// Signed degrees off target, for the "turn left / turn right" hint.
-    private(set) var offBy: Double?
-    private(set) var onTarget: Bool = false
-    private(set) var arrivedAt: Date?
-    /// 0 far away, 1 practically standing on it.
-    private(set) var proximity: Double = 0
-    private(set) var hasEverBeenOnTarget = false
+
+    var hasArrived: Bool { wasArrived }
 
     /// True when there is no usable heading — no magnetometer, or too much interference. The
     /// UI switches to an absolute-bearing presentation rather than pretending.
@@ -62,18 +113,13 @@ final class CompassEngine {
         !location.headingUnavailable && location.currentHeading != nil
     }
 
-    var horizontalAccuracy: Double? {
-        location.currentLocation?.horizontalAccuracy
-    }
-
-    var hasArrived: Bool { arrivedAt != nil }
-
     init(location: LocationService = .shared, settings: AppSettings = .shared) {
         self.location = location
         self.settings = settings
         // Start the rose wherever the device already is, so it does not sweep in from north.
         if let heading = location.headingDegrees(preferTrueNorth: settings.usesTrueNorth) {
             roseAngle = heading
+            dial.seed(rose: heading)
         }
     }
 
@@ -114,9 +160,16 @@ final class CompassEngine {
         guard let target, target.isValid, let origin = location.coordinate else {
             bearing = nil
             distanceMetres = nil
-            offBy = nil
-            onTarget = false
-            proximity = 0
+            wasArrived = false
+            dial.update(rose: roseAngle, arrow: arrowAngle)
+            solution.publish(
+                frame: CompassFrame.make(
+                    bearing: nil, distanceMetres: nil, offBy: nil,
+                    headingIsUsable: headingIsUsable, elevationDeltaMetres: nil,
+                    wasArrived: false, unitPreference: settings.unitPreference
+                ),
+                accuracy: location.currentLocation?.horizontalAccuracy
+            )
             return
         }
 
@@ -125,77 +178,30 @@ final class CompassEngine {
 
         bearing = bearingToTarget
         distanceMetres = metres
-        proximity = max(0, min(1, 1 - metres / Self.proximityRange))
 
         // With no usable heading the arrow shows the absolute bearing against a rose that is
         // frozen at north. It is still correct information, just held differently.
         let effectiveHeading = headingIsUsable ? BearingMath.normalized(degrees: roseAngle) : 0
         let relative = BearingMath.relativeAngle(bearing: bearingToTarget, heading: effectiveHeading)
-
-        offBy = relative
         arrowAngle = BearingMath.unwrapped(target: relative, near: arrowAngle)
 
-        let nowOnTarget = abs(relative) <= Self.onTargetTolerance
-        if nowOnTarget, !onTarget { hasEverBeenOnTarget = true }
-        onTarget = nowOnTarget
+        dial.update(rose: roseAngle, arrow: arrowAngle)
 
-        if metres <= Self.arrivalRadius {
-            if arrivedAt == nil { arrivedAt = Date() }
-        } else if metres > Self.arrivalRadius * 2.5 {
-            // Hysteresis: don't flicker the celebration on and off at the boundary.
-            arrivedAt = nil
-        }
-    }
+        let elevationDelta: Double? = {
+            guard let targetAltitude, let here = location.currentLocation?.altitude else { return nil }
+            return targetAltitude - here
+        }()
 
-    // MARK: - Readouts
-
-    func distanceReadout() -> DistanceReadout? {
-        guard let distanceMetres else { return nil }
-        return DistanceFormatting.readout(metres: distanceMetres, preference: settings.unitPreference)
-    }
-
-    func walkingTimeText() -> String? {
-        guard let distanceMetres else { return nil }
-        return DistanceFormatting.walkingTime(metres: distanceMetres)
-    }
-
-    func elevationText() -> String? {
-        guard let targetAltitude, let here = location.currentLocation?.altitude else { return nil }
-        return DistanceFormatting.elevationDelta(
-            metres: targetAltitude - here,
-            preference: settings.unitPreference
+        let frame = CompassFrame.make(
+            bearing: bearingToTarget,
+            distanceMetres: metres,
+            offBy: relative,
+            headingIsUsable: headingIsUsable,
+            elevationDeltaMetres: elevationDelta,
+            wasArrived: wasArrived,
+            unitPreference: settings.unitPreference
         )
-    }
-
-    /// "Turn left", "Turn right", "Straight ahead" — the one-glance instruction.
-    func turnHint() -> String {
-        guard let offBy else { return "Looking for a signal" }
-        guard headingIsUsable else {
-            guard let bearing else { return "Looking for a signal" }
-            return "Head \(BearingMath.compassPoint(forBearing: bearing))"
-        }
-        if abs(offBy) <= Self.onTargetTolerance { return "Straight ahead" }
-        if abs(offBy) > 150 { return "It's behind you" }
-        return offBy > 0 ? "Turn right" : "Turn left"
-    }
-
-    /// Full sentence for VoiceOver, which cannot see an arrow.
-    func accessibilityDescription(spotName: String) -> String {
-        guard let distanceMetres else {
-            return "\(spotName). Waiting for your location."
-        }
-        let distance = DistanceFormatting.string(
-            metres: distanceMetres,
-            preference: settings.unitPreference
-        )
-        guard let bearing else { return "\(spotName), \(distance) away." }
-        let compass = BearingMath.compassPoint(forBearing: bearing)
-        if let offBy, headingIsUsable {
-            let direction = abs(offBy) <= Self.onTargetTolerance
-                ? "straight ahead"
-                : "\(Int(abs(offBy.rounded()))) degrees to your \(offBy > 0 ? "right" : "left")"
-            return "\(spotName), \(distance) away, \(compass), \(direction)."
-        }
-        return "\(spotName), \(distance) away, \(compass)."
+        wasArrived = frame.hasArrived
+        solution.publish(frame: frame, accuracy: location.currentLocation?.horizontalAccuracy)
     }
 }

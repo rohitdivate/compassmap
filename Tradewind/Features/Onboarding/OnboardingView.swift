@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// First run. Four pages: what it does, why it needs the camera and your location, what the
-/// widgets do, and which look you want.
+/// First run. Five pages: what it does, why it needs the camera and your location, the places
+/// your photos already know, what the widgets do, and which look you want.
 ///
 /// The permission asks come with a reason attached and only after you have seen what the app is
 /// for — a cold system prompt on launch is how apps get denied.
@@ -12,8 +12,9 @@ struct OnboardingView: View {
 
     @State private var page = 0
     @State private var location = LocationService.shared
+    @State private var libraryAccess = PhotoService.libraryAccess
 
-    private let pageCount = 4
+    private let pageCount = 5
 
     var body: some View {
         ZStack {
@@ -23,8 +24,9 @@ struct OnboardingView: View {
                 TabView(selection: $page) {
                     welcome.tag(0)
                     permissions.tag(1)
-                    widgets.tag(2)
-                    look.tag(3)
+                    library.tag(2)
+                    widgets.tag(3)
+                    look.tag(4)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.spring(response: 0.4, dampingFraction: 0.85), value: page)
@@ -69,6 +71,34 @@ struct OnboardingView: View {
                     .font(theme.labelFont)
                     .foregroundStyle(theme.textMuted)
                     .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 30)
+        }
+    }
+
+    private var library: some View {
+        OnboardingPage(
+            eyebrow: "From your library",
+            title: "Places you've already been",
+            message: "Tradewind reads where your photos were taken — on this phone, nothing leaves it — and the places behind them appear as spots by themselves. Turn it off any time in Settings.",
+            illustration: { PermissionIllustration() }
+        ) {
+            VStack(spacing: 10) {
+                if libraryAccess == .granted || libraryAccess == .limited {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text("Photos allowed")
+                    }
+                    .font(theme.captionFont)
+                    .foregroundStyle(theme.accent)
+                } else {
+                    PrimaryButton(title: "Allow photo access", symbol: "photo.on.rectangle.angled") {
+                        Task { @MainActor in
+                            libraryAccess = await PhotoService.resolveLibraryAccess()
+                        }
+                    }
+                    .accessibilityIdentifier("onboarding-photos")
+                }
             }
             .padding(.horizontal, 30)
         }

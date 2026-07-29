@@ -38,7 +38,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Tradewind uses the camera so you can photograph a place and find your way back to it later.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Pick photos you have already taken — Tradewind reads the location stored in them so it can point you back.</string>
+	<string>Tradewind reads where your photos were taken — on this phone, nothing leaves it — so the places you have been can appear as spots by themselves.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save the photos you capture in Tradewind to your library.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
